@@ -37,7 +37,7 @@ const validateDataSetHash = (argv) => {
     }
 }
 
-export async function processArgs(args, contractApi) {
+export async function processArgs(args, contractApi, env) {
     return yargs
         .usage('Usage: $0 [global options] <command> [options]')
         .option('api', {demand: false, default: false, type: 'boolean'})
@@ -101,6 +101,7 @@ export async function processArgs(args, contractApi) {
             }, async (argv) => {
                 try {
                     //TODO add the data set to the database and then add the dataset to the blockchain
+                    let insert_result = await env.db.loadCaptchas();
                     let result = await contractApi.providerAddDataSet(argv.value);
                     console.log(JSON.stringify(result, null, 2));
                 } catch (err) {

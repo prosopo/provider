@@ -46,6 +46,7 @@ export class Environment implements ProsopoEnvironment {
     async isReady() {
         await this.getSigners();
         await this.getContract();
+        await this.db.connect();
         assert(this.providerSigner instanceof Signer);
         assert(this.contract instanceof Contract);
     }

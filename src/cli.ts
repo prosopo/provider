@@ -15,7 +15,7 @@ async function main() {
     await env.isReady();
     const contractApi = new contractApiInterface(env);
 
-    const args = await processArgs(process.argv.slice(2), contractApi);
+    const args = await processArgs(process.argv.slice(2), contractApi, env);
 
     if (args.api) {
         app.use(prosopoMiddleware(env));

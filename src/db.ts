@@ -1,11 +1,12 @@
-import {Collection, Db, Document, MongoClient, UpdateResult} from "mongodb";
-import {ContractDetails, Database} from './types/db'
+import {AnyError, Collection, Db, Document, MongoClient, InsertManyResult} from "mongodb";
+import {Database} from './types'
 import {ERRORS} from './errors'
+import {Captcha} from "./types/captcha";
 
 
 export class ProsopoDatabase implements Database {
     readonly url: string;
-    collections: { contract?: Collection }
+    collections: { contract?: Collection, captchas?: Collection }
     dbname: string
 
 
@@ -22,48 +23,24 @@ export class ProsopoDatabase implements Database {
         this.collections.contract = db.collection("contract");
     }
 
-    // async getContractDetails(name: string): Promise<ContractDetails> {
-    //     return new Promise<ContractDetails>((resolve, reject) => {
-    //             if (this.collections.contract !== undefined) {
-    //                 const collection = this.collections.contract;
-    //                 collection.findOne({"_id": name}, function (err, item) {
-    //                     if (err) {
-    //                         reject(err);
-    //                     }
-    //                     if (item) {
-    //                         resolve(item);
-    //                     }
-    //                 })
-    //             } else {
-    //                 reject(ERRORS.DATABASE.DATABASE_UNDEFINED);
-    //             }
-    //         }
-    //     )
-    // }
-
-    // TODO does this even need to be async?
-    async updateContractDetails(contract, deployer, contractName) {
-        // Store contract in local db
-        return new Promise<UpdateResult>((resolve, reject) => {
-            if (this.collections.contract !== undefined) {
-                const collection = this.collections.contract;
-                // TODO blockchain/parachain identifier?
-                const doc = {
-                    "_id": contractName,
-                    "address": contract.address.toString(),
-                    "owner": deployer.address.toString()
+    async loadCaptchas(captchas: Captcha[]): Promise<AnyError | InsertManyResult<Document>> {
+        return new Promise<AnyError | InsertManyResult>((resolve, reject) => {
+                if (this.collections.captchas !== undefined) {
+                    this.collections.captchas.insertMany(captchas, function (err, result) {
+                        if (err) {
+                            reject(err);
+                        }
+                        if (result) {
+                            resolve(result);
+                        }
+                    })
+                } else {
+                    reject(ERRORS.DATABASE.COLLECTION_UNDEFINED);
                 }
-                const updateResult = collection.updateOne({"_id": contractName}, {$set: doc}, function (err, result) {
-                    if (err) {
-                        reject(err);
-                    }
-                    if (result) {
-                        resolve(result);
-                    }
-                });
-            } else {
-                reject(ERRORS.DATABASE.DATABASE_UNDEFINED);
             }
-        })
+        )
     }
+
 }
+
+

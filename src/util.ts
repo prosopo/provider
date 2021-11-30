@@ -20,3 +20,4 @@ export function encodeStringAddress(address: string) {
 export function loadJSONFile(filePath) {
     return JSON.parse(fs.readFileSync(filePath));
 }
+

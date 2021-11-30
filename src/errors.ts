@@ -10,6 +10,9 @@ export const ERRORS = {
     DATABASE: {
         DATABASE_UNDEFINED: {
             message: 'Database client is not connected',
+        },
+        COLLECTION_UNDEFINED: {
+            message: 'Database collection is not available',
         }
     },
     API: {
