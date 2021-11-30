@@ -1,13 +1,24 @@
-import {Captcha} from "./types/captcha";
+import {Captcha, Dataset, DatasetSchema} from "./types/captcha";
+import {ERRORS} from './errors'
 
-const {blake2AsHex} = require('@polkadot/util-crypto');
+const {u8aConcat, u8aToHex} = require('@polkadot/util');
+const {blake2AsU8a} = require('@polkadot/util-crypto');
 
 function hash(data: string): string {
-    return blake2AsHex(data);
+    return blake2AsU8a(data);
 }
 
-export function hashDataSet(captchas: Captcha[]): string {
+export function hashDataset(captchas: Captcha[]): string {
     // each captcha is a leaf in a very wide merkle tree
     const hashes = captchas.map(captcha => hash(captcha['id'] + captcha['solution'] + captcha['salt']));
-    return hash(hashes.join())
+    return hash(u8aConcat(hashes))
+}
+
+
+export function parseCaptchaDataset(captchaJSON: JSON): Dataset {
+    try {
+        return DatasetSchema.parse(captchaJSON)
+    } catch (err) {
+        throw(`${ERRORS.DATASET.PARSE_ERROR}:\n${err}`);
+    }
 }

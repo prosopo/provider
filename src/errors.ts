@@ -5,6 +5,9 @@ export const ERRORS = {
         },
         CANNOT_LOAD_JSON_SECRETS_FILE: {
             message: 'cannot load JSON secrets file'
+        },
+        ASSERT_ERROR: {
+            message: 'AssertionError'
         }
     },
     DATABASE: {
@@ -33,6 +36,12 @@ export const ERRORS = {
         PARAMETER_ERROR: {
             message: 'Invalid parameter'
         }
+    },
+    DATASET: {
+        PARSE_ERROR: {
+            message: 'error parsing dataset'
+        }
+
     }
 }
 

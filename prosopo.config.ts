@@ -25,7 +25,7 @@ export default {
     },
     database: {
         development: {
-            endpoint: "127.0.0.1:27017",
+            endpoint: "mongodb://127.0.0.1:27017",
             dbname: "prosopo"
         }
     },

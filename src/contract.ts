@@ -86,13 +86,13 @@ export class contractApiInterface {
     }
 
     //provider_add_data_set
-    async providerAddDataSet(dataSetHash) {
+    async providerAddDataset(datasetHash) {
         await this.env.isReady();
         const signedContract = this.env.contract!.connect(this.env.providerSigner!)
-        const response = await signedContract.tx.providerAddDataSet(dataSetHash, {"signer": this.env.providerSigner})
+        const response = await signedContract.tx.providerAddDataset(datasetHash, {"signer": this.env.providerSigner})
         // @ts-ignore
         if (response.events) {
-            return response.events.filter(x => x["name"] == "ProviderAddDataSet")
+            return response.events.filter(x => x["name"] == "ProviderAddDataset")
         } else {
             throw(ERRORS.TRANSACTION.TX_ERROR); //TODO get the error information from respons
         }

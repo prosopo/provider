@@ -1,9 +1,11 @@
-import {encodeStringAddress} from './util'
+import {encodeStringAddress, loadJSONFile} from './util'
 import BN from 'bn.js';
 import {ERRORS} from './errors'
 // @ts-ignore
 import yargs from 'yargs'
-import { Compact, u128} from '@polkadot/types';
+import {Compact, u128} from '@polkadot/types';
+import {parseCaptchaDataset, hashDataset} from "./captcha";
+
 
 const {isHex} = require('@polkadot/util');
 
@@ -29,7 +31,7 @@ const validateValue = (argv) => {
     }
 }
 
-const validateDataSetHash = (argv) => {
+const validateDatasetHash = (argv) => {
     if (isHex(argv.dataSetHash)) {
         return argv.dataSetHash
     } else {
@@ -82,7 +84,6 @@ export async function processArgs(args, contractApi, env) {
         )
         .command('provider_unstake', 'Unstake funds as a Provider', (yargs) => {
                 return yargs
-                    .option('address', {type: 'string', demand: true,})
                     .option('value', {type: 'number', demand: true,})
             }, async (argv) => {
                 try {
@@ -92,23 +93,23 @@ export async function processArgs(args, contractApi, env) {
                     console.log(err);
                 }
             },
-            [validateAddress, validateValue]
+            [validateValue]
         )
         .command('provider_add_data_set', 'Add a dataset as a Provider', (yargs) => {
                 return yargs
-                    .option('address', {type: 'string', demand: true,})
-                    .option('dataSetHash', {type: 'string', demand: true,})
+                    .option('file', {type: 'string', demand: true})
             }, async (argv) => {
                 try {
-                    //TODO add the data set to the database and then add the dataset to the blockchain
-                    let insert_result = await env.db.loadCaptchas();
-                    let result = await contractApi.providerAddDataSet(argv.value);
+                    let dataset = parseCaptchaDataset(loadJSONFile(argv.file));
+                    await env.db.loadDataset(dataset);
+                    let datasetHash = hashDataset(dataset['captchas']);
+                    let result = await contractApi.providerAddDataset(datasetHash);
                     console.log(JSON.stringify(result, null, 2));
                 } catch (err) {
                     console.log(err);
                 }
             },
-            [validateAddress, validateDataSetHash]
+            []
         )
         .argv
 }

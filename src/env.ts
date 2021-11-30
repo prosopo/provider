@@ -28,14 +28,14 @@ export class Environment implements ProsopoEnvironment {
     defaultEnvironment: string
 
     constructor() {
-        this.config = this.getConfig();
+        this.config = Environment.getConfig();
         this.network = network;
         this.patract = patract;
         if (this.config.defaultEnvironment && this.config.networks.hasOwnProperty(this.config.defaultEnvironment)) {
             this.defaultEnvironment = this.config.defaultEnvironment
             this.deployerAddress = this.config.networks[this.defaultEnvironment].contract.deployer.address;
             this.contractAddress = this.config.networks[this.defaultEnvironment].contract.address;
-            this.db = new ProsopoDatabase(this.config.networks[this.defaultEnvironment].endpoint,
+            this.db = new ProsopoDatabase(this.config.database[this.defaultEnvironment].endpoint,
                 this.config.database[this.defaultEnvironment].dbname)
             this.providerAddress = this.config.networks[this.defaultEnvironment].provider.address;
         } else {
@@ -55,8 +55,7 @@ export class Environment implements ProsopoEnvironment {
         await this.network.api.isReadyOrError;
         let network = this.network;
         const contractFactory = await patract.getContractFactory("prosopo", this.providerAddress);
-        const contract = await contractFactory.attach(this.contractAddress);
-        this.contract = contract;
+        this.contract = await contractFactory.attach(this.contractAddress);
     }
 
     // utility functions
@@ -69,14 +68,13 @@ export class Environment implements ProsopoEnvironment {
             let mnemonic = this.config.networks[this.defaultEnvironment].provider.mnemonic
             if (mnemonic) {
                 const keyringPair = this.network.keyring.addFromMnemonic(mnemonic);
-                const signer = this.network.createSigner(keyringPair);
                 // @ts-ignore
-                this.providerSigner = signer;
+                this.providerSigner = this.network.createSigner(keyringPair);
             }
         }
     }
 
-    private getConfigPath() {
+    private static getConfigPath() {
         const tsConfigPath = findUp.sync(TS_CONFIG_FILENAME);
         if (tsConfigPath !== null) {
             return tsConfigPath;
@@ -91,13 +89,14 @@ export class Environment implements ProsopoEnvironment {
         return pathToConfigFile;
     }
 
-    private getConfig() {
-        const filePath = this.getConfigPath();
-        let config = this.importCsjOrEsModule(filePath);
-        return config
+    private static getConfig() {
+        const filePath = Environment.getConfigPath();
+        if (filePath) {
+            return Environment.importCsjOrEsModule(filePath)
+        }
     }
 
-    private importCsjOrEsModule(filePath: string): any {
+    private static importCsjOrEsModule(filePath: string): any {
         const imported = require(filePath);
         return imported.default !== undefined ? imported.default : imported;
     }

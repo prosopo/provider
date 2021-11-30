@@ -122,7 +122,7 @@ export function prosopoMiddleware(env): Router {
             if (!address || !dataSetHash) {
                 throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
             }
-            const result = await contractApi.providerAddDataSet(dataSetHash);
+            const result = await contractApi.providerAddDataset(dataSetHash);
             res.json(result);
         } catch (err: any) {
             let msg = err.message ? err.message : ERRORS.TRANSACTION.TX_ERROR.message;
