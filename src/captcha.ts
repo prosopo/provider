@@ -29,5 +29,5 @@ export async function addDataset(env: Environment, contractApi, file: string) {
     let dataset = parseCaptchaDataset(loadJSONFile(file));
     let datasetHash = hashDataset(dataset['captchas']);
     await env.db.loadDataset(dataset, u8aToHex(datasetHash));
-    return await contractApi.providerAddDataset(datasetHash);
+    return await contractApi.providerAddDataset(datasetHash)
 }

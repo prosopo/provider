@@ -89,7 +89,7 @@ export async function processArgs(args, contractApi, env) {
                     .option('file', {type: 'string', demand: true})
             }, async (argv) => {
                 try {
-                    let result = addDataset(env, contractApi, argv.file)
+                    let result = await addDataset(env, contractApi, argv.file)
                     console.log(JSON.stringify(result, null, 2));
                 } catch (err) {
                     console.log(err);

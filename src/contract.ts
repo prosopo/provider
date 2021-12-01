@@ -91,7 +91,6 @@ export class contractApiInterface {
         const signedContract = this.env.contract!.connect(this.env.providerSigner!)
         const response = await signedContract.tx.providerAddDataset(datasetHash, {"signer": this.env.providerSigner})
         // @ts-ignore
-        console.log(response);
         if (response.events) {
             return response.events.filter(x => x["name"] == "ProviderAddDataset")
         } else {
