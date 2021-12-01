@@ -2,6 +2,7 @@ import express, {Router} from 'express';
 import {Captcha, CaptchaSolution, CaptchaSolutionResponse, Hash} from './types/api';
 import {contractApiInterface} from './contract'
 import {BadRequest, ERRORS} from './errors'
+import {addDataset} from "./captcha";
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -21,7 +22,7 @@ export function prosopoMiddleware(env): Router {
         try {
             const {serviceOrigin, fee, payee, address} = req.body;
             if (!serviceOrigin || !fee || !payee || !address) {
-                next(new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message));
+                throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
             }
             const result = await contractApi.providerRegister(serviceOrigin, fee, payee, address);
             res.json(result);
@@ -43,7 +44,7 @@ export function prosopoMiddleware(env): Router {
         try {
             const {serviceOrigin, fee, payee, address} = req.body;
             if (!serviceOrigin || !fee || !payee || !address) {
-                next(new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message));
+                throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
             }
             const result = await contractApi.providerUpdate(serviceOrigin, fee, payee, address);
             res.json(result);
@@ -62,7 +63,7 @@ export function prosopoMiddleware(env): Router {
         try {
             const address: string = req.body.address;
             if (!address) {
-                next(new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message));
+                throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
             }
             const result = await contractApi.providerDeregister(address);
             res.json(result);
@@ -79,9 +80,9 @@ export function prosopoMiddleware(env): Router {
      */
     router.post('/v1/prosopo/provider_stake/', async function (req, res, next) {
         try {
-            const {address, value} = req.body;
-            if (!address || !value) {
-                next(new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message));
+            const {value} = req.body;
+            if (!value) {
+                throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
             }
             const result = await contractApi.providerStake(value);
             res.json(result);
@@ -98,9 +99,9 @@ export function prosopoMiddleware(env): Router {
      */
     router.post('/v1/prosopo/provider_unstake/', async function (req, res, next) {
         try {
-            const {address, value} = req.body;
-            if (!address || !value) {
-                next(new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message));
+            const {value} = req.body;
+            if (!value) {
+                throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
             }
             const result = await contractApi.providerUnstake(value);
             res.json(result);
@@ -117,11 +118,11 @@ export function prosopoMiddleware(env): Router {
      */
     router.post('/v1/prosopo/provider_add_data_set/', async function (req, res, next) {
         try {
-            const {address, dataSetHash} = req.body;
-            if (!address || !dataSetHash) {
-                next(new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message));
+            const {file} = req.body;
+            if (!file) {
+                throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
             }
-            const result = await contractApi.providerAddDataset(dataSetHash);
+            let result = await addDataset(env, contractApi, file)
             res.json(result);
         } catch (err: any) {
             let msg = err.message ? err.message : ERRORS.TRANSACTION.TX_ERROR.message;
@@ -138,7 +139,7 @@ export function prosopoMiddleware(env): Router {
         try {
             const {address, dappServiceOrigin, dappContractAddress, dappOwner} = req.body;
             if (!address || !dappServiceOrigin || !dappContractAddress) {
-                next(new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message));
+                throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
             }
             const result = await contractApi.dappRegister(dappServiceOrigin, dappContractAddress, dappOwner);
             res.json(result);
