@@ -1,5 +1,3 @@
-import {ERRORS} from './errors'
-
 const {decodeAddress, encodeAddress} = require('@polkadot/keyring');
 const {hexToU8a, isHex} = require('@polkadot/util');
 const fs = require('fs');

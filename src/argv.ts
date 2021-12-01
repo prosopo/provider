@@ -3,7 +3,15 @@ import {ERRORS} from './errors'
 // @ts-ignore
 import yargs from 'yargs'
 import {Compact, u128} from '@polkadot/types';
-import {addDataset} from "./captcha";
+import {
+    providerRegister,
+    providerUpdate,
+    providerStake,
+    providerUnstake,
+    providerDeregister,
+    providerAddDataset,
+    dappRegister
+} from './tasks/tasks'
 
 
 const validateAddress = (argv) => {
@@ -12,16 +20,17 @@ const validateAddress = (argv) => {
     return {address}
 }
 
+// TODO use zod for this
 const validatePayee = (argv) => {
     let payee = argv.payee[0].toUpperCase() + argv.payee.slice(1,).toLowerCase();
     payee = ["Provider", "Dapp"].indexOf(payee) > -1 ? payee : undefined;
     return {payee}
 }
 
+// TODO use zod for this
 const validateValue = (argv) => {
     if (typeof argv.value === 'number') {
         let value: Compact<u128> = argv.value as Compact<u128>;
-        console.log(value);
         return {value}
     } else {
         throw new Error(`${ERRORS.CLI.PARAMETER_ERROR.message}::value::${argv.value}`)
@@ -39,7 +48,7 @@ export async function processArgs(args, contractApi, env) {
                     .option('payee', {type: 'string', demand: true,})
                     .option('address', {type: 'string', demand: true,})
             }, async (argv) => {
-                let result = await contractApi.providerRegister(argv.serviceOrigin, argv.fee, argv.payee, argv.address)
+                let result = await providerRegister(argv.serviceOrigin, argv.fee, argv.payee, argv.address)
                 console.log(JSON.stringify(result, null, 2));
             },
             [validateAddress, validatePayee]
@@ -63,7 +72,7 @@ export async function processArgs(args, contractApi, env) {
                     .option('value', {type: 'number', demand: true,})
             }, async (argv) => {
                 try {
-                    let result = await contractApi.providerStake(argv.value);
+                    let result = await providerStake(argv.value);
                     console.log(JSON.stringify(result, null, 2));
                 } catch (err) {
                     console.log(err);
@@ -76,7 +85,7 @@ export async function processArgs(args, contractApi, env) {
                     .option('value', {type: 'number', demand: true,})
             }, async (argv) => {
                 try {
-                    let result = await contractApi.providerUnstake(argv.value);
+                    let result = await providerUnstake(argv.value);
                     console.log(JSON.stringify(result, null, 2));
                 } catch (err) {
                     console.log(err);
@@ -89,7 +98,7 @@ export async function processArgs(args, contractApi, env) {
                     .option('file', {type: 'string', demand: true})
             }, async (argv) => {
                 try {
-                    let result = await addDataset(env, contractApi, argv.file)
+                    let result = await providerAddDataset(env, contractApi, argv.file)
                     console.log(JSON.stringify(result, null, 2));
                 } catch (err) {
                     console.log(err);

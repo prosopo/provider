@@ -2,10 +2,11 @@ import {Environment} from './env'
 import {ERRORS} from './errors'
 import {encodeStringAddress} from './util'
 import {Option, Text, Compact, u128} from '@polkadot/types';
+import {contractApiInterface} from "./types/contract";
 
 const {blake2AsU8a} = require('@polkadot/util-crypto');
 
-export class contractApiInterface {
+export class prosopoContractApi implements contractApiInterface {
 
     env: Environment
 

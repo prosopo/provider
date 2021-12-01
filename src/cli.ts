@@ -4,7 +4,8 @@ import express from 'express'
 import {prosopoMiddleware} from './api'
 import {handleErrors} from './errorHandler'
 import {processArgs} from './argv'
-import {contractApiInterface} from './contract'
+import {prosopoContractApi} from './contract'
+
 
 const app = express();
 app.use(express.json())
@@ -13,7 +14,7 @@ const port = 3000;
 async function main() {
     const env = new Environment();
     await env.isReady();
-    const contractApi = new contractApiInterface(env);
+    const contractApi = new prosopoContractApi(env);
 
     const args = await processArgs(process.argv.slice(2), contractApi, env);
 

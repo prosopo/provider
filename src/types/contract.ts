@@ -1,3 +1,5 @@
+import {Environment} from "../env";
+
 const contractDefinitions = {
     Status: {
         _enum: [
@@ -55,6 +57,24 @@ const contractDefinitions = {
         incorrect_captchas: 'u64',
     }
 
+}
+
+export interface contractApiInterface {
+    env: Environment
+
+    providerRegister(providerServiceOrigin: string, providerFee: number, payee: string, address: string): Promise<Object>
+
+    providerUpdate(providerServiceOrigin: string, providerFee: number, payee: string, address: string): Promise<Object>
+
+    providerDeregister(address: string): Promise<Object>
+
+    providerStake(value: number): Promise<Object>
+
+    providerUnstake(value: number): Promise<Object>
+
+    providerAddDataset(datasetHash: Uint8Array): Promise<Object>
+
+    dappRegister(dappServiceOrigin: string, dappContractAddress: string, dappOwner?: string | undefined): Promise<Object>
 }
 
 export default contractDefinitions;
