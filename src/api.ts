@@ -6,9 +6,8 @@ import {BadRequest, ERRORS} from './errors'
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
  *
- * @param contract - An instance of the polkadot-js ContractPromise
- * @param {MongoClient} db - A mongodb client connected to a database with captcha data in the "ProsopoCaptchas" collection
  * @return {Router} - A middleware router that can interact with the Prosopo protocol
+ * @param env
  */
 export function prosopoMiddleware(env): Router {
     const router = express.Router();
@@ -22,7 +21,7 @@ export function prosopoMiddleware(env): Router {
         try {
             const {serviceOrigin, fee, payee, address} = req.body;
             if (!serviceOrigin || !fee || !payee || !address) {
-                throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
+                next(new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message));
             }
             const result = await contractApi.providerRegister(serviceOrigin, fee, payee, address);
             res.json(result);
@@ -44,7 +43,7 @@ export function prosopoMiddleware(env): Router {
         try {
             const {serviceOrigin, fee, payee, address} = req.body;
             if (!serviceOrigin || !fee || !payee || !address) {
-                throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
+                next(new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message));
             }
             const result = await contractApi.providerUpdate(serviceOrigin, fee, payee, address);
             res.json(result);
@@ -63,7 +62,7 @@ export function prosopoMiddleware(env): Router {
         try {
             const address: string = req.body.address;
             if (!address) {
-                throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
+                next(new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message));
             }
             const result = await contractApi.providerDeregister(address);
             res.json(result);
@@ -82,7 +81,7 @@ export function prosopoMiddleware(env): Router {
         try {
             const {address, value} = req.body;
             if (!address || !value) {
-                throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
+                next(new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message));
             }
             const result = await contractApi.providerStake(value);
             res.json(result);
@@ -101,7 +100,7 @@ export function prosopoMiddleware(env): Router {
         try {
             const {address, value} = req.body;
             if (!address || !value) {
-                throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
+                next(new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message));
             }
             const result = await contractApi.providerUnstake(value);
             res.json(result);
@@ -120,7 +119,7 @@ export function prosopoMiddleware(env): Router {
         try {
             const {address, dataSetHash} = req.body;
             if (!address || !dataSetHash) {
-                throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
+                next(new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message));
             }
             const result = await contractApi.providerAddDataset(dataSetHash);
             res.json(result);
@@ -139,7 +138,7 @@ export function prosopoMiddleware(env): Router {
         try {
             const {address, dappServiceOrigin, dappContractAddress, dappOwner} = req.body;
             if (!address || !dappServiceOrigin || !dappContractAddress) {
-                throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
+                next(new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message));
             }
             const result = await contractApi.dappRegister(dappServiceOrigin, dappContractAddress, dappOwner);
             res.json(result);

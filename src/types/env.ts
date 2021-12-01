@@ -10,7 +10,7 @@ export interface ProsopoEnvironment {
     network: Network,
     contract?: Contract
     config: ProsopoConfig,
-    db: Database,
+    db: Database | undefined,
     providerSigner?: Signer | undefined
     dappSigner?: Signer | undefined
     deployerAddress: string

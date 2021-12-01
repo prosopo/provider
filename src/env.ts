@@ -5,7 +5,6 @@ import {ERRORS} from './errors'
 // @ts-ignore
 import {network, patract} from 'redspot';
 import {Network} from "redspot/types"
-import {ProsopoDatabase} from './db'
 import {AccountSigner, Signer} from 'redspot/provider'
 import Contract from "@redspot/patract/contract"
 import {strict as assert} from 'assert';
@@ -18,7 +17,7 @@ export class Environment implements ProsopoEnvironment {
     config: ProsopoConfig
     network: Network
     contract?: Contract
-    db: Database
+    db: Database | undefined
     providerSigner?: Signer
     dappSigner?: Signer
     deployerAddress: string
@@ -35,20 +34,25 @@ export class Environment implements ProsopoEnvironment {
             this.defaultEnvironment = this.config.defaultEnvironment
             this.deployerAddress = this.config.networks[this.defaultEnvironment].contract.deployer.address;
             this.contractAddress = this.config.networks[this.defaultEnvironment].contract.address;
-            this.db = new ProsopoDatabase(this.config.database[this.defaultEnvironment].endpoint,
-                this.config.database[this.defaultEnvironment].dbname)
             this.providerAddress = this.config.networks[this.defaultEnvironment].provider.address;
         } else {
-            throw new Error(`You asked for defaultEnvironment=${this.config.defaultEnvironment} but this could not be found in the config file`);
+            throw new Error(`${ERRORS.CONFIG.UNKNOWN_ENVIRONMENT}:${this.config.defaultEnvironment}`);
         }
     }
 
     async isReady() {
         await this.getSigners();
         await this.getContract();
-        await this.db.connect();
+        await this.importDatabase();
+        await this.db?.connect();
         assert(this.providerSigner instanceof Signer);
         assert(this.contract instanceof Contract);
+    }
+
+    async importDatabase() {
+        let {ProsopoDatabase} = await import(`./db/${this.config.database[this.defaultEnvironment].type}`);
+        this.db = new ProsopoDatabase(this.config.database[this.defaultEnvironment].endpoint,
+            this.config.database[this.defaultEnvironment].dbname)
     }
 
     async getContract() {
@@ -61,7 +65,6 @@ export class Environment implements ProsopoEnvironment {
     // utility functions
     async getSigners() {
         await this.network.api.isReadyOrError;
-        const signerClass = new AccountSigner();
         // TODO this logic about having multiple people configured in the service at once is pretty confusing.
         //  Maybe only one person should be allowed to sign at one time.
         if (this.providerAddress) {

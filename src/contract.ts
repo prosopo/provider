@@ -2,6 +2,7 @@ import {Environment} from './env'
 import {ERRORS} from './errors'
 import {encodeStringAddress} from './util'
 import {Option, Text, Compact, u128} from '@polkadot/types';
+
 const {blake2AsU8a} = require('@polkadot/util-crypto');
 
 export class contractApiInterface {
@@ -13,16 +14,14 @@ export class contractApiInterface {
     }
 
     // provider_register
-    async providerRegister(providerServiceOrigin: string, providerFee: number, payee: string, address: string) {
+    async providerRegister(providerServiceOrigin: string, providerFee: number, payee: string, address: string): Promise<Object> {
         await this.env.isReady();
         let encodedAddress = encodeStringAddress(address);
         const signedContract = this.env.contract!.connect(this.env.providerSigner!)
         let providerServiceOriginHash = blake2AsU8a(providerServiceOrigin);
         const response = await signedContract.tx.providerRegister(providerServiceOriginHash, providerFee, payee, encodedAddress);
-        console.log(response);
         // @ts-ignore
         if (response.events) {
-
             return response.events.filter(x => x["name"] == "ProviderRegister")
         } else {
             throw(ERRORS.TRANSACTION.TX_ERROR); //TODO get the error information from response
@@ -30,7 +29,7 @@ export class contractApiInterface {
     }
 
     //provider_update
-    async providerUpdate(providerServiceOrigin: string, providerFee: number, payee: string, address: string) {
+    async providerUpdate(providerServiceOrigin: string, providerFee: number, payee: string, address: string): Promise<Object> {
         await this.env.isReady();
         let encodedAddress = encodeStringAddress(address);
         const signedContract = this.env.contract!.connect(this.env.providerSigner!)
@@ -45,7 +44,7 @@ export class contractApiInterface {
     }
 
     //provider_deregister
-    async providerDeregister(address: string) {
+    async providerDeregister(address: string): Promise<Object> {
         await this.env.isReady();
         let encodedAddress = encodeStringAddress(address);
         const signedContract = this.env.contract!.connect(this.env.providerSigner!)
@@ -60,7 +59,7 @@ export class contractApiInterface {
     }
 
     //provider_stake
-    async providerStake(value: number) {
+    async providerStake(value: number): Promise<Object> {
         await this.env.isReady();
         const signedContract = this.env.contract!.connect(this.env.providerSigner!)
         const response = await signedContract.tx.providerStake({"value": value, "signer": this.env.providerSigner!})
@@ -73,7 +72,7 @@ export class contractApiInterface {
     }
 
     //provider_unstake
-    async providerUnstake(value) {
+    async providerUnstake(value: number): Promise<Object> {
         await this.env.isReady();
         const signedContract = this.env.contract!.connect(this.env.providerSigner!)
         const response = await signedContract.tx.providerUnstake({"value": value, "signer": this.env.providerSigner!})
@@ -86,7 +85,7 @@ export class contractApiInterface {
     }
 
     //provider_add_data_set
-    async providerAddDataset(datasetHash) {
+    async providerAddDataset(datasetHash: Uint8Array): Promise<Object> {
         await this.env.isReady();
         const signedContract = this.env.contract!.connect(this.env.providerSigner!)
         const response = await signedContract.tx.providerAddDataset(datasetHash, {"signer": this.env.providerSigner})
@@ -99,7 +98,7 @@ export class contractApiInterface {
     }
 
     //dapp_register
-    async dappRegister(dappServiceOrigin: string, dappContractAddress: string, dappOwner?: string | undefined) {
+    async dappRegister(dappServiceOrigin: string, dappContractAddress: string, dappOwner?: string | undefined): Promise<Object> {
         await this.env.isReady();
         const signedContract = this.env.contract!.connect(this.env.dappSigner!)
         const registry = this.env.network.api.registry;

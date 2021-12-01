@@ -10,6 +10,11 @@ export const ERRORS = {
             message: 'AssertionError'
         }
     },
+    CONFIG: {
+        UNKNOWN_ENVIRONMENT: {
+            message: 'Unknown environment requested'
+        }
+    },
     DATABASE: {
         DATABASE_UNDEFINED: {
             message: 'Database client is not connected',
