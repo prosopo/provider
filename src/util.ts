@@ -23,8 +23,3 @@ export function encodeStringAddress(address: string) {
 export function loadJSONFile(filePath) {
     return JSON.parse(fs.readFileSync(filePath));
 }
-
-export const assert = function (condition, message) {
-    if (!condition)
-        throw Error(`${ERRORS.GENERAL.ASSERT_ERROR}: ${message || ''}`);
-};

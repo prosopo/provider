@@ -9,7 +9,7 @@
     "start": "ts-node ./build/src/cli.js",
     "setup": "yarn ts-node ./build/scripts/setupdev.js",
     "mnemonic": "yarn build && yarn ts-node ./build/scripts/generateMnemonic.js",
-    "test": "mocha --require ts-node/register ./test/*.test.ts"
+    "test": "npx redspot test"
   },
   "dependencies": {
     "@redspot/chai": "file:../../redspot/build/redspot-chai",

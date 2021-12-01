@@ -12,15 +12,15 @@ const captchaData = [
         "salt": "0x01",
         "target": "bus",
         "items": [
-            "/home/chris/dev/prosopo/data/img/01.01.jpeg",
-            "/home/chris/dev/prosopo/data/img/01.02.jpeg",
-            "/home/chris/dev/prosopo/data/img/01.03.jpeg",
-            "/home/chris/dev/prosopo/data/img/01.04.jpeg",
-            "/home/chris/dev/prosopo/data/img/01.05.jpeg",
-            "/home/chris/dev/prosopo/data/img/01.06.jpeg",
-            "/home/chris/dev/prosopo/data/img/01.07.jpeg",
-            "/home/chris/dev/prosopo/data/img/01.08.jpeg",
-            "/home/chris/dev/prosopo/data/img/01.09.jpeg"
+            "/home/user/dev/prosopo/data/img/01.01.jpeg",
+            "/home/user/dev/prosopo/data/img/01.02.jpeg",
+            "/home/user/dev/prosopo/data/img/01.03.jpeg",
+            "/home/user/dev/prosopo/data/img/01.04.jpeg",
+            "/home/user/dev/prosopo/data/img/01.05.jpeg",
+            "/home/user/dev/prosopo/data/img/01.06.jpeg",
+            "/home/user/dev/prosopo/data/img/01.07.jpeg",
+            "/home/user/dev/prosopo/data/img/01.08.jpeg",
+            "/home/user/dev/prosopo/data/img/01.09.jpeg"
         ]
     },
     {
@@ -29,15 +29,15 @@ const captchaData = [
         "salt": "0x01",
         "target": "train",
         "items": [
-            "/home/chris/dev/prosopo/data/img/01.01.jpeg",
-            "/home/chris/dev/prosopo/data/img/01.02.jpeg",
-            "/home/chris/dev/prosopo/data/img/01.03.jpeg",
-            "/home/chris/dev/prosopo/data/img/01.04.jpeg",
-            "/home/chris/dev/prosopo/data/img/01.05.jpeg",
-            "/home/chris/dev/prosopo/data/img/01.06.jpeg",
-            "/home/chris/dev/prosopo/data/img/01.07.jpeg",
-            "/home/chris/dev/prosopo/data/img/01.08.jpeg",
-            "/home/chris/dev/prosopo/data/img/01.09.jpeg"
+            "/home/user/dev/prosopo/data/img/01.01.jpeg",
+            "/home/user/dev/prosopo/data/img/01.02.jpeg",
+            "/home/user/dev/prosopo/data/img/01.03.jpeg",
+            "/home/user/dev/prosopo/data/img/01.04.jpeg",
+            "/home/user/dev/prosopo/data/img/01.05.jpeg",
+            "/home/user/dev/prosopo/data/img/01.06.jpeg",
+            "/home/user/dev/prosopo/data/img/01.07.jpeg",
+            "/home/user/dev/prosopo/data/img/01.08.jpeg",
+            "/home/user/dev/prosopo/data/img/01.09.jpeg"
         ]
     }
 ];
