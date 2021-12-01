@@ -1,13 +1,10 @@
-import {encodeStringAddress, loadJSONFile} from './util'
-import BN from 'bn.js';
+import {encodeStringAddress} from './util'
 import {ERRORS} from './errors'
 // @ts-ignore
 import yargs from 'yargs'
 import {Compact, u128} from '@polkadot/types';
-import {parseCaptchaDataset, hashDataset} from "./captcha";
+import {addDataset} from "./captcha";
 
-
-const {isHex} = require('@polkadot/util');
 
 const validateAddress = (argv) => {
     let address
@@ -28,14 +25,6 @@ const validateValue = (argv) => {
         return {value}
     } else {
         throw new Error(`${ERRORS.CLI.PARAMETER_ERROR.message}::value::${argv.value}`)
-    }
-}
-
-const validateDatasetHash = (argv) => {
-    if (isHex(argv.dataSetHash)) {
-        return argv.dataSetHash
-    } else {
-        throw new Error(`${ERRORS.CLI.PARAMETER_ERROR.message}::dataSetHash::${argv.value}`)
     }
 }
 
@@ -100,10 +89,7 @@ export async function processArgs(args, contractApi, env) {
                     .option('file', {type: 'string', demand: true})
             }, async (argv) => {
                 try {
-                    let dataset = parseCaptchaDataset(loadJSONFile(argv.file));
-                    await env.db.loadDataset(dataset);
-                    let datasetHash = hashDataset(dataset['captchas']);
-                    let result = await contractApi.providerAddDataset(datasetHash);
+                    let result = addDataset(env, contractApi, argv.file)
                     console.log(JSON.stringify(result, null, 2));
                 } catch (err) {
                     console.log(err);

@@ -25,7 +25,7 @@ export class contractApiInterface {
 
             return response.events.filter(x => x["name"] == "ProviderRegister")
         } else {
-            throw(ERRORS.TRANSACTION.TX_ERROR); //TODO get the error information from respons
+            throw(ERRORS.TRANSACTION.TX_ERROR); //TODO get the error information from response
         }
     }
 
@@ -40,7 +40,7 @@ export class contractApiInterface {
         if (response.events) {
             return response.events.filter(x => x["name"] == "ProviderUpdate")
         } else {
-            throw(ERRORS.TRANSACTION.TX_ERROR); //TODO get the error information from respons
+            throw(ERRORS.TRANSACTION.TX_ERROR); //TODO get the error information from response
         }
     }
 
@@ -55,7 +55,7 @@ export class contractApiInterface {
         if (response.events) {
             return response.events.filter(x => x["name"] == "ProviderDeregister")
         } else {
-            throw(ERRORS.TRANSACTION.TX_ERROR); //TODO get the error information from respons
+            throw(ERRORS.TRANSACTION.TX_ERROR); //TODO get the error information from response
         }
     }
 
@@ -68,7 +68,7 @@ export class contractApiInterface {
         if (response.events) {
             return response.events.filter(x => x["name"] == "ProviderStake")
         } else {
-            throw(ERRORS.TRANSACTION.TX_ERROR); //TODO get the error information from respons
+            throw(ERRORS.TRANSACTION.TX_ERROR); //TODO get the error information from response
         }
     }
 
@@ -81,7 +81,7 @@ export class contractApiInterface {
         if (response.events) {
             return response.events.filter(x => x["name"] == "ProviderUnstake")
         } else {
-            throw(ERRORS.TRANSACTION.TX_ERROR); //TODO get the error information from respons
+            throw(ERRORS.TRANSACTION.TX_ERROR); //TODO get the error information from response
         }
     }
 
@@ -91,10 +91,11 @@ export class contractApiInterface {
         const signedContract = this.env.contract!.connect(this.env.providerSigner!)
         const response = await signedContract.tx.providerAddDataset(datasetHash, {"signer": this.env.providerSigner})
         // @ts-ignore
+        console.log(response);
         if (response.events) {
             return response.events.filter(x => x["name"] == "ProviderAddDataset")
         } else {
-            throw(ERRORS.TRANSACTION.TX_ERROR); //TODO get the error information from respons
+            throw(ERRORS.TRANSACTION.TX_ERROR); //TODO get the error information from response
         }
     }
 
@@ -108,7 +109,7 @@ export class contractApiInterface {
         if (response.events) {
             return response.events.filter(x => (x["name"] == "DappRegister" || x["name"] == "DappUpdate"))
         } else {
-            throw(ERRORS.TRANSACTION.TX_ERROR); //TODO get the error information from respons
+            throw(ERRORS.TRANSACTION.TX_ERROR); //TODO get the error information from response
         }
     }
 

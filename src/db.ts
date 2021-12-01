@@ -1,8 +1,13 @@
-import {AnyError, Collection, Db, Document, MongoClient, InsertManyResult} from "mongodb";
+import {
+    Collection,
+    Db,
+    MongoClient,
+} from "mongodb";
 import {Database} from './types'
 import {ERRORS} from './errors'
 import {Captcha, Dataset} from "./types/captcha";
 
+const DEFAULT_ENDPOINT = "mongodb://127.0.0.1:27017"
 
 export class ProsopoDatabase implements Database {
     readonly url: string;
@@ -11,7 +16,7 @@ export class ProsopoDatabase implements Database {
 
 
     constructor(url, dbname) {
-        this.url = url || "mongodb://localhost:27017";
+        this.url = url || DEFAULT_ENDPOINT;
         this.collections = {};
         this.dbname = dbname;
     }
@@ -24,30 +29,67 @@ export class ProsopoDatabase implements Database {
         this.collections.captchas = db.collection("captchas");
     }
 
-    async loadDataset(dataset: Dataset): Promise<AnyError | InsertManyResult<Document>> {
-        return new Promise<AnyError | InsertManyResult>((resolve, reject) => {
-                if (this.collections.captchas !== undefined && this.collections.dataset) {
-                    const datasetDoc = {
-                        datasetId: dataset.datasetId,
-                        format: dataset.format
-                    }
-                    this.collections.dataset.updateOne({datasetId: dataset.datasetId}, {$set:datasetDoc}, {upsert: true})
-                    const captchaDocs = dataset.captchas.map(c => ({...c, datasetId: dataset.datasetId}));
-                    this.collections.captchas.insertMany(captchaDocs, function (err, result) {
-                        if (err) {
-                            reject(err);
-                        }
-                        if (result) {
-                            resolve(result);
-                        }
-                    })
-                } else {
-                    reject(ERRORS.DATABASE.COLLECTION_UNDEFINED);
-                }
+    /**
+     * @description Load a dataset to the database
+     * @param {Dataset}  dataset
+     * @param {string}   hashHexString       hex string representation of the dataset hash
+     */
+    async loadDataset(dataset: Dataset, hashHexString: string): Promise<void> {
+        try {
+            const datasetDoc = {
+                datasetId: dataset.datasetId,
+                format: dataset.format,
+                hash: hashHexString
             }
-        )
+            await this.collections.dataset?.updateOne({datasetId: dataset.datasetId}, {$set: datasetDoc}, {upsert: true})
+            // put the dataset id on each of the captcha docs
+            const captchaDocs = dataset.captchas.map(captcha => ({...captcha, datasetId: dataset.datasetId}));
+
+            // create a bulk upsert operation and execute
+            await this.collections.captchas?.bulkWrite(captchaDocs.map(captchaDoc =>
+                ({updateOne: {filter: {_id: captchaDoc.captchaId}, update: {$set: captchaDoc}, upsert: true}})
+            ))
+
+        } catch (err) {
+            throw(`${ERRORS.DATABASE.DATASET_LOAD_FAILED}:${err}`)
+        }
     }
 
+    /**
+     * @description Get a captcha that is solved or not solved
+     * @param {boolean}  solved    `true` when captcha is solved
+     * @param {string}   datasetId  the id of the data set
+     */
+    async getCaptcha(solved: boolean, datasetId: string): Promise<Captcha | undefined> {
+        try {
+            const doc = await this.collections.captchas?.aggregate([
+                {$match: {datasetId: datasetId}},
+                {$sample: {size: 1}}
+            ])
+            if (doc) {
+                return doc[0] as Captcha
+            }
+        } catch (err) {
+            throw(`${ERRORS.DATABASE.CAPTCHA_GET_FAILED}:${err}`)
+        }
+    }
+
+    /**
+     * @description Update a captcha solution
+     * @param {Captcha}  captcha
+     * @param {string}   datasetId  the id of the data set
+     */
+    async updateCaptcha(captcha: Captcha, datasetId: string): Promise<void> {
+        try {
+            await this.collections.captchas?.updateOne(
+                {datasetId: datasetId},
+                {$set: captcha},
+                {upsert: false}
+            );
+        } catch (err) {
+            throw(`${ERRORS.DATABASE.CAPTCHA_UPDATE_FAILED}:${err}`)
+        }
+    }
 }
 
 

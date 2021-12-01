@@ -16,6 +16,18 @@ export const ERRORS = {
         },
         COLLECTION_UNDEFINED: {
             message: 'Database collection is not available',
+        },
+        DATASET_LOAD_FAILED: {
+            message: 'Data set load failed'
+        },
+        CAPTCHA_GET_FAILED: {
+            message: 'Failed to get captcha'
+        },
+        CAPTCHA_UPDATE_FAILED: {
+            message: 'Failed to update captcha'
+        },
+        NO_CAPTCHAS_FOUND : {
+            message: 'No captcha matching datasetId'
         }
     },
     API: {
