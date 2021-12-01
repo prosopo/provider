@@ -23,7 +23,7 @@ export function prosopoMiddleware(env): Router {
     /**
      * Register a Provider
      *
-     * @return ...
+     * @return JSON result showing ProviderRegister event
      */
     router.post('/v1/prosopo/provider_register/', async function (req, res, next) {
         try {
@@ -35,7 +35,6 @@ export function prosopoMiddleware(env): Router {
             res.json(result);
 
         } catch (err: any) {
-            console.log(err);
             let msg = err.message ? err.message : ERRORS.TRANSACTION.TX_ERROR.message;
             next(new BadRequest(msg));
         }
