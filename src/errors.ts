@@ -3,8 +3,8 @@ export const ERRORS = {
         CANNOT_FIND_CONFIG_FILE: {
             message: 'prosopo.config.js / prosopo.config.ts cannot be found.',
         },
-        CANNOT_LOAD_JSON_SECRETS_FILE: {
-            message: 'cannot load JSON secrets file'
+        JSON_LOAD_FAILED: {
+            message: 'Failed to load JSON file'
         },
         ASSERT_ERROR: {
             message: 'AssertionError'
@@ -16,6 +16,9 @@ export const ERRORS = {
         }
     },
     DATABASE: {
+        DATABASE_IMPORT_FAILED: {
+            message: 'Failed to import database engine',
+        },
         DATABASE_UNDEFINED: {
             message: 'Database client is not connected',
         },
@@ -44,9 +47,15 @@ export const ERRORS = {
         },
 
     },
-    TRANSACTION: {
+    CONTRACT: {
+        INVALID_METHOD: {
+            message: 'Invalid contract method'
+        },
         TX_ERROR: {
             message: 'Error making tx'
+        },
+        INVALID_ADDRESS: {
+            message: 'Failed to encode invalid address'
         }
     },
     CLI: {
@@ -58,7 +67,6 @@ export const ERRORS = {
         PARSE_ERROR: {
             message: 'error parsing dataset'
         }
-
     }
 }
 

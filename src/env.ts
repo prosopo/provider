@@ -5,13 +5,12 @@ import {ERRORS} from './errors'
 // @ts-ignore
 import {network, patract} from 'redspot';
 import {Network} from "redspot/types"
-import {AccountSigner, Signer} from 'redspot/provider'
+import {Signer} from 'redspot/provider'
 import Contract from "@redspot/patract/contract"
 import {strict as assert} from 'assert';
 
 const TS_CONFIG_FILENAME = "prosopo.config.ts"
 const JS_CONFIG_FILENAME = "prosopo.config.js"
-const PERSONS = ["dapp", "provider"];
 
 export class Environment implements ProsopoEnvironment {
     config: ProsopoConfig
@@ -25,6 +24,7 @@ export class Environment implements ProsopoEnvironment {
     contractAddress: string
     providerAddress: string
     defaultEnvironment: string
+
 
     constructor() {
         this.config = Environment.getConfig();
@@ -50,14 +50,17 @@ export class Environment implements ProsopoEnvironment {
     }
 
     async importDatabase() {
-        let {ProsopoDatabase} = await import(`./db/${this.config.database[this.defaultEnvironment].type}`);
-        this.db = new ProsopoDatabase(this.config.database[this.defaultEnvironment].endpoint,
-            this.config.database[this.defaultEnvironment].dbname)
+        try {
+            let {ProsopoDatabase} = await import(`./db/${this.config.database[this.defaultEnvironment].type}`);
+            this.db = new ProsopoDatabase(this.config.database[this.defaultEnvironment].endpoint,
+                this.config.database[this.defaultEnvironment].dbname)
+        } catch (err) {
+            throw new Error(`${ERRORS.DATABASE.DATABASE_IMPORT_FAILED.message}:${this.config.database[this.defaultEnvironment].type}`);
+        }
     }
 
     async getContract() {
         await this.network.api.isReadyOrError;
-        let network = this.network;
         const contractFactory = await patract.getContractFactory("prosopo", this.providerAddress);
         this.contract = await contractFactory.attach(this.contractAddress);
     }

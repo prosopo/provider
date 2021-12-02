@@ -1,14 +1,5 @@
 import express, {Router} from 'express';
-import {prosopoContractApi} from './contract'
-import {
-    providerRegister,
-    providerUpdate,
-    providerStake,
-    providerUnstake,
-    providerDeregister,
-    providerAddDataset,
-    dappRegister
-} from './tasks/tasks'
+import {Tasks} from './tasks/tasks'
 import {BadRequest, ERRORS} from './errors'
 
 /**
@@ -19,7 +10,7 @@ import {BadRequest, ERRORS} from './errors'
  */
 export function prosopoMiddleware(env): Router {
     const router = express.Router();
-    const contractApi = new prosopoContractApi(env);
+    const tasks = new Tasks(env);
     /**
      * Register a Provider
      *
@@ -31,11 +22,11 @@ export function prosopoMiddleware(env): Router {
             if (!serviceOrigin || !fee || !payee || !address) {
                 throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
             }
-            let result = await providerRegister(serviceOrigin, fee, payee, address)
+            let result = await tasks.providerRegister(serviceOrigin, fee, payee, address)
             res.json(result);
 
         } catch (err: any) {
-            let msg = err.message ? err.message : ERRORS.TRANSACTION.TX_ERROR.message;
+            let msg = err.message ? err.message : ERRORS.CONTRACT.TX_ERROR.message;
             next(new BadRequest(msg));
         }
 
@@ -52,10 +43,10 @@ export function prosopoMiddleware(env): Router {
             if (!serviceOrigin || !fee || !payee || !address) {
                 throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
             }
-            const result = await providerUpdate(serviceOrigin, fee, payee, address);
+            const result = await tasks.providerUpdate(serviceOrigin, fee, payee, address);
             res.json(result);
         } catch (err: any) {
-            let msg = err.message ? err.message : ERRORS.TRANSACTION.TX_ERROR.message;
+            let msg = err.message ? err.message : ERRORS.CONTRACT.TX_ERROR.message;
             next(new BadRequest(msg));
         }
     });
@@ -71,10 +62,10 @@ export function prosopoMiddleware(env): Router {
             if (!address) {
                 throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
             }
-            const result = await providerDeregister(address)
+            const result = await tasks.providerDeregister(address)
             res.json(result);
         } catch (err: any) {
-            let msg = err.message ? err.message : ERRORS.TRANSACTION.TX_ERROR.message;
+            let msg = err.message ? err.message : ERRORS.CONTRACT.TX_ERROR.message;
             next(new BadRequest(msg));
         }
     });
@@ -90,10 +81,10 @@ export function prosopoMiddleware(env): Router {
             if (!value) {
                 throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
             }
-            const result = providerStake(value);
+            const result = tasks.providerStake(value);
             res.json(result);
         } catch (err: any) {
-            let msg = err.message ? err.message : ERRORS.TRANSACTION.TX_ERROR.message;
+            let msg = err.message ? err.message : ERRORS.CONTRACT.TX_ERROR.message;
             next(new BadRequest(msg));
         }
     });
@@ -109,10 +100,10 @@ export function prosopoMiddleware(env): Router {
             if (!value) {
                 throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
             }
-            const result = await providerUnstake(value);
+            const result = await tasks.providerUnstake(value);
             res.json(result);
         } catch (err: any) {
-            let msg = err.message ? err.message : ERRORS.TRANSACTION.TX_ERROR.message;
+            let msg = err.message ? err.message : ERRORS.CONTRACT.TX_ERROR.message;
             next(new BadRequest(msg));
         }
     });
@@ -128,10 +119,10 @@ export function prosopoMiddleware(env): Router {
             if (!file) {
                 throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
             }
-            let result = await providerAddDataset(env, contractApi, file);
+            let result = await tasks.providerAddDataset(file);
             res.json(result);
         } catch (err: any) {
-            let msg = err.message ? err.message : ERRORS.TRANSACTION.TX_ERROR.message;
+            let msg = err.message ? err.message : ERRORS.CONTRACT.TX_ERROR.message;
             next(new BadRequest(msg));
         }
     });
@@ -147,10 +138,10 @@ export function prosopoMiddleware(env): Router {
             if (!address || !dappServiceOrigin || !dappContractAddress) {
                 throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
             }
-            const result = await dappRegister(dappServiceOrigin, dappContractAddress, dappOwner)
+            const result = await tasks.dappRegister(dappServiceOrigin, dappContractAddress, dappOwner)
             res.json(result);
         } catch (err: any) {
-            let msg = err.message ? err.message : ERRORS.TRANSACTION.TX_ERROR.message;
+            let msg = err.message ? err.message : ERRORS.CONTRACT.TX_ERROR.message;
             next(new BadRequest(msg));
         }
     });
