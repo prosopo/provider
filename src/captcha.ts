@@ -9,9 +9,14 @@ function hash(data: string): Uint8Array {
 }
 
 export function hashDataset(captchas: Captcha[]): Uint8Array {
-    // each captcha is a leaf in a very wide merkle tree
-    const hashes = captchas.map(captcha => hash(captcha['id'] + captcha['solution'] + captcha['salt']));
-    return hash(u8aConcat(hashes))
+    try {
+        // each captcha is a leaf in a very wide merkle tree
+        const hashes = captchas.map(captcha => hash(captcha['id'] + captcha['solution'] + captcha['salt']));
+        return hash(u8aConcat(hashes))
+    } catch (err) {
+        throw(`${ERRORS.DATASET.HASH_ERROR.message}:\n${err}`);
+    }
+
 }
 
 
@@ -19,7 +24,7 @@ export function parseCaptchaDataset(captchaJSON: JSON): Dataset {
     try {
         return DatasetSchema.parse(captchaJSON)
     } catch (err) {
-        throw(`${ERRORS.DATASET.PARSE_ERROR}:\n${err}`);
+        throw(`${ERRORS.DATASET.PARSE_ERROR.message}:\n${err}`);
     }
 }
 

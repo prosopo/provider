@@ -66,6 +66,9 @@ export const ERRORS = {
     DATASET: {
         PARSE_ERROR: {
             message: 'error parsing dataset'
+        },
+        HASH_ERROR: {
+            message: 'error hashing dataset'
         }
     }
 }
