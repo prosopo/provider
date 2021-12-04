@@ -1,7 +1,7 @@
 import {z} from "zod";
 
 export type Dataset = {
-    datasetId: string,
+    datasetId?: string,
     captchas: Captcha[],
     format: CaptchaTypes
 }
@@ -33,7 +33,7 @@ export const SelectAllCaptchaSchema = CaptchaSchema.extend({
 )
 
 export const DatasetSchema = z.object({
-    datasetId: z.string(),
+    datasetId: z.string().optional(),
     captchas: z.array(SelectAllCaptchaSchema),
     format: z.nativeEnum(CaptchaTypes)
 })

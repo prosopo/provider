@@ -8,7 +8,7 @@ export interface Database {
 
     connect(): Promise<void>;
 
-    loadDataset(dataset: Dataset, hash: string): Promise<void>;
+    loadDataset(dataset: Dataset): Promise<void>;
 
     getCaptcha(solved: boolean, datasetId: string): Promise<Captcha | undefined>;
 

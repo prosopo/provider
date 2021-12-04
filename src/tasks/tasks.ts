@@ -44,8 +44,9 @@ export class Tasks {
     async providerAddDataset(file: string): Promise<Object> {
         let dataset = parseCaptchaDataset(loadJSONFile(file));
         let datasetWithHashes = await addHashesToDataset(dataset);
-        const datasetHash = hashDataset(datasetWithHashes)
-        await this.db?.loadDataset(dataset, u8aToHex(datasetHash));
+        const datasetHash = hashDataset(datasetWithHashes);
+        dataset['datasetId'] = u8aToHex(datasetHash);
+        await this.db?.loadDataset(dataset);
         return await this.contractApi.contractTx('providerAddDataset', [datasetHash])
     }
 

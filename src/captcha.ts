@@ -3,7 +3,6 @@ import {ERRORS} from './errors'
 import path from "path";
 import {readFile} from "./util";
 
-const {u8aConcat} = require('@polkadot/util');
 const {blake2AsU8a, blake2AsHex} = require('@polkadot/util-crypto');
 
 function hash(data: string | Uint8Array): Uint8Array {
@@ -31,7 +30,6 @@ export async function addHashesToCaptchas(captchas: Captcha[]): Promise<Captcha[
         //TODO what about target? Salt should avoid collisions but...
         captcha['captchaId'] = hexHash([captcha['solution'], captcha['salt'], itemHashes].join());
     }
-    console.log(captchas);
     return captchas
 }
 

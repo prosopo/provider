@@ -1,10 +1,6 @@
 import {expect} from "chai";
 import {addHashesToCaptchas} from '../src/captcha'
 import {Captcha} from "../src/types/captcha";
-import {ERRORS} from "../src/errors";
-
-const {u8aToHex} = require('@polkadot/util');
-
 
 const captchaData = [
     {
@@ -12,30 +8,31 @@ const captchaData = [
         "salt": "0x01",
         "target": "bus",
         "items": [
-            "/home/user/dev/prosopo/data/img/01.01.jpeg",
-            "/home/user/dev/prosopo/data/img/01.02.jpeg",
-            "/home/user/dev/prosopo/data/img/01.03.jpeg",
-            "/home/user/dev/prosopo/data/img/01.04.jpeg",
-            "/home/user/dev/prosopo/data/img/01.05.jpeg",
-            "/home/user/dev/prosopo/data/img/01.06.jpeg",
-            "/home/user/dev/prosopo/data/img/01.07.jpeg",
-            "/home/user/dev/prosopo/data/img/01.08.jpeg",
-            "/home/user/dev/prosopo/data/img/01.09.jpeg"
+            {"type": "text", "text": "blah"},
+            {"type": "text", "text": "blah"},
+            {"type": "text", "text": "blah"},
+            {"type": "text", "text": "blah"},
+            {"type": "text", "text": "blah"},
+            {"type": "text", "text": "blah"},
+            {"type": "text", "text": "blah"},
+            {"type": "text", "text": "blah"},
+            {"type": "text", "text": "blah"},
+
         ]
     },
     {
-        "salt": "0x01",
+        "salt": "0x02",
         "target": "train",
         "items": [
-            "/home/user/dev/prosopo/data/img/01.01.jpeg",
-            "/home/user/dev/prosopo/data/img/01.02.jpeg",
-            "/home/user/dev/prosopo/data/img/01.03.jpeg",
-            "/home/user/dev/prosopo/data/img/01.04.jpeg",
-            "/home/user/dev/prosopo/data/img/01.05.jpeg",
-            "/home/user/dev/prosopo/data/img/01.06.jpeg",
-            "/home/user/dev/prosopo/data/img/01.07.jpeg",
-            "/home/user/dev/prosopo/data/img/01.08.jpeg",
-            "/home/user/dev/prosopo/data/img/01.09.jpeg"
+            {"type": "text", "text": "blah"},
+            {"type": "text", "text": "blah"},
+            {"type": "text", "text": "blah"},
+            {"type": "text", "text": "blah"},
+            {"type": "text", "text": "blah"},
+            {"type": "text", "text": "blah"},
+            {"type": "text", "text": "blah"},
+            {"type": "text", "text": "blah"},
+            {"type": "text", "text": "blah"},
         ]
     }
 ];
@@ -47,14 +44,13 @@ describe("PROVIDER", () => {
     });
 
     it("Captcha data set is hashed correctly", async () => {
-        const datasetHash =
-            addHashesToCaptchas(captchaData as Captcha[]);
-        //todo manually check this is the correct value
-        expect(u8aToHex(datasetHash)).equal("0x9ee6dfb61a2fb903df487c401663825643bb825d41695e63df8af6162ab145a6");
+        const captchas = await addHashesToCaptchas(captchaData as Captcha[]);
+        expect(captchas[0]['captchaId']).equal("0x361faabdd0dcf4d3d2b95d439307bd3ae100c26cffa3043a39f40248e989a98c");
+        expect(captchas[1]['captchaId']).equal("0x8b68a08350fd3caecd03b5813274c37ac64d3b224157db359340ed323a4f8da9");
     });
 
-    it("Empty data set fails", async () => {
-        expect(() => addHashesToCaptchas({} as Captcha[])).to.throw(ERRORS.DATASET.HASH_ERROR.message);
+    it("Empty captchas returns empty", async () => {
+        expect(await addHashesToCaptchas([])).is.empty;
     })
 
 })

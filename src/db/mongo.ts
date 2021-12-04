@@ -41,18 +41,15 @@ export class ProsopoDatabase implements Database {
     /**
      * @description Load a dataset to the database
      * @param {Dataset}  dataset
-     * @param {string}   hashHexString       hex string representation of the dataset hash
      */
-    async loadDataset(dataset: Dataset, hashHexString: string): Promise<void> {
+    async loadDataset(dataset: Dataset): Promise<void> {
         const datasetDoc = {
             datasetId: dataset.datasetId,
             format: dataset.format,
-            hash: hashHexString
         }
-        await this.tables.dataset?.updateOne({datasetId: dataset.datasetId}, {$set: datasetDoc}, {upsert: true})
+        await this.tables.dataset?.updateOne({_id: dataset.datasetId}, {$set: datasetDoc}, {upsert: true})
         // put the dataset id on each of the captcha docs
         const captchaDocs = dataset.captchas.map(captcha => ({...captcha, datasetId: dataset.datasetId}));
-
 
         // create a bulk upsert operation and execute
         await this.tables.captchas?.bulkWrite(captchaDocs.map(captchaDoc =>
