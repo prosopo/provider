@@ -17,7 +17,7 @@ export function encodeStringAddress(address: string) {
     } catch (error) {
         throw new Error(`${ERRORS.CONTRACT.INVALID_ADDRESS}:${error}\n${address}`);
     }
-};
+}
 
 export function loadJSONFile(filePath) {
     try {
@@ -25,4 +25,22 @@ export function loadJSONFile(filePath) {
     } catch (err) {
         throw new Error(`${ERRORS.GENERAL.JSON_LOAD_FAILED}:${err}`);
     }
+}
+
+async function exists(path) {
+    try {
+        await fs.access(path)
+        return true
+    } catch {
+        return false
+    }
+}
+
+export async function readFile(filePath): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+        fs.readFile(filePath, (err, data) => {
+            if (err) reject(err);
+            resolve(data);
+        })
+    });
 }

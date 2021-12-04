@@ -1,10 +1,12 @@
 //Tasks that are shared by the API and CLI. Tasks will be database only, blockchain only, and a mixture
 import {loadJSONFile} from "../util";
-import {hashDataset, parseCaptchaDataset} from "../captcha";
+import {addHashesToDataset, hashDataset, parseCaptchaDataset} from "../captcha";
 import {u8aToHex} from "@polkadot/util";
 import {contractApiInterface} from "../types/contract";
 import {prosopoContractApi} from "../contract";
 import {Database} from "../types";
+import {Captcha} from "../types/captcha";
+import {ERRORS} from "../errors";
 
 export class Tasks {
 
@@ -15,6 +17,8 @@ export class Tasks {
         this.contractApi = new prosopoContractApi(env);
         this.db = env.db
     }
+
+    // Contract tasks
 
     // TODO These functions could all be constructed automatically from the contract ABI
     async providerRegister(serviceOrigin: string, fee: number, payee: string, address: string): Promise<Object> {
@@ -39,7 +43,8 @@ export class Tasks {
 
     async providerAddDataset(file: string): Promise<Object> {
         let dataset = parseCaptchaDataset(loadJSONFile(file));
-        let datasetHash = hashDataset(dataset['captchas']);
+        let datasetWithHashes = await addHashesToDataset(dataset);
+        const datasetHash = hashDataset(datasetWithHashes)
         await this.db?.loadDataset(dataset, u8aToHex(datasetHash));
         return await this.contractApi.contractTx('providerAddDataset', [datasetHash])
     }
@@ -87,6 +92,24 @@ export class Tasks {
     //captcha_solution_commitment
     async captchaSolutionCommitment() {
     }
+
+    // Other tasks
+
+    async getSolvedAndUnsolvedCaptcha(datasetId): Promise<Captcha[]> {
+        console.log(`Dataset: ${datasetId}`);
+        const unsolved = await this.db.getCaptcha(false, datasetId);
+        const solved = await this.db.getCaptcha(true, datasetId);
+
+        console.log(unsolved, solved);
+        if (solved && unsolved) {
+            delete solved.solution;
+            return [solved, unsolved];
+        } else {
+            throw Error(ERRORS.DATABASE.CAPTCHA_GET_FAILED.message);
+        }
+    }
+
+
 }
 
 // async getProviderAccounts() {

@@ -1,4 +1,4 @@
-import {hashDataset} from "../src/captcha";
+import {addHashesToCaptchas, addHashesToDataset} from "../src/captcha";
 import {Captcha} from "../src/types/captcha";
 
 const captchaData = [
@@ -44,5 +44,5 @@ const captchaData = [
 
 console.log(captchaData);
 const dataSetHash =
-    hashDataset(captchaData as Captcha[]);
+    addHashesToCaptchas(captchaData as Captcha[]);
 console.log(dataSetHash);

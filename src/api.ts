@@ -26,7 +26,7 @@ export function prosopoMiddleware(env): Router {
             res.json(result);
 
         } catch (err: any) {
-            let msg = err.message ? err.message : ERRORS.CONTRACT.TX_ERROR.message;
+            let msg = `${ERRORS.CONTRACT.TX_ERROR.message}:${err}`;
             next(new BadRequest(msg));
         }
 
@@ -46,7 +46,7 @@ export function prosopoMiddleware(env): Router {
             const result = await tasks.providerUpdate(serviceOrigin, fee, payee, address);
             res.json(result);
         } catch (err: any) {
-            let msg = err.message ? err.message : ERRORS.CONTRACT.TX_ERROR.message;
+            let msg = `${ERRORS.CONTRACT.TX_ERROR.message}:${err}`;
             next(new BadRequest(msg));
         }
     });
@@ -65,7 +65,7 @@ export function prosopoMiddleware(env): Router {
             const result = await tasks.providerDeregister(address)
             res.json(result);
         } catch (err: any) {
-            let msg = err.message ? err.message : ERRORS.CONTRACT.TX_ERROR.message;
+            let msg = `${ERRORS.CONTRACT.TX_ERROR.message}:${err}`;
             next(new BadRequest(msg));
         }
     });
@@ -84,7 +84,7 @@ export function prosopoMiddleware(env): Router {
             const result = tasks.providerStake(value);
             res.json(result);
         } catch (err: any) {
-            let msg = err.message ? err.message : ERRORS.CONTRACT.TX_ERROR.message;
+            let msg = `${ERRORS.CONTRACT.TX_ERROR.message}:${err}`;
             next(new BadRequest(msg));
         }
     });
@@ -103,7 +103,7 @@ export function prosopoMiddleware(env): Router {
             const result = await tasks.providerUnstake(value);
             res.json(result);
         } catch (err: any) {
-            let msg = err.message ? err.message : ERRORS.CONTRACT.TX_ERROR.message;
+            let msg = `${ERRORS.CONTRACT.TX_ERROR.message}:${err}`;
             next(new BadRequest(msg));
         }
     });
@@ -122,7 +122,7 @@ export function prosopoMiddleware(env): Router {
             let result = await tasks.providerAddDataset(file);
             res.json(result);
         } catch (err: any) {
-            let msg = err.message ? err.message : ERRORS.CONTRACT.TX_ERROR.message;
+            let msg = `${ERRORS.CONTRACT.TX_ERROR.message}:${err}`;
             next(new BadRequest(msg));
         }
     });
@@ -141,7 +141,7 @@ export function prosopoMiddleware(env): Router {
             const result = await tasks.dappRegister(dappServiceOrigin, dappContractAddress, dappOwner)
             res.json(result);
         } catch (err: any) {
-            let msg = err.message ? err.message : ERRORS.CONTRACT.TX_ERROR.message;
+            let msg = `${ERRORS.CONTRACT.TX_ERROR.message}:${err}`;
             next(new BadRequest(msg));
         }
     });
@@ -340,10 +340,18 @@ export function prosopoMiddleware(env): Router {
      * @param {string} dappId - Dapp Contract AccountId
      * @return {Captcha} - The Captcha data
      */
-    router.get('/v1/prosopo/provider/captcha', function (req, res, next) {
-        // query database for captcha
-        // send one solved, one unsolved
-        next();
+    router.get('/v1/prosopo/provider/captcha/:datasetId', async function (req, res, next) {
+        try {
+            const {datasetId} = req.params;
+            if (!datasetId) {
+                throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
+            }
+            let result = await tasks.getSolvedAndUnsolvedCaptcha(datasetId);
+            res.json(result);
+        } catch (err: any) {
+            let msg = `${ERRORS.CONTRACT.TX_ERROR.message}:${err}`;
+            next(new BadRequest(msg));
+        }
     });
 
     /**
