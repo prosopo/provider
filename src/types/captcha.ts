@@ -1,9 +1,11 @@
 import {z} from "zod";
+import {MerkleNodeSchema} from './merkle'
 
 export type Dataset = {
     datasetId?: string,
     captchas: Captcha[],
-    format: CaptchaTypes
+    format: CaptchaTypes,
+    tree?: string[][]
 }
 
 export type Captcha = {
@@ -11,6 +13,8 @@ export type Captcha = {
     salt: string,
     solution?: any
 }
+
+
 
 export enum CaptchaTypes { SelectAll = "SelectAll"}
 
@@ -35,7 +39,8 @@ export const SelectAllCaptchaSchema = CaptchaSchema.extend({
 export const DatasetSchema = z.object({
     datasetId: z.string().optional(),
     captchas: z.array(SelectAllCaptchaSchema),
-    format: z.nativeEnum(CaptchaTypes)
+    format: z.nativeEnum(CaptchaTypes),
+    tree: z.array(z.array(z.string())).optional()
 })
 
 

@@ -1,7 +1,7 @@
 import {
     Collection,
     Db,
-    MongoClient,
+    MongoClient, WithId,
 } from "mongodb";
 import {Database} from '../types'
 import {ERRORS} from '../errors'
@@ -46,10 +46,16 @@ export class ProsopoDatabase implements Database {
         const datasetDoc = {
             datasetId: dataset.datasetId,
             format: dataset.format,
+            tree: dataset.tree
         }
         await this.tables.dataset?.updateOne({_id: dataset.datasetId}, {$set: datasetDoc}, {upsert: true})
         // put the dataset id on each of the captcha docs
-        const captchaDocs = dataset.captchas.map(captcha => ({...captcha, datasetId: dataset.datasetId}));
+        const captchaDocs = dataset.captchas.map((captcha, index) => ({
+            ...captcha,
+            datasetId: dataset.datasetId,
+            index: index
+        }));
+        console.log(captchaDocs);
 
         // create a bulk upsert operation and execute
         await this.tables.captchas?.bulkWrite(captchaDocs.map(captchaDoc =>
@@ -61,15 +67,18 @@ export class ProsopoDatabase implements Database {
      * @description Get a captcha that is solved or not solved
      * @param {boolean}  solved    `true` when captcha is solved
      * @param {string}   datasetId  the id of the data set
+     * @param {number}   size       the number of records to be returned
      */
-    async getCaptcha(solved: boolean, datasetId: string): Promise<Captcha | undefined> {
+    async getCaptcha(solved: boolean, datasetId: string, size?: number): Promise<Captcha[] | undefined> {
+        const sampleSize = size ? Math.abs(Math.trunc(size)) : 1;
         const cursor = this.tables.captchas?.aggregate([
             {$match: {datasetId: datasetId, solution: {$exists: solved}}},
-            {$sample: {size: 1}}
+            {$sample: {size: sampleSize}}
         ])
         const docs = await cursor?.toArray();
         if (docs) {
-            return docs[0] as Captcha;
+            // drop the _id field
+            return docs.map(({_id, ...keepAttrs}) => keepAttrs) as Captcha[];
         } else {
             throw(ERRORS.DATABASE.CAPTCHA_GET_FAILED.message)
         }
@@ -88,6 +97,20 @@ export class ProsopoDatabase implements Database {
         )
 
     }
+
+
+    /**
+     * @description Get a captcha that is solved or not solved
+     */
+    async getDatasetDetails(datasetId: string) {
+        const doc = await this.tables.dataset?.findOne({datasetId: datasetId});
+        if (doc) {
+            return doc
+        } else {
+            throw(ERRORS.DATABASE.DATASET_GET_FAILED.message)
+        }
+    }
+
 }
 
 

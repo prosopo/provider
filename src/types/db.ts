@@ -1,4 +1,4 @@
-import {Collection} from "mongodb";
+import {Collection, WithId} from "mongodb";
 import {Captcha, Dataset} from "./captcha";
 
 export interface Database {
@@ -10,10 +10,11 @@ export interface Database {
 
     loadDataset(dataset: Dataset): Promise<void>;
 
-    getCaptcha(solved: boolean, datasetId: string): Promise<Captcha | undefined>;
+    getCaptcha(solved: boolean, datasetId: string, size?: number): Promise<Captcha[] | undefined>;
 
     updateCaptcha(captcha: Captcha, datasetId: string): Promise<void>;
 
+    getDatasetDetails(datasetId: string);
 }
 
 // Other table types from other database engines go here

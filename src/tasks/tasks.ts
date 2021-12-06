@@ -1,12 +1,14 @@
 //Tasks that are shared by the API and CLI. Tasks will be database only, blockchain only, and a mixture
 import {loadJSONFile} from "../util";
-import {addHashesToDataset, hashDataset, parseCaptchaDataset} from "../captcha";
-import {u8aToHex} from "@polkadot/util";
+import {addHashesToDataset, parseCaptchaDataset} from "../captcha";
+import {hexToU8a} from "@polkadot/util";
 import {contractApiInterface} from "../types/contract";
 import {prosopoContractApi} from "../contract";
 import {Database} from "../types";
 import {Captcha} from "../types/captcha";
 import {ERRORS} from "../errors";
+import {CaptchaMerkleTree} from "../merkle";
+import {CaptchaResponse, CaptchaWithProof} from "../types/api";
 
 export class Tasks {
 
@@ -43,11 +45,14 @@ export class Tasks {
 
     async providerAddDataset(file: string): Promise<Object> {
         let dataset = parseCaptchaDataset(loadJSONFile(file));
-        let datasetWithHashes = await addHashesToDataset(dataset);
-        const datasetHash = hashDataset(datasetWithHashes);
-        dataset['datasetId'] = u8aToHex(datasetHash);
-        await this.db?.loadDataset(dataset);
-        return await this.contractApi.contractTx('providerAddDataset', [datasetHash])
+        let tree = new CaptchaMerkleTree();
+        await tree.build(dataset['captchas']);
+        let dataset_hashes = addHashesToDataset(dataset, tree);
+        dataset_hashes['datasetId'] = tree.root?.hash;
+        dataset_hashes['tree'] = tree.layers;
+        console.log(dataset_hashes);
+        await this.db?.loadDataset(dataset_hashes);
+        return await this.contractApi.contractTx('providerAddDataset', [hexToU8a(tree.root?.hash)])
     }
 
     async dappRegister(dappServiceOrigin: string, dappContractAddress: string, dappOwner?: string | undefined): Promise<Object> {
@@ -96,21 +101,27 @@ export class Tasks {
 
     // Other tasks
 
-    async getSolvedAndUnsolvedCaptcha(datasetId): Promise<Captcha[]> {
-        console.log(`Dataset: ${datasetId}`);
-        const unsolved = await this.db.getCaptcha(false, datasetId);
-        const solved = await this.db.getCaptcha(true, datasetId);
+    async getSolvedAndUnsolvedCaptcha(datasetId): Promise<CaptchaWithProof[]> {
+        const unsolved = await this.db.getCaptcha(false, datasetId, 1);
+        const solved = await this.db.getCaptcha(true, datasetId, 1);
 
-        console.log(unsolved, solved);
         if (solved && unsolved) {
-            delete solved.solution;
-            return [solved, unsolved];
+            const datasetDetails = await this.db.getDatasetDetails(datasetId)
+            const tree = new CaptchaMerkleTree();
+            tree.layers = datasetDetails['tree'];
+            let unsolved_proof = tree.proof(unsolved['captchaId'])
+            let solved_proof = tree.proof(solved['captchaId'])
+
+            // cannot pass solution to dapp user
+            delete solved[0].solution;
+            return [
+                {'captcha': solved[0], 'proof': solved_proof},
+                {'captcha': unsolved[0], 'proof': unsolved_proof}
+            ];
         } else {
             throw Error(ERRORS.DATABASE.CAPTCHA_GET_FAILED.message);
         }
     }
-
-
 }
 
 // async getProviderAccounts() {

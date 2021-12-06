@@ -28,6 +28,9 @@ export const ERRORS = {
         DATASET_LOAD_FAILED: {
             message: 'Data set load failed'
         },
+        DATASET_GET_FAILED: {
+            message: 'Failed to get dataset'
+        },
         CAPTCHA_GET_FAILED: {
             message: 'Failed to get captcha'
         },

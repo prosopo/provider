@@ -15,7 +15,7 @@ export function encodeStringAddress(address: string) {
                 : decodeAddress(address)
         );
     } catch (error) {
-        throw new Error(`${ERRORS.CONTRACT.INVALID_ADDRESS}:${error}\n${address}`);
+        throw (`${ERRORS.CONTRACT.INVALID_ADDRESS.message}:${error}\n${address}`);
     }
 }
 
@@ -23,7 +23,7 @@ export function loadJSONFile(filePath) {
     try {
         return JSON.parse(fs.readFileSync(filePath));
     } catch (err) {
-        throw new Error(`${ERRORS.GENERAL.JSON_LOAD_FAILED}:${err}`);
+        throw (`${ERRORS.GENERAL.JSON_LOAD_FAILED.message}:${err}`);
     }
 }
 
