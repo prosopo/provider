@@ -55,7 +55,6 @@ export class ProsopoDatabase implements Database {
             datasetId: dataset.datasetId,
             index: index
         }));
-        console.log(captchaDocs);
 
         // create a bulk upsert operation and execute
         await this.tables.captchas?.bulkWrite(captchaDocs.map(captchaDoc =>
