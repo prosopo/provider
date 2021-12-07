@@ -44,3 +44,11 @@ export async function readFile(filePath): Promise<Buffer> {
         })
     });
 }
+
+export function shuffleArray(array) {
+    for (let arrayIndex = array.length - 1; arrayIndex > 0; arrayIndex--) {
+        const randIndex = Math.floor(Math.random() * (arrayIndex + 1));
+        [array[arrayIndex], array[randIndex]] = [array[randIndex], array[arrayIndex]];
+    }
+    return array
+}

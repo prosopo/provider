@@ -1,6 +1,7 @@
 import express, {Router} from 'express';
 import {Tasks} from './tasks/tasks'
 import {BadRequest, ERRORS} from './errors'
+import {shuffleArray} from "./util";
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -349,7 +350,7 @@ export function prosopoMiddleware(env): Router {
             //return one solved and one unsolved
             const solved = await tasks.getCaptchaWithProof(datasetId, true, 1)
             const unsolved = await tasks.getCaptchaWithProof(datasetId, false, 1)
-            let result = [solved[0], unsolved[0]];
+            let result = shuffleArray([solved[0], unsolved[0]]);
             res.json(result);
         } catch (err: any) {
             let msg = `${ERRORS.CONTRACT.TX_ERROR.message}:${err}`;
