@@ -1,4 +1,4 @@
-import {expect, should} from 'chai';
+import {expect} from 'chai';
 import {Tasks} from '../../src/tasks/tasks'
 import {MockEnvironment} from "../mocks/mockenv";
 
@@ -11,8 +11,7 @@ describe("PROVIDER TASKS", () => {
     async function setup() {
         const mockEnv = new MockEnvironment()
         await mockEnv.isReady();
-        const tasks = new Tasks(mockEnv);
-        return tasks
+        return new Tasks(mockEnv)
     }
 
 
@@ -82,7 +81,6 @@ describe("PROVIDER TASKS", () => {
                         ],
                         [
                             "0x0282715bd2de51935c8ed3bf101ad150861d91b2af0e6c50281740a0c072650a",
-                            undefined
                         ]
                     ]
                 },

@@ -84,12 +84,21 @@ export class CaptchaMerkleTree {
             // if layer 0 leaf index is 3, it should be partnered with 2: [L0,L1],[L2,L3],[L3,L4],...
             // layer one pairs looks like [L0L1, L2L3], [L3L4, L5L6],...etc
             const partnerIndex = (leafIndex % 2 && leafIndex > 0) ? leafIndex - 1 : leafIndex + 1;
+            let pair = [leafHash];
             let layer = this.layers[layerNum];
-            let pair = (partnerIndex > leafIndex) ? [leafHash, layer[partnerIndex]] : [layer[partnerIndex], leafHash];
+            if (partnerIndex < layer.length) {
+                // determine whether the leaf sits on the left or the right of its partner
+                if (partnerIndex > leafIndex) {
+                    pair.push(layer[partnerIndex])
+                } else {
+                    pair.unshift(layer[partnerIndex]);
+                }
+            }
             proofTree.push(pair);
             layerNum += 1;
             leafHash = hexHash(pair.join())
         }
+
         return proofTree;
 
     }
