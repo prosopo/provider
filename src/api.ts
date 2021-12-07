@@ -346,7 +346,10 @@ export function prosopoMiddleware(env): Router {
             if (!datasetId) {
                 throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
             }
-            let result = await tasks.getSolvedAndUnsolvedCaptcha(datasetId);
+            //return one solved and one unsolved
+            const solved = await tasks.getCaptchaWithProof(datasetId, true, 1)
+            const unsolved = await tasks.getCaptchaWithProof(datasetId, false, 1)
+            let result = [solved[0], unsolved[0]];
             res.json(result);
         } catch (err: any) {
             let msg = `${ERRORS.CONTRACT.TX_ERROR.message}:${err}`;

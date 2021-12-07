@@ -5,10 +5,9 @@ import {hexToU8a} from "@polkadot/util";
 import {contractApiInterface} from "../types/contract";
 import {prosopoContractApi} from "../contract";
 import {Database} from "../types";
-import {Captcha} from "../types/captcha";
 import {ERRORS} from "../errors";
 import {CaptchaMerkleTree} from "../merkle";
-import {CaptchaResponse, CaptchaWithProof} from "../types/api";
+import {CaptchaWithProof} from "../types/api";
 
 export class Tasks {
 
@@ -101,23 +100,32 @@ export class Tasks {
 
     // Other tasks
 
-    async getSolvedAndUnsolvedCaptcha(datasetId): Promise<CaptchaWithProof[]> {
-        const unsolved = await this.db.getCaptcha(false, datasetId, 1);
-        const solved = await this.db.getCaptcha(true, datasetId, 1);
+    /**
+     * @description Get captchas that are solved or not solved, along with the merkle proof for each
+     * @param {string}   datasetId  the id of the data set
+     * @param {boolean}  solved    `true` when captcha is solved
+     * @param {number}   size       the number of records to be returned
+     */
+    async getCaptchaWithProof(datasetId: string, solved: boolean, size: number): Promise<CaptchaWithProof[]> {
 
-        if (solved && unsolved) {
-            const datasetDetails = await this.db.getDatasetDetails(datasetId)
-            const tree = new CaptchaMerkleTree();
-            tree.layers = datasetDetails['tree'];
-            let unsolved_proof = tree.proof(unsolved['captchaId'])
-            let solved_proof = tree.proof(solved['captchaId'])
+        // TODO check that dataset is attached to a Provider before responding ???!!!
+        //  Otherwise Providers could store any random data and have Dapp Users request it. Is there any advantage to
+        //  this?
 
-            // cannot pass solution to dapp user
-            delete solved[0].solution;
-            return [
-                {'captcha': solved[0], 'proof': solved_proof},
-                {'captcha': unsolved[0], 'proof': unsolved_proof}
-            ];
+        const captchaDocs = await this.db.getCaptcha(solved, datasetId, size);
+        if (captchaDocs) {
+            let captchas: CaptchaWithProof[] = [];
+            for (let captcha of captchaDocs) {
+                let captcha = captchaDocs[0];
+                const datasetDetails = await this.db.getDatasetDetails(datasetId);
+                const tree = new CaptchaMerkleTree();
+                tree.layers = datasetDetails['tree'];
+                let proof = tree.proof(captcha.captchaId!);
+                // cannot pass solution to dapp user as they are required to solve the captcha!
+                delete captcha.solution;
+                captchas.push({captcha: captcha, proof: proof});
+            }
+            return captchas
         } else {
             throw Error(ERRORS.DATABASE.CAPTCHA_GET_FAILED.message);
         }

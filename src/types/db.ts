@@ -1,4 +1,4 @@
-import {Collection, WithId} from "mongodb";
+import {Collection} from "mongodb";
 import {Captcha, Dataset} from "./captcha";
 
 export interface Database {
@@ -18,4 +18,4 @@ export interface Database {
 }
 
 // Other table types from other database engines go here
-export type Table = Collection | undefined
+export type Table = Collection | undefined | Object
