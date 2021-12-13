@@ -12,14 +12,6 @@ export default {
                     address: "//Alice"
                 }
             },
-            provider: {
-                address: process.env.PROVIDER_ADDRESS,
-                mnemonic: process.env.PROVIDER_MNEMONIC,
-                serviceOrigin: "",
-                fee: 1,
-                payee: "Provider"
-            }
-
         },
     },
     database: {

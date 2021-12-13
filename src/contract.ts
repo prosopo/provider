@@ -1,7 +1,9 @@
 import {Environment} from './env'
 import {ERRORS} from './errors'
 import {contractApiInterface} from "./types/contract";
-import {isU8a} from '@polkadot/util'
+import {isU8a, u8aToHex, u8aToString} from '@polkadot/util'
+import {decodeU8a, decodeU8aVec, typeToConstructor} from "@polkadot/types/codec/utils";
+import {decodeAddress} from "@polkadot/util-crypto";
 
 const {blake2AsU8a} = require('@polkadot/util-crypto');
 
@@ -22,7 +24,7 @@ export class prosopoContractApi implements contractApiInterface {
      */
     async contractTx(contractMethodName: string, args: Array<any>, value?: number): Promise<Object> {
         await this.env.isReady();
-        const signedContract = this.env.contract!.connect(this.env.providerSigner!)
+        const signedContract = this.env.contract!.connect(this.env.signer!)
         const encodedArgs = this.encodeArgs(contractMethodName, args);
         let response;
         if (value) {
@@ -88,10 +90,21 @@ export class prosopoContractApi implements contractApiInterface {
         const promiseresult = await this.env.network.api.rpc.contracts.getStorage(this.env.contractAddress, key);
         const data = promiseresult.unwrapOrDefault();
         let buffer = Buffer.from(data);
-        // data is returned here
-        console.log(buffer.readUInt8(0));
-        console.log(data.toHex());
-        throw "NotImplemented";
+
+        const vecType = typeToConstructor(this.env.network.registry, 'Vec<[u8;32]>')
+        const decoded = decodeU8aVec(this.env.network.registry, data, 0, vecType, 1);
+        const signerAddress = decodeAddress(this.env.signer?.address);
+        console.log("Current Signer Address: ", u8aToHex(signerAddress));
+        decoded[0].forEach(function (value, index, array) {
+            // @ts-ignore
+            for (let innerVal of value.toHuman()) {
+                let shortVal = innerVal.toString().substr(2);
+                console.log(shortVal);
+                const decodedAddress = u8aToHex(decodeAddress(innerVal));
+                console.log("Decoded Address from contract: ",decodedAddress);
+
+            }
+        });
     }
 }
 
