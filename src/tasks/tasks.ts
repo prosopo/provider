@@ -130,6 +130,11 @@ export class Tasks {
             throw Error(ERRORS.DATABASE.CAPTCHA_GET_FAILED.message);
         }
     }
+
+    async providerAccounts(providerId: string, status: ProviderStatus): Promise<AnyJson> {
+        const providerAccountsList = await this.contractApi.getStorage("provider_accounts", buildDecodeVector('ProviderAccounts'));
+        console.log(providerAccountsList);
+    }
 }
 
 // async getProviderAccounts() {
