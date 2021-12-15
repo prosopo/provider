@@ -8,6 +8,9 @@ import {Database} from "../types";
 import {ERRORS} from "../errors";
 import {CaptchaMerkleTree} from "../merkle";
 import {CaptchaWithProof} from "../types/api";
+import {buildDecodeVector} from "../codec/codec";
+import {AnyJson} from "@polkadot/types/types/codec";
+import {ProviderStatus} from "../types/provider";
 
 export class Tasks {
 
@@ -131,6 +134,13 @@ export class Tasks {
     async providerAccounts(providerId: string, status: ProviderStatus): Promise<AnyJson> {
         const providerAccountsList = await this.contractApi.getStorage("provider_accounts", buildDecodeVector('ProviderAccounts'));
         console.log(providerAccountsList);
+        return providerAccountsList
+    }
+
+    async dappAccounts(dappId: string, status: ProviderStatus): Promise<AnyJson> {
+        const dappAccountsList = await this.contractApi.getStorage("dapp_accounts", buildDecodeVector('DappAccounts'));
+        console.log(dappAccountsList);
+        return dappAccountsList
     }
 }
 

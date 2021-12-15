@@ -45,8 +45,6 @@ export class Environment implements ProsopoEnvironment {
         await this.getContract();
         await this.importDatabase();
         await this.db?.connect();
-        console.log(this.mnemonic);
-        assert(this.signer instanceof Signer);
         assert(this.contract instanceof Contract);
     }
 
@@ -76,6 +74,12 @@ export class Environment implements ProsopoEnvironment {
             // @ts-ignore
             this.signer = this.network.createSigner(keyringPair);
         }
+    }
+
+    async changeSigner(mnemonic: string) {
+        await this.network.api.isReadyOrError;
+        this.mnemonic = mnemonic;
+        await this.getSigner();
     }
 
     private static getConfigPath() {
