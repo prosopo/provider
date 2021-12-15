@@ -1,9 +1,8 @@
 import {Environment} from './env'
 import {ERRORS} from './errors'
 import {contractApiInterface} from "./types/contract";
-import {isU8a, u8aToHex, u8aToString} from '@polkadot/util'
-import {decodeU8a, decodeU8aVec, typeToConstructor} from "@polkadot/types/codec/utils";
-import {decodeAddress} from "@polkadot/util-crypto";
+import {isU8a} from '@polkadot/util';
+import { Registry } from "redspot/types/provider";
 
 const {blake2AsU8a} = require('@polkadot/util-crypto');
 
@@ -24,7 +23,7 @@ export class prosopoContractApi implements contractApiInterface {
      */
     async contractTx(contractMethodName: string, args: Array<any>, value?: number): Promise<Object> {
         await this.env.isReady();
-        const signedContract = this.env.contract!.connect(this.env.signer!)
+        const signedContract = this.env.contract!.connect(this.env.providerSigner!)
         const encodedArgs = this.encodeArgs(contractMethodName, args);
         let response;
         if (value) {
@@ -71,6 +70,18 @@ export class prosopoContractApi implements contractApiInterface {
         }
     }
 
+    /** Get the storage key from the ABI given a storage name
+     * @return the storage key
+     */
+    getStorageKey(storageName: string): string {
+        const storageEntry = this.env.contract?.abi.json!['V1']['storage']['struct']['fields'].filter(obj => obj['name'] === storageName)[0];
+        if (storageEntry) {
+            return storageEntry["layout"]["cell"]["key"];
+        } else {
+            throw (ERRORS.CONTRACT.INVALID_STORAGE_NAME.message);
+        }
+    }
+
     /**
      * Get the event name from the contract method name
      * Each of the ink contract methods returns an event with a capitalised version of the method name
@@ -85,26 +96,15 @@ export class prosopoContractApi implements contractApiInterface {
      * Get the data at specified storage key
      * @return {any} data
      */
-    async getStorage(key: string): Promise<any> {
+    async getStorage<T>(name: string, decodingFn: (registry: Registry, data: Uint8Array) => T): Promise<T> {
         await this.env.isReady();
-        const promiseresult = await this.env.network.api.rpc.contracts.getStorage(this.env.contractAddress, key);
+        const storageKey = this.getStorageKey(name);
+        // const promiseresult = this.env.contract!.api.rpc.contracts.getStorage(this.env.contract!.address, storageKey);
+        const promiseresult = await this.env.network.api.rpc.contracts.getStorage(this.env.contract!.address, storageKey);
         const data = promiseresult.unwrapOrDefault();
-        let buffer = Buffer.from(data);
-
-        const vecType = typeToConstructor(this.env.network.registry, 'Vec<[u8;32]>')
-        const decoded = decodeU8aVec(this.env.network.registry, data, 0, vecType, 1);
-        const signerAddress = decodeAddress(this.env.signer?.address);
-        console.log("Current Signer Address: ", u8aToHex(signerAddress));
-        decoded[0].forEach(function (value, index, array) {
-            // @ts-ignore
-            for (let innerVal of value.toHuman()) {
-                let shortVal = innerVal.toString().substr(2);
-                console.log(shortVal);
-                const decodedAddress = u8aToHex(decodeAddress(innerVal));
-                console.log("Decoded Address from contract: ",decodedAddress);
-
-            }
-        });
+        // console.log(data.toHex());
+        return decodingFn(this.env.network.registry, data);
+        // console.log(this.hex_to_string(data.toHex()));
     }
 }
 
