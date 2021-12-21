@@ -36,10 +36,10 @@ export async function processArgs(args, env) {
         .option('api', {demand: false, default: false, type: 'boolean'})
         .command('provider_register', 'Register a Provider', (yargs) => {
                 return yargs
-                    .option('serviceOrigin', {type: 'string', demand: false,})
-                    .option('fee', {type: 'number', demand: false,})
-                    .option('payee', {type: 'string', demand: false,})
-                    .option('address', {type: 'string', demand: false,})
+                    .option('serviceOrigin', {type: 'string', demand: true,})
+                    .option('fee', {type: 'number', demand: true,})
+                    .option('payee', {type: 'string', demand: true,})
+                    .option('address', {type: 'string', demand: true,})
             }, async (argv) => {
                 let result = await tasks.providerRegister(argv.serviceOrigin, argv.fee, argv.payee, argv.address)
                 console.log(JSON.stringify(result, null, 2));
