@@ -74,9 +74,9 @@ export class prosopoContractApi implements contractApiInterface {
      * @return the storage key
      */
     getStorageKey(storageName: string): string {
-        console.log(this.env.contract);
-        const storageEntry = undefined;
-        //const storageEntry = this.env.contract?.abi.json!['V1']['storage']['struct']['fields'].filter(obj => obj['name'] === storageName)[0];
+        // TODO there has got to be a better way to get this info
+        // @ts-ignore
+        const storageEntry = this.env.contract?.abi.json!['V1']['storage']['struct']['fields'].filter(obj => obj['name'] === storageName)[0];
         if (storageEntry) {
             return storageEntry["layout"]["cell"]["key"];
         } else {
