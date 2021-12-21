@@ -60,7 +60,7 @@ export class Tasks {
         return await this.contractApi.contractTx('dappRegister', [dappServiceOrigin, dappContractAddress, dappOwner]);
     }
 
-    async dappFund(contractAccount:string, value: number) {
+    async dappFund(contractAccount: string, value: number) {
         return await this.contractApi.contractTx('dappFund', [contractAccount], value);
     }
 
@@ -129,6 +129,10 @@ export class Tasks {
         } else {
             throw Error(ERRORS.DATABASE.CAPTCHA_GET_FAILED.message);
         }
+    }
+
+    async getProviderDetails(accountId: string) {
+        return await this.contractApi.contractTx("getProviderDetails", [accountId])
     }
 
     async providerAccounts(providerId: string, status: GovernanceStatus): Promise<AnyJson> {

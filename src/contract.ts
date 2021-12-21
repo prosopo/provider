@@ -2,7 +2,7 @@ import {Environment} from './env'
 import {ERRORS} from './errors'
 import {contractApiInterface} from "./types/contract";
 import {isU8a} from '@polkadot/util';
-import { Registry } from "redspot/types/provider";
+import {Registry} from "redspot/types/provider";
 
 const {blake2AsU8a} = require('@polkadot/util-crypto');
 
@@ -36,7 +36,8 @@ export class prosopoContractApi implements contractApiInterface {
             const eventName = this.getEventNameFromMethodName(contractMethodName);
             return response.events.filter(x => x["name"] == eventName)
         } else {
-            throw(ERRORS.CONTRACT.TX_ERROR.message); //TODO get the error information from response
+            let msg = response.error ? response.error : ERRORS.CONTRACT.TX_ERROR.message;
+            throw(msg);
         }
     }
 
