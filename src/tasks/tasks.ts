@@ -49,10 +49,10 @@ export class Tasks {
         let dataset = parseCaptchaDataset(loadJSONFile(file));
         let tree = new CaptchaMerkleTree();
         await tree.build(dataset['captchas']);
-        let dataset_hashes = addHashesToDataset(dataset, tree);
-        dataset_hashes['datasetId'] = tree.root?.hash;
-        dataset_hashes['tree'] = tree.layers;
-        await this.db?.loadDataset(dataset_hashes);
+        let datasetHashes = addHashesToDataset(dataset, tree);
+        datasetHashes['datasetId'] = tree.root?.hash;
+        datasetHashes['tree'] = tree.layers;
+        await this.db?.loadDataset(datasetHashes);
         return await this.contractApi.contractTx('providerAddDataset', [hexToU8a(tree.root?.hash)])
     }
 
@@ -143,7 +143,3 @@ export class Tasks {
         return dappAccountsList
     }
 }
-
-// async getProviderAccounts() {
-//     return await this.contractApi.getStorage("")
-// }
