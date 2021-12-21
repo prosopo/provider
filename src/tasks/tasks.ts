@@ -8,6 +8,9 @@ import {Database} from "../types";
 import {ERRORS} from "../errors";
 import {CaptchaMerkleTree} from "../merkle";
 import {CaptchaWithProof} from "../types/api";
+import {GovernanceStatus} from "../types/provider";
+import {buildDecodeVector} from "../codec/codec";
+import {AnyJson} from "@polkadot/types/types/codec";
 
 export class Tasks {
 
@@ -131,7 +134,7 @@ export class Tasks {
         }
     }
 
-    async providerAccounts(providerId: string, status: ProviderStatus): Promise<AnyJson> {
+    async providerAccounts(providerId: string, status: GovernanceStatus): Promise<void> {
         const providerAccountsList = await this.contractApi.getStorage("provider_accounts", buildDecodeVector('ProviderAccounts'));
         console.log(providerAccountsList);
     }

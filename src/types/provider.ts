@@ -1,2 +1,2 @@
 
-export enum ProviderStatus { Active = "Active", Inactive = "Inactive" }
+export enum GovernanceStatus { Active = "Active", Inactive = "Inactive", Deactivated = "Deactivated" }
