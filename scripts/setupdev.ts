@@ -2,6 +2,7 @@ import {Environment} from '../src/env'
 import yargs from 'yargs'
 import {CaptchaMerkleTree} from "../src/merkle";
 import {Tasks} from "../src/tasks/tasks";
+import {contractDefinitions} from '../src/contract/definitions'
 
 require('dotenv').config()
 
@@ -124,20 +125,22 @@ async function setupDappUser(env) {
     const tasks = new Tasks(env);
     console.log(" - getCaptchaWithProof")
     const provider = await tasks.getProviderDetails(process.env.PROVIDER_ADDRESS!);
-    console.log(provider);
-    process.exit();
-    const solved = await tasks.getCaptchaWithProof(PROVIDER.datasetHash, true, 1)
-    const unsolved = await tasks.getCaptchaWithProof(PROVIDER.datasetHash, false, 1)
-    solved[0].captcha.solution = [1];
-    unsolved[0].captcha.solution = [1];
-    //TODO add salt to solution
-    console.log(" - build Merkle tree")
-    let tree = new CaptchaMerkleTree();
-    await tree.build([solved[0].captcha, unsolved[0].captcha]);
-    // TODO send solution to Provider database
-    await env.changeSigner(DAPP_USER.mnemonic);
-    console.log(" - dappUserCommit")
-    await tasks.dappUserCommit(DAPP.contractAccount, PROVIDER.datasetHash, tree.root!.hash);
+    if (provider) {
+        const solved = await tasks.getCaptchaWithProof(provider.captcha_dataset_id, true, 1)
+        const unsolved = await tasks.getCaptchaWithProof(provider.captcha_dataset_id, false, 1)
+        solved[0].captcha.solution = [1];
+        unsolved[0].captcha.solution = [1];
+        //TODO add salt to solution
+        console.log(" - build Merkle tree")
+        let tree = new CaptchaMerkleTree();
+        await tree.build([solved[0].captcha, unsolved[0].captcha]);
+        // TODO send solution to Provider database
+        await env.changeSigner(DAPP_USER.mnemonic);
+        console.log(" - dappUserCommit")
+        await tasks.dappUserCommit(DAPP.contractAccount, PROVIDER.datasetHash, tree.root!.hash);
+    } else {
+        throw("Provider not found");
+    }
 }
 
 run().catch((err) => {
