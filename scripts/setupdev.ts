@@ -60,8 +60,13 @@ function processArgs(env) {
         )
         .command('user', 'Submit and approve Dapp User solution commitments', (yargs) => {
                 return yargs
+                    .option('approve', {type: 'boolean', demand: false,})
+                    .option('disapprove', {type: 'boolean', demand: false,})
             }, async (argv) => {
-                await setupDappUser(env);
+                const solutionHash = await setupDappUser(env);
+                if (argv.approve || argv.disapprove) {
+                    await approveOrDisapproveCommitment(env, solutionHash, argv.approve);
+                }
             },
         )
         .argv
@@ -130,7 +135,7 @@ async function setupDappUser(env) {
         const unsolved = await tasks.getCaptchaWithProof(provider.captcha_dataset_id, false, 1)
         solved[0].captcha.solution = [1];
         unsolved[0].captcha.solution = [1];
-        //TODO add salt to solution
+        // TODO add salt to solution
         console.log(" - build Merkle tree")
         let tree = new CaptchaMerkleTree();
         await tree.build([solved[0].captcha, unsolved[0].captcha]);
@@ -138,8 +143,27 @@ async function setupDappUser(env) {
         await env.changeSigner(DAPP_USER.mnemonic);
         console.log(" - dappUserCommit")
         await tasks.dappUserCommit(DAPP.contractAccount, PROVIDER.datasetHash, tree.root!.hash);
+        return tree.root!.hash;
+
     } else {
         throw("Provider not found");
+    }
+}
+
+async function approveOrDisapproveCommitment(env, solutionHash, approve: boolean) {
+    const tasks = new Tasks(env);
+    // This stage would take place on the Provider node after checking the solution was correct
+    // We need to assume that the Provider has access to the Dapp User's merkle tree root or can construct it from the
+    // raw data that was sent to them
+    // TODO check solution is correct
+    await env.changeSigner(process.env.PROVIDER_MNEMONIC);
+    console.log(" - getCaptchaSolutionCommitment")
+    const commitment = await tasks.getCaptchaSolutionCommitment(solutionHash, PROVIDER.datasetHash);
+    console.log("Captcha solution commitment \n" , commitment);
+    if (approve) {
+        await tasks.providerApprove(commitment);
+    } else {
+        await tasks.providerDisapprove(commitment);
     }
 }
 

@@ -74,13 +74,13 @@ export class Tasks {
     }
 
     //provider_approve
-    async providerApprove() {
-        return await this.contractApi.contractCall('providerApprove', []);
+    async providerApprove(captchaSolutionCommitmentId) {
+        return await this.contractApi.contractCall('providerApprove', [captchaSolutionCommitmentId]);
     }
 
     //provider_disapprove
-    async providerDisapprove() {
-        return await this.contractApi.contractCall('providerDisapprove', []);
+    async providerDisapprove(captchaSolutionCommitmentId) {
+        return await this.contractApi.contractCall('providerDisapprove', [captchaSolutionCommitmentId]);
     }
 
     //dapp_operator_is_human_user
@@ -133,8 +133,12 @@ export class Tasks {
     }
 
     async getProviderDetails(accountId: string): Promise<Provider> {
-        //TODO should be contract query instead of contractTx - Use mutates `false` in method definition in ABI
         return await this.contractApi.contractCall("getProviderDetails", [accountId])
+    }
+
+    async getCaptchaSolutionCommitment(solutionId: string, datasetId: string): Promise<Provider> {
+        //TODO rebuild contract now that this method is an [ink(message)]
+        return await this.contractApi.contractCall("getCaptchaSolutionCommitment", [solutionId, datasetId])
     }
 
     async providerAccounts(providerId: string, status: GovernanceStatus): Promise<AnyJson> {
