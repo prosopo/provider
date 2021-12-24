@@ -61,4 +61,11 @@ export const contractDefinitions = {
         captcha_dataset_id: 'Hash',
     },
     ProviderMap: '{"AccountId":"Provider"}',
+    ProsopoCaptchaSolutionCommitment: {
+        account: 'AccountId',
+        captcha_dataset_id: 'Hash',
+        status: 'CaptchaStatus',
+        contract: 'AccountId',
+        provider: 'AccountId',
+    }
 };

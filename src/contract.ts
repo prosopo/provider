@@ -45,16 +45,25 @@ export class prosopoContractApi implements contractApiInterface {
             response = await signedContract.tx[contractMethodName](...encodedArgs);
         }
         const property = 'events';
-        if (response.error) {
-            throw(response.error.message);
-        }
-        if (response.result.isInBlock && response.result.isFinalized) {
+
+        if (response.result.isInBlock) {
+            if (response.result.status.isRetracted) {
+                throw(response.status.asRetracted)
+            }
+            if (response.result.status.isInvalid) {
+                throw(response.status.asInvalid);
+            }
             const eventName = this.getEventNameFromMethodName(contractMethodName);
-            if (property in response) {
-                // @ts-ignore
+            if (response[property]) {
                 return response[property].filter(x => x["name"] == eventName)
             } else {
-                throw(ERRORS.CONTRACT.TX_ERROR.message);
+                // TODO When a contract function returns a Result<Error> the contract execution is reverted and details
+                //  of this are passed back in a `flags` variable. `flags` does not seem to be available to polkadot-js
+                //  currently. So the lack of event here implies that the contract excution failed, which is fine
+                //  sometimes - e.g. the case where a Provider tries to register twice. This returns ProviderExists
+                //  https://github.com/polkadot-js/apps/issues/6465
+                //  https://github.com/polkadot-js/api/issues/4389
+                return {}
             }
         }
     }

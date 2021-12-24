@@ -36,9 +36,9 @@
     "mocha": "8.4.0"
   },
   "resolutions": {
-    "@polkadot/api": "^7.0.2",
-    "@polkadot/api-contract": "^7.0.2",
-    "@polkadot/types": "^7.0.2",
+    "@polkadot/api": "^6.12.1",
+    "@polkadot/api-contract": "^6.12.1",
+    "@polkadot/types": "^6.12.1",
     "@polkadot/util": "^8.2.2",
     "@polkadot/keyring": "^8.2.2",
     "@polkadot/util-crypto": "^8.2.2",

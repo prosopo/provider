@@ -40,7 +40,6 @@ async function run() {
 }
 
 function processArgs(env) {
-    console.log("here")
     return yargs
         .usage('Usage: $0 [global options] <command> [options]')
         .command('provider', 'Setup a Provider', (yargs) => {
@@ -96,7 +95,7 @@ async function sendFunds(env, address, who, amount) {
 }
 
 async function setupProvider(env, address) {
-    console.log("Setup Provider\n---------------")
+    console.log("\n---------------\nSetup Provider\n---------------")
     await env.changeSigner(process.env.PROVIDER_MNEMONIC);
     const tasks = new Tasks(env);
     console.log(" - providerRegister")
@@ -105,11 +104,12 @@ async function setupProvider(env, address) {
     await tasks.providerStake(PROVIDER.stake);
     console.log(" - providerAddDataset")
     const datasetResult = await tasks.providerAddDataset(PROVIDER.datasetFile);
+    console.log(datasetResult);
     PROVIDER.datasetHash = datasetResult[0]['args'][1];
 }
 
 async function setupDapp(env) {
-    console.log("setupDapp\n---------------")
+    console.log("\n---------------\nSetup Dapp\n---------------")
     const tasks = new Tasks(env);
     await env.changeSigner(DAPP.mnemonic);
     console.log(" - dappRegister")
@@ -119,7 +119,7 @@ async function setupDapp(env) {
 }
 
 async function setupDappUser(env) {
-    console.log("setupDappUser\n---------------")
+    console.log("\n---------------\nSetup Dapp User\n---------------")
     await env.changeSigner(DAPP_USER.mnemonic);
 
     // This next section is doing everything that the ProCaptcha repo will eventually be doing in the client browser
@@ -151,6 +151,7 @@ async function setupDappUser(env) {
 }
 
 async function approveOrDisapproveCommitment(env, solutionHash, approve: boolean) {
+    console.log("\n---------------\nApprove or Disapprove Commitment\n---------------")
     const tasks = new Tasks(env);
     // This stage would take place on the Provider node after checking the solution was correct
     // We need to assume that the Provider has access to the Dapp User's merkle tree root or can construct it from the
@@ -158,8 +159,10 @@ async function approveOrDisapproveCommitment(env, solutionHash, approve: boolean
     // TODO check solution is correct
     await env.changeSigner(process.env.PROVIDER_MNEMONIC);
     console.log(" - getCaptchaSolutionCommitment")
+    console.log(solutionHash);
     const commitment = await tasks.getCaptchaSolutionCommitment(solutionHash, PROVIDER.datasetHash);
-    console.log("Captcha solution commitment \n" , commitment);
+    console.log(commitment);
+    console.log(" - Captcha solution commitment \n", commitment);
     if (approve) {
         await tasks.providerApprove(commitment);
     } else {
