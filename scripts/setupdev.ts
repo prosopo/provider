@@ -31,7 +31,6 @@ const DAPP_USER = {
 async function run() {
     const env = new Environment("//Alice");
     await env.isReady();
-
     if (process.env.PROVIDER_MNEMONIC) {
         await processArgs(env);
     }
@@ -101,7 +100,7 @@ async function setupProvider(env, address) {
     console.log(" - providerRegister")
     await tasks.providerRegister(PROVIDER.serviceOrigin, PROVIDER.fee, PROVIDER.payee, address);
     console.log(" - providerStake")
-    await tasks.providerStake(PROVIDER.stake);
+    await tasks.providerUpdate(PROVIDER.serviceOrigin, PROVIDER.fee, PROVIDER.payee, address, PROVIDER.stake);
     console.log(" - providerAddDataset")
     const datasetResult = await tasks.providerAddDataset(PROVIDER.datasetFile);
     console.log(datasetResult);

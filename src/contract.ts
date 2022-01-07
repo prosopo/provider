@@ -115,6 +115,7 @@ export class prosopoContractApi implements contractApiInterface {
      * @return the contract method object
      */
     getContractMethod(contractMethodName: string): AbiMessage {
+        console.log("Looking for contract Method: ", contractMethodName);
         const methodObj = this.env.contract?.abi.messages.filter(obj => obj['method'] === contractMethodName)[0];
         if (methodObj) {
             return methodObj

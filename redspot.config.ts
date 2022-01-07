@@ -20,7 +20,6 @@ export default {
     networks: {
         development: {
             endpoint: "ws://substrate-node:9944",
-            //endpoint: "127.0.0.1:9944",
             gasLimit: "400000000000",
             types: contractDefinitions,
             accounts: [

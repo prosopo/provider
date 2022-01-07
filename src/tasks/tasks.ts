@@ -30,16 +30,12 @@ export class Tasks {
         return await this.contractApi.contractCall('providerRegister', [serviceOrigin, fee, payee, address]);
     }
 
-    async providerUpdate(serviceOrigin: string, fee: number, payee: string, address: string): Promise<Object> {
-        return await this.contractApi.contractCall('providerUpdate', [serviceOrigin, fee, payee, address]);
+    async providerUpdate(serviceOrigin: string, fee: number, payee: string, address: string, value: number | undefined): Promise<Object> {
+        return await this.contractApi.contractCall('providerUpdate', [serviceOrigin, fee, payee, address], value);
     }
 
     async providerDeregister(address: string): Promise<Object> {
         return await this.contractApi.contractCall('providerDeregister', [address]);
-    }
-
-    async providerStake(value: number): Promise<Object> {
-        return await this.contractApi.contractCall('providerStake', [], value);
     }
 
     async providerUnstake(value: number): Promise<Object> {
