@@ -1,8 +1,8 @@
 import {Environment} from '../src/env'
+// @ts-ignore
 import yargs from 'yargs'
 import {CaptchaMerkleTree} from "../src/merkle";
 import {Tasks} from "../src/tasks/tasks";
-import {contractDefinitions} from '../src/contract/definitions'
 
 require('dotenv').config()
 
@@ -171,5 +171,6 @@ async function approveOrDisapproveCommitment(env, solutionHash, approve: boolean
 }
 
 run().catch((err) => {
-    throw new Error(`Setup dev error: ${err}`);
+    console.log(err);
+    throw new Error(`Setup dev error`);
 });
