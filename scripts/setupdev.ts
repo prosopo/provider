@@ -13,14 +13,14 @@ const PROVIDER = {
     payee: "Provider",
     stake: 10,
     datasetFile: '/usr/src/data/captchas.json',
-    datasetHash: ""
+    datasetHash: undefined
 }
 
 const DAPP = {
     serviceOrigin: "http://localhost:9393",
     mnemonic: "//Ferdie",
-    contractAccount: "",
-    optionalOwner: "",
+    contractAccount: process.env.DAPP_CONTRACT_ADDRESS,
+    optionalOwner: "5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL", //Ferdie's address
     fundAmount: 100
 }
 
@@ -84,9 +84,9 @@ async function sendFunds(env, address, who, amount) {
     const signerAddresses = await env.network.getAddresses();
     // @ts-ignore
     const Alice = signerAddresses[0];
-    await displayBalance(env, address, Alice);
+    await displayBalance(env, address, "Alice");
     let api = env.network.api;
-    if (balance.data.free.toNumber() === 0) {
+    if (balance.data.free.isEmpty) {
         const alicePair = env.network.keyring.getPair(Alice);
         await env.patract.buildTx(
             api.registry,
@@ -107,7 +107,7 @@ async function setupProvider(env, address) {
     await tasks.providerUpdate(PROVIDER.serviceOrigin, PROVIDER.fee, PROVIDER.payee, address, PROVIDER.stake);
     console.log(" - providerAddDataset")
     const datasetResult = await tasks.providerAddDataset(PROVIDER.datasetFile);
-    console.log(datasetResult);
+    console.log(JSON.stringify(datasetResult));
     PROVIDER.datasetHash = datasetResult[0]['args'][1];
 }
 
@@ -116,9 +116,13 @@ async function setupDapp(env) {
     const tasks = new Tasks(env);
     await env.changeSigner(DAPP.mnemonic);
     console.log(" - dappRegister")
-    await tasks.dappRegister(DAPP.serviceOrigin, DAPP.contractAccount, DAPP.optionalOwner)
-    console.log(" - dappFund")
-    await tasks.dappFund(DAPP.contractAccount, DAPP.fundAmount);
+    if (typeof (DAPP.contractAccount) === "string") {
+        await tasks.dappRegister(DAPP.serviceOrigin, DAPP.contractAccount, DAPP.optionalOwner)
+        console.log(" - dappFund")
+        await tasks.dappFund(DAPP.contractAccount, DAPP.fundAmount);
+    } else {
+        throw("DAPP_CONTRACT_ACCOUNT not set in environment variables");
+    }
 }
 
 async function setupDappUser(env) {
@@ -145,7 +149,12 @@ async function setupDappUser(env) {
         // TODO send solution to Provider database https://github.com/prosopo-io/provider/issues/35
         await env.changeSigner(DAPP_USER.mnemonic);
         console.log(" - dappUserCommit")
-        await tasks.dappUserCommit(DAPP.contractAccount, PROVIDER.datasetHash, tree.root!.hash);
+        if (typeof (DAPP.contractAccount) === "string" && typeof (process.env.PROVIDER_ADDRESS) === "string") {
+            console.log(DAPP.contractAccount, provider.captcha_dataset_id, tree.root!.hash);
+            await tasks.dappUserCommit(DAPP.contractAccount, provider.captcha_dataset_id, tree.root!.hash, process.env.PROVIDER_ADDRESS);
+        } else {
+            throw("Either DAPP_CONTRACT_ACCOUNT or PROVIDER_ADDRESS not set in environment variables");
+        }
         return tree.root!.hash;
 
     } else {
@@ -159,11 +168,12 @@ async function approveOrDisapproveCommitment(env, solutionHash, approve: boolean
     // This stage would take place on the Provider node after checking the solution was correct
     // We need to assume that the Provider has access to the Dapp User's merkle tree root or can construct it from the
     // raw data that was sent to them
+    const provider = await tasks.getProviderDetails(process.env.PROVIDER_ADDRESS!);
     // TODO check solution is correct https://github.com/prosopo-io/provider/issues/35
     await env.changeSigner(process.env.PROVIDER_MNEMONIC);
     console.log(" - getCaptchaSolutionCommitment")
     console.log(solutionHash);
-    const commitment = await tasks.getCaptchaSolutionCommitment(solutionHash, PROVIDER.datasetHash);
+    const commitment = await tasks.getCaptchaSolutionCommitment(solutionHash, provider.captcha_dataset_id.toString());
     console.log(commitment);
     console.log(" - Captcha solution commitment \n", commitment);
     if (approve) {

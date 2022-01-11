@@ -2,7 +2,7 @@
 import {loadJSONFile} from "../util";
 import {addHashesToDataset, parseCaptchaDataset} from "../captcha";
 import {hexToU8a} from "@polkadot/util";
-import {contractApiInterface, Provider} from "../types/contract";
+import {contractApiInterface, Dapp, Provider} from "../types/contract";
 import {prosopoContractApi} from "../contract";
 import {Database} from "../types";
 import {ERRORS} from "../errors";
@@ -50,6 +50,7 @@ export class Tasks {
         datasetHashes['datasetId'] = tree.root?.hash;
         datasetHashes['tree'] = tree.layers;
         await this.db?.loadDataset(datasetHashes);
+        console.log("Data set hash", tree.root?.hash);
         return await this.contractApi.contractCall('providerAddDataset', [hexToU8a(tree.root?.hash)])
     }
 
@@ -65,33 +66,27 @@ export class Tasks {
         return await this.contractApi.contractCall('dappCancel', [contractAccount]);
     }
 
-    async dappUserCommit(contractAccount: string, captchaDatasetId: string, userMerkleTreeRoot: string) {
-        return await this.contractApi.contractCall('dappUserCommit', [contractAccount, captchaDatasetId, userMerkleTreeRoot]);
+    async dappUserCommit(contractAccount: string, captchaDatasetId: Hash, userMerkleTreeRoot: string, providerAddress: string) {
+        return await this.contractApi.contractCall('dappUserCommit', [contractAccount, captchaDatasetId, userMerkleTreeRoot, providerAddress]);
     }
 
-    //provider_approve
     async providerApprove(captchaSolutionCommitmentId) {
         return await this.contractApi.contractCall('providerApprove', [captchaSolutionCommitmentId]);
     }
 
-    //provider_disapprove
     async providerDisapprove(captchaSolutionCommitmentId) {
         return await this.contractApi.contractCall('providerDisapprove', [captchaSolutionCommitmentId]);
     }
 
-    //dapp_operator_is_human_user
     async dappOperatorIsHumanUser() {
     }
 
-    //dapp_operator_check_recent_solution
     async dappOperatorCheckRecentSolution() {
     }
 
-    //add_prosopo_operator
     async addProsopoOperator() {
     }
 
-    //captcha_solution_commitment
     async captchaSolutionCommitment() {
     }
 
@@ -132,6 +127,14 @@ export class Tasks {
         return await this.contractApi.contractCall("getProviderDetails", [accountId])
     }
 
+    async getDappDetails(accountId: string): Promise<Dapp> {
+        return await this.contractApi.contractCall("getDappDetails", [accountId])
+    }
+
+    async getCaptchaData(captchaDatasetId: string) {
+        return await this.contractApi.contractCall("getCaptchaData", [captchaDatasetId])
+    }
+
     async getCaptchaSolutionCommitment(solutionId: string, datasetId: string): Promise<Provider> {
         //TODO rebuild contract now that this method is an [ink(message)]
         return await this.contractApi.contractCall("getCaptchaSolutionCommitment", [solutionId, datasetId])
@@ -148,4 +151,5 @@ export class Tasks {
         console.log(dappAccountsList);
         return dappAccountsList
     }
+
 }
