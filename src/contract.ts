@@ -1,11 +1,12 @@
 import {Environment} from './env'
 import {ERRORS} from './errors'
 import {contractApiInterface} from "./types/contract";
-import {isU8a} from '@polkadot/util';
+import {isU8a, isHex} from '@polkadot/util';
 import {Registry} from "redspot/types/provider";
 import {AbiMessage} from "@polkadot/api-contract/types";
 import Contract from "@redspot/patract/contract";
 import {Codec} from "@polkadot/types/types";
+import {decodeAddress} from "@polkadot/util-crypto";
 
 const {blake2AsU8a} = require('@polkadot/util-crypto');
 
@@ -42,11 +43,9 @@ export class prosopoContractApi implements contractApiInterface {
         if (value) {
             response = await signedContract.tx[contractMethodName](...encodedArgs, {value: value});
         } else {
-            console.log("Using tx method without value");
             response = await signedContract.tx[contractMethodName](...encodedArgs);
         }
         const property = 'events';
-        console.log(JSON.stringify(response));
         if (response.result.isInBlock) {
             if (response.result.status.isRetracted) {
                 throw(response.status.asRetracted)
@@ -95,6 +94,7 @@ export class prosopoContractApi implements contractApiInterface {
         return item
     }
 
+
     /** Encodes arguments that should be hashes using blake2AsU8a
 
      * @return encoded arguments
@@ -103,8 +103,12 @@ export class prosopoContractApi implements contractApiInterface {
         let encodedArgs: any[] = [];
         // args must be in the same order as methodObj['args']
         methodObj['args'].forEach((methodArg, idx) => {
-            let val = this.env.network.api.registry.createType(methodArg['type']['type'], args[idx])
-            encodedArgs.push(val)
+            let argVal = args[idx]
+            // hash values that have been passed as strings
+            if (methodArg['type']['type'] === 'Hash' && !(isU8a(args[idx]) || isHex(args[idx]))) {
+                argVal = this.env.network.api.registry.createType(methodArg['type']['type'], args[idx])
+            }
+            encodedArgs.push(argVal);
         });
         return encodedArgs
     }
@@ -113,7 +117,6 @@ export class prosopoContractApi implements contractApiInterface {
      * @return the contract method object
      */
     getContractMethod(contractMethodName: string): AbiMessage {
-        console.log("Looking for contract Method: ", contractMethodName);
         const methodObj = this.env.contract?.abi.messages.filter(obj => obj['method'] === contractMethodName)[0];
         if (methodObj) {
             return methodObj

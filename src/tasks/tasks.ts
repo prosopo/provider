@@ -11,7 +11,8 @@ import {CaptchaWithProof} from "../types/api";
 import {GovernanceStatus} from "../types/provider";
 import {buildDecodeVector} from "../codec/codec";
 import {AnyJson} from "@polkadot/types/types/codec";
-import {Hash} from "@polkadot/types/interfaces";
+import {AccountId, Hash} from "@polkadot/types/interfaces";
+import type { Option } from '@polkadot/types';
 
 export class Tasks {
 
@@ -54,7 +55,7 @@ export class Tasks {
         return await this.contractApi.contractCall('providerAddDataset', [hexToU8a(tree.root?.hash)])
     }
 
-    async dappRegister(dappServiceOrigin: string, dappContractAddress: string, dappOwner?: string | undefined): Promise<Object> {
+    async dappRegister(dappServiceOrigin: string, dappContractAddress: string, dappOwner?: string): Promise<Object> {
         return await this.contractApi.contractCall('dappRegister', [dappServiceOrigin, dappContractAddress, dappOwner]);
     }
 
@@ -135,9 +136,8 @@ export class Tasks {
         return await this.contractApi.contractCall("getCaptchaData", [captchaDatasetId])
     }
 
-    async getCaptchaSolutionCommitment(solutionId: string, datasetId: string): Promise<Provider> {
-        //TODO rebuild contract now that this method is an [ink(message)]
-        return await this.contractApi.contractCall("getCaptchaSolutionCommitment", [solutionId, datasetId])
+    async getCaptchaSolutionCommitment(solutionId: string): Promise<Provider> {
+        return await this.contractApi.contractCall("getCaptchaSolutionCommitment", [solutionId])
     }
 
     async providerAccounts(providerId: string, status: GovernanceStatus): Promise<AnyJson> {
