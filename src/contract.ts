@@ -42,10 +42,11 @@ export class prosopoContractApi implements contractApiInterface {
         if (value) {
             response = await signedContract.tx[contractMethodName](...encodedArgs, {value: value});
         } else {
+            console.log("Using tx method without value");
             response = await signedContract.tx[contractMethodName](...encodedArgs);
         }
         const property = 'events';
-
+        console.log(JSON.stringify(response));
         if (response.result.isInBlock) {
             if (response.result.status.isRetracted) {
                 throw(response.status.asRetracted)
@@ -101,12 +102,9 @@ export class prosopoContractApi implements contractApiInterface {
     encodeArgs(methodObj: object, args: any[], value?: number): any[] {
         let encodedArgs: any[] = [];
         // args must be in the same order as methodObj['args']
-        methodObj['args'].forEach(function (methodArg, idx) {
-            if (methodArg['type']['type'] === 'Hash' && !isU8a(args[idx])) {
-                encodedArgs.push(blake2AsU8a(args[idx]));
-            } else {
-                encodedArgs.push(args[idx]);
-            }
+        methodObj['args'].forEach((methodArg, idx) => {
+            let val = this.env.network.api.registry.createType(methodArg['type']['type'], args[idx])
+            encodedArgs.push(val)
         });
         return encodedArgs
     }

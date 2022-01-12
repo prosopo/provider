@@ -61,6 +61,11 @@ export const contractDefinitions = {
         captcha_dataset_id: 'Hash',
     },
     ProviderMap: '{"AccountId":"Provider"}',
+    ProsopoCaptchaData: {
+        provider: 'AccountId',
+        merkle_tree_root: 'Hash',
+        captcha_type: 'u16',
+    },
     ProsopoCaptchaSolutionCommitment: {
         account: 'AccountId',
         captcha_dataset_id: 'Hash',

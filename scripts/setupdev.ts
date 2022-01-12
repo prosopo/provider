@@ -148,9 +148,17 @@ async function setupDappUser(env) {
         await tree.build([solved[0].captcha, unsolved[0].captcha]);
         // TODO send solution to Provider database https://github.com/prosopo-io/provider/issues/35
         await env.changeSigner(DAPP_USER.mnemonic);
+        console.log("Looking for Captcha Data with ID: ", provider.captcha_dataset_id.toString())
+        let captchaData = await tasks.getCaptchaData(provider.captcha_dataset_id.toString());
+        if (captchaData.merkle_tree_root !== provider.captcha_dataset_id.toString()) {
+            throw(`Cannot find captcha data id: ${provider.captcha_dataset_id.toString()}`);
+        }
         console.log(" - dappUserCommit")
         if (typeof (DAPP.contractAccount) === "string" && typeof (process.env.PROVIDER_ADDRESS) === "string") {
-            console.log(DAPP.contractAccount, provider.captcha_dataset_id, tree.root!.hash);
+            console.log("Contract Account", DAPP.contractAccount);
+            console.log("Captcha Dataset ID", provider.captcha_dataset_id);
+            console.log("Solution Root Hash", tree.root!.hash);
+            console.log("Provider Address", process.env.PROVIDER_ADDRESS);
             await tasks.dappUserCommit(DAPP.contractAccount, provider.captcha_dataset_id, tree.root!.hash, process.env.PROVIDER_ADDRESS);
         } else {
             throw("Either DAPP_CONTRACT_ACCOUNT or PROVIDER_ADDRESS not set in environment variables");
