@@ -3,6 +3,8 @@ RUN apk add --update --no-cache python3 gcc g++ libc-dev make && ln -sf python3 
 RUN apk add curl zsh git
 ENV USER=node
 RUN mkdir -p /usr/src/app && chown -R $USER:$USER /usr/src/app
+RUN mkdir -p /usr/src/redspot && chown -R $USER:$USER /usr/src/redspot
+RUN mkdir -p /usr/src/data && chown -R $USER:$USER /usr/src/data
 USER $USER
 WORKDIR /usr/src/app
 RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"

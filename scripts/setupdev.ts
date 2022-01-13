@@ -5,8 +5,6 @@ import {CaptchaMerkleTree} from "../src/merkle";
 import {Tasks} from "../src/tasks/tasks";
 import {hexHash} from "../src/util"
 import BN from "bn.js";
-import {Option, GenericAccountId} from '@polkadot/types';
-import {AccountId, Hash} from "@polkadot/types/interfaces";
 import {blake2AsHex, decodeAddress, encodeAddress} from "@polkadot/util-crypto";
 
 require('dotenv').config()
