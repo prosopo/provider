@@ -82,7 +82,7 @@ export class prosopoContractApi implements contractApiInterface {
             // @ts-ignore
             return this.unwrap(response.output.toJSON());
         } else {
-            throw(response.result.asErr);
+            throw(new Error(response.result.asErr.asModule.message.unwrap().toString()));
         }
     }
 
@@ -96,7 +96,6 @@ export class prosopoContractApi implements contractApiInterface {
 
 
     /** Encodes arguments that should be hashes using blake2AsU8a
-
      * @return encoded arguments
      */
     encodeArgs(methodObj: object, args: any[], value?: number): any[] {

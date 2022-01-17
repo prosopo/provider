@@ -68,6 +68,9 @@ export const ERRORS = {
         },
         INVALID_STORAGE_NAME: {
             message: 'Failed to find given storage name'
+        },
+        CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST : {
+            message: 'Captcha solution commitment does not exist'
         }
     },
     CLI: {

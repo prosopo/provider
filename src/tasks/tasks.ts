@@ -1,4 +1,3 @@
-//Tasks that are shared by the API and CLI. Tasks will be database only, blockchain only, and a mixture
 import {loadJSONFile} from "../util";
 import {
     addHashesToDataset,
@@ -13,12 +12,16 @@ import {prosopoContractApi} from "../contract";
 import {Database} from "../types";
 import {ERRORS} from "../errors";
 import {CaptchaMerkleTree} from "../merkle";
-import {CaptchaSolutionBody, CaptchaSolutionResponse, CaptchaWithProof} from "../types/api";
+import {CaptchaSolutionResponse, CaptchaWithProof} from "../types/api";
 import {GovernanceStatus} from "../types/provider";
 import {buildDecodeVector} from "../codec/codec";
 import {AnyJson} from "@polkadot/types/types/codec";
 import {AccountId, Hash} from "@polkadot/types/interfaces";
 
+
+/**
+ * @description Tasks that are shared by the API and CLI
+ */
 export class Tasks {
 
     contractApi: contractApiInterface
@@ -165,7 +168,7 @@ export class Tasks {
      * @param {CaptchaWithProof} captchas
      * @return JSON result containing the contract event
      */
-    async dappUserSolution(userAccount: AccountId, dappAccount: AccountId, captchas: JSON): Promise<CaptchaSolutionResponse[]> {
+    async dappUserSolution(userAccount: string | Uint8Array, dappAccount: string | Uint8Array, captchas: JSON): Promise<CaptchaSolutionResponse[]> {
         const receivedCaptchas = parseCaptchaSolutions(captchas);
         const captchaIds = receivedCaptchas.map(captcha => captcha.captchaId);
         const storedCaptchas = await this.db.getCaptchaById(captchaIds);
@@ -173,10 +176,13 @@ export class Tasks {
             throw new Error(ERRORS.CAPTCHA.INVALID_CAPTCHA_ID.message)
         }
         let tree = new CaptchaMerkleTree();
-        await tree.build(receivedCaptchas);
+        tree.build(receivedCaptchas);
+        let commitment = await this.getCaptchaSolutionCommitment(tree.root!.hash);
+        if (!commitment) {
+            throw new Error(ERRORS.CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST.message)
+        }
         await this.db.storeDappUserCaptchaSolution(receivedCaptchas, tree.root!.hash);
-        let success = compareCaptchaSolutions(receivedCaptchas, storedCaptchas);
-        if (success) {
+        if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
             return captchaIds.map(id => ({captchaId: id, proof: tree.proof(id)}))
         } else {
             return []

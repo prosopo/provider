@@ -178,7 +178,11 @@ export class ProsopoDatabase implements Database {
     }
 
     getCaptchaById(captchaId: string[]): Promise<Captcha[] | undefined> {
-        return Promise.resolve(undefined);
+        if (captchaId.indexOf(SOLVED_CAPTCHA.captchaId) > -1) {
+            return Promise.resolve([SOLVED_CAPTCHA]);
+        } else {
+            return Promise.resolve([]);
+        }
     }
 
     storeDappUserCaptchaSolution(captchas: CaptchaSolution[], treeRoot: string) {

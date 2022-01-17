@@ -95,7 +95,6 @@ describe("PROVIDER MERKLE TREE", () => {
             expect(tree.layers[2].indexOf(layerOneHash) > -1);
         }
     )
-
     it("Tree contains correct leaf hashes when not computing leaf hashes", async () => {
             let captchas = CAPTCHAS_WITH_LEAF_HASHES;
             const tree = new CaptchaMerkleTree()
@@ -122,6 +121,21 @@ describe("PROVIDER MERKLE TREE", () => {
             const tree = new CaptchaMerkleTree()
             await tree.build(captchas);
             const proof = tree.proof("1");
+            const layerZeroHash = hexHash(proof[0].join());
+            expect(tree.layers[1].indexOf(layerZeroHash) > -1);
+            const layerOneHash = hexHash(proof[1].join());
+            expect(tree.layers[2].indexOf(layerOneHash) > -1);
+        }
+    )
+
+    it.only("Tree proof works when there is only one leaf", async () => {
+            let captchas = [CAPTCHAS_WITH_LEAF_HASHES[0]];
+            const tree = new CaptchaMerkleTree()
+            console.log(captchas);
+            await tree.build(captchas);
+            const proof = tree.proof("1");
+            console.log(tree);
+            console.log(tree.layers);
             const layerZeroHash = hexHash(proof[0].join());
             expect(tree.layers[1].indexOf(layerZeroHash) > -1);
             const layerOneHash = hexHash(proof[1].join());

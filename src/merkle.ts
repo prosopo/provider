@@ -14,7 +14,11 @@ export class CaptchaMerkleTree {
 
 
 
-    async build(captchas: CaptchaSolution[]) {
+    build(captchas: CaptchaSolution[]) {
+        // allow rebuild
+        if (this.layers.length) {
+            this.layers = [];
+        }
         let layerZero: string[] = []
         for (let captcha of captchas) {
             let node = new MerkleNode(captcha.captchaId)
