@@ -4,6 +4,9 @@ import Contract from "@redspot/patract/contract";
 import {Signer} from "redspot/provider";
 import {ERRORS} from "../../src/errors";
 import {network, patract} from 'redspot';
+import {Environment} from "../../src/env"
+
+const CONTRACT_NAME = "prosopo"
 
 export class MockEnvironment implements ProsopoEnvironment {
     config: ProsopoConfig
@@ -21,13 +24,13 @@ export class MockEnvironment implements ProsopoEnvironment {
         this.config = {
             defaultEnvironment: "development",
             networks: {
-                development: {endpoint: "", contract: {address: "", deployer: {address: ""}}}
+                development: {endpoint: "ws://substrate-node:9944", contract: {address: "", deployer: {address: ""}}}
             },
             database: {
                 development: {type: "mockdb", endpoint: "", dbname: ""}
             }
         }
-        this.mnemonic = "\\Alice";
+        this.mnemonic = "//Alice";
         this.network = network;
         this.patract = patract;
         if (this.config.defaultEnvironment && this.config.networks.hasOwnProperty(this.config.defaultEnvironment)) {
@@ -40,6 +43,8 @@ export class MockEnvironment implements ProsopoEnvironment {
     }
 
     async isReady() {
+        await this.getSigner();
+        await this.getContract();
         await this.importDatabase();
         await this.db?.connect();
     }
@@ -55,6 +60,26 @@ export class MockEnvironment implements ProsopoEnvironment {
             throw new Error(`${ERRORS.DATABASE.DATABASE_IMPORT_FAILED.message}:${this.config.database[this.defaultEnvironment].type}:${err}`);
         }
     }
+
+    /*
+        Direct copy of functions from env.ts as contract is not currently mocked
+    */
+    async getContract() {
+        await this.network.api.isReadyOrError;
+        const contractFactory = await patract.getContractFactory(CONTRACT_NAME, this.signer);
+        this.contract = await contractFactory.attach(this.contractAddress);
+    }
+
+    async getSigner() {
+        await this.network.api.isReadyOrError;
+        let mnemonic = this.mnemonic;
+        if (mnemonic) {
+            const keyringPair = this.network.keyring.addFromMnemonic(mnemonic);
+            // @ts-ignore
+            this.signer = this.network.createSigner(keyringPair);
+        }
+    }
+
 
 
 }

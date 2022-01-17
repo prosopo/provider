@@ -11,8 +11,7 @@ import {CaptchaWithProof} from "../types/api";
 import {GovernanceStatus} from "../types/provider";
 import {buildDecodeVector} from "../codec/codec";
 import {AnyJson} from "@polkadot/types/types/codec";
-import {AccountId, Hash} from "@polkadot/types/interfaces";
-import type { Option } from '@polkadot/types';
+import {Hash} from "@polkadot/types/interfaces";
 
 export class Tasks {
 
