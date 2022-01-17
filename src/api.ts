@@ -2,6 +2,7 @@ import express, {Router} from 'express';
 import {Tasks} from './tasks/tasks'
 import {BadRequest, ERRORS} from './errors'
 import {shuffleArray} from "./util";
+import {parseCaptchas} from "./captcha";
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -159,6 +160,7 @@ export function prosopoMiddleware(env): Router {
         //TODO
         next()
     });
+
 
     /**
      * Dapp User Commit
@@ -341,16 +343,20 @@ export function prosopoMiddleware(env): Router {
     });
 
     /**
-     * Receives a solved Captcha and verifies the solution of against the database and the on-chain merkle tree hash of the user
+     * Receives solved Captchas, store to database, and check against solution commitment
      *
-     * @param {string} userId - Dapp User id
-     * @param {string} dappId - Dapp Contract AccountId
-     * @param {CaptchaSolution} captchaSolution - The Captcha solution
+     * @param {string} userAccount - Dapp User id
+     * @param {string} dappAccount - Dapp Contract AccountId
+     * @param {Captcha[]} captchas - The Captcha solutions
      * @return {CaptchaSolutionResponse} - The Captcha solution result and proof
      */
-    router.post('/v1/prosopo/provider/captcha', function (req, res, next) {
-        // TODO
-        next();
+    router.post('/v1/prosopo/provider/captcha', async function (req, res, next) {
+        const {userAccount, dappAccount, captchas} = req.body;
+        if (!userAccount || !dappAccount || !captchas) {
+            throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
+        }
+        const result = await tasks.dappUserSolution(userAccount, dappAccount, captchas)
+        res.json(result);
     });
 
     return router;

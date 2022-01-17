@@ -11,11 +11,15 @@ export interface Database {
 
     loadDataset(dataset: Dataset): Promise<void>;
 
-    getCaptcha(solved: boolean, datasetId: Hash | string | Uint8Array, size?: number): Promise<Captcha[] | undefined>;
+    getRandomCaptcha(solved: boolean, datasetId: Hash | string | Uint8Array, size?: number): Promise<Captcha[] | undefined>;
+
+    getCaptchaById(captchaId): Promise<Captcha[] | undefined>;
 
     updateCaptcha(captcha: Captcha, datasetId: string): Promise<void>;
 
     getDatasetDetails(datasetId: Hash | string | Uint8Array);
+
+    storeDappUserCaptchaSolution(captchas: Captcha[],treeRoot: string);
 }
 
 // Other table types from other database engines go here

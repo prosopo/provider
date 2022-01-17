@@ -34,7 +34,7 @@ export const ERRORS = {
         CAPTCHA_GET_FAILED: {
             message: 'Failed to get captcha'
         },
-        NO_CAPTCHAS_FOUND : {
+        NO_CAPTCHAS_FOUND: {
             message: 'No captcha matching datasetId'
         }
     },
@@ -73,6 +73,14 @@ export const ERRORS = {
         HASH_ERROR: {
             message: 'error hashing dataset'
         }
+    },
+    CAPTCHA: {
+        PARSE_ERROR: {
+            message: 'error parsing captcha'
+        },
+        INVALID_CAPTCHA_ID: {
+            message: 'invalid captcha id'
+        },
     }
 }
 

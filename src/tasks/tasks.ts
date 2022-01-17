@@ -1,6 +1,6 @@
 //Tasks that are shared by the API and CLI. Tasks will be database only, blockchain only, and a mixture
 import {loadJSONFile} from "../util";
-import {addHashesToDataset, parseCaptchaDataset} from "../captcha";
+import {addHashesToDataset, compareCaptchaSolutions, parseCaptchaDataset, parseSolvedCaptchas} from "../captcha";
 import {hexToU8a} from "@polkadot/util";
 import {contractApiInterface, Dapp, Provider} from "../types/contract";
 import {prosopoContractApi} from "../contract";
@@ -12,7 +12,6 @@ import {GovernanceStatus} from "../types/provider";
 import {buildDecodeVector} from "../codec/codec";
 import {AnyJson} from "@polkadot/types/types/codec";
 import {AccountId, Hash} from "@polkadot/types/interfaces";
-import type { Option } from '@polkadot/types';
 
 export class Tasks {
 
@@ -91,39 +90,6 @@ export class Tasks {
     async captchaSolutionCommitment() {
     }
 
-    // Other tasks
-
-    /**
-     * @description Get captchas that are solved or not solved, along with the merkle proof for each
-     * @param {string}   datasetId  the id of the data set
-     * @param {boolean}  solved    `true` when captcha is solved
-     * @param {number}   size       the number of records to be returned
-     */
-    async getCaptchaWithProof(datasetId: Hash | string | Uint8Array, solved: boolean, size: number): Promise<CaptchaWithProof[]> {
-
-        // TODO check that dataset is attached to a Provider before responding ???!!!
-        //  Otherwise Providers could store any random data and have Dapp Users request it. Is there any advantage to
-        //  this?
-
-        const captchaDocs = await this.db.getCaptcha(solved, datasetId, size);
-        if (captchaDocs) {
-            let captchas: CaptchaWithProof[] = [];
-            for (let captcha of captchaDocs) {
-                let captcha = captchaDocs[0];
-                const datasetDetails = await this.db.getDatasetDetails(datasetId);
-                const tree = new CaptchaMerkleTree();
-                tree.layers = datasetDetails['tree'];
-                let proof = tree.proof(captcha.captchaId!);
-                // cannot pass solution to dapp user as they are required to solve the captcha!
-                delete captcha.solution;
-                captchas.push({captcha: captcha, proof: proof});
-            }
-            return captchas
-        } else {
-            throw Error(ERRORS.DATABASE.CAPTCHA_GET_FAILED.message);
-        }
-    }
-
     async getProviderDetails(accountId: string): Promise<Provider> {
         return await this.contractApi.contractCall("getProviderDetails", [accountId])
     }
@@ -150,6 +116,75 @@ export class Tasks {
         const dappAccountsList = await this.contractApi.getStorage("dapp_accounts", buildDecodeVector('DappAccounts'));
         console.log(dappAccountsList);
         return dappAccountsList
+    }
+
+    // Other tasks
+
+    /**
+     * @description Get captchas that are solved or not solved, along with the merkle proof for each
+     * @param {string}   datasetId  the id of the data set
+     * @param {boolean}  solved    `true` when captcha is solved
+     * @param {number}   size       the number of records to be returned
+     */
+    async getCaptchaWithProof(datasetId: Hash | string | Uint8Array, solved: boolean, size: number): Promise<CaptchaWithProof[]> {
+
+        // TODO check that dataset is attached to a Provider before responding ???!!!
+        //  Otherwise Providers could store any random data and have Dapp Users request it. Is there any advantage to
+        //  this?
+
+        const captchaDocs = await this.db.getRandomCaptcha(solved, datasetId, size);
+        if (captchaDocs) {
+            let captchas: CaptchaWithProof[] = [];
+            for (let captcha of captchaDocs) {
+                let captcha = captchaDocs[0];
+                const datasetDetails = await this.db.getDatasetDetails(datasetId);
+                const tree = new CaptchaMerkleTree();
+                tree.layers = datasetDetails['tree'];
+                let proof = tree.proof(captcha.captchaId!);
+                // cannot pass solution to dapp user as they are required to solve the captcha!
+                delete captcha.solution;
+                captchas.push({captcha: captcha, proof: proof});
+            }
+            return captchas
+        } else {
+            throw Error(ERRORS.DATABASE.CAPTCHA_GET_FAILED.message);
+        }
+    }
+
+    /**
+     * Validate and store the clear text captcha solution(s) from the Dapp User
+     * @param userAccount
+     * @param dappAccount
+     * @param {CaptchaWithProof} captchas
+     * @return JSON result containing the contract event
+     */
+    async dappUserSolution(userAccount: AccountId, dappAccount: AccountId, captchas: JSON) {
+        // Check captchas have valid structure solutions
+        const receivedCaptchas = parseSolvedCaptchas(captchas);
+        // Check captchas exist in DB
+        const captchaIds = receivedCaptchas.map(captcha => [captcha.captchaId]);
+        const storedCaptchas = await this.db.getCaptchaById(captchaIds);
+        if (!storedCaptchas || receivedCaptchas.length !== storedCaptchas.length) {
+            throw new Error(ERRORS.CAPTCHA.INVALID_CAPTCHA_ID.message)
+        }
+        let tree = new CaptchaMerkleTree();
+        await tree.build(receivedCaptchas);
+        await this.db.storeDappUserCaptchaSolution(receivedCaptchas, tree.root!.hash);
+        let success = compareCaptchaSolutions(receivedCaptchas, storedCaptchas)
+        if (success) {
+            // TODO return captchas with merkle branches so that client can confirm that they belong to the dataset
+        } else {
+            // TODO return some kind of error message
+        }
+    }
+
+    /**
+     * Apply new captcha solutions to captcha dataset and recalculate merkle tree
+     * @param {string} datasetId
+     */
+    async calculateCaptchaSolutions(datasetId: string) {
+        //TODO run this on a predefined schedule as updating the dataset requires committing an updated
+        // captcha_dataset_id to the blockchain
     }
 
 }

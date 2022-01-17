@@ -1,7 +1,7 @@
 import {
     Collection,
     Db,
-    MongoClient, ObjectId,
+    MongoClient, ObjectId, WithId,
 } from "mongodb";
 import {Database} from '../types'
 import {ERRORS} from '../errors'
@@ -19,13 +19,13 @@ const DEFAULT_ENDPOINT = "mongodb://127.0.0.1:27017"
  */
 export class ProsopoDatabase implements Database {
     readonly url: string;
-    tables: { captchas?: Collection, dataset?: Collection }
+    tables: { captchas: Collection, dataset: Collection, solutions: Collection }
     dbname: string
 
 
     constructor(url, dbname) {
         this.url = url || DEFAULT_ENDPOINT;
-        this.tables = {};
+        this.tables = {dataset: new Collection(), captchas: new Collection(), solutions: new Collection()};
         this.dbname = dbname;
     }
 
@@ -38,6 +38,7 @@ export class ProsopoDatabase implements Database {
         const db: Db = client.db(this.dbname);
         this.tables.dataset = db.collection("dataset");
         this.tables.captchas = db.collection("captchas");
+        this.tables.solutions = db.collection("solutions");
     }
 
     /**
@@ -71,17 +72,32 @@ export class ProsopoDatabase implements Database {
     }
 
     /**
-     * @description Get a captcha that is solved or not solved
+     * @description Get random captchas that are solved or not solved
      * @param {boolean}  solved    `true` when captcha is solved
      * @param {string}   datasetId  the id of the data set
      * @param {number}   size       the number of records to be returned
      */
-    async getCaptcha(solved: boolean, datasetId: Hash | string | Uint8Array, size?: number): Promise<Captcha[] | undefined> {
+    async getRandomCaptcha(solved: boolean, datasetId: Hash | string | Uint8Array, size?: number): Promise<Captcha[] | undefined> {
         const sampleSize = size ? Math.abs(Math.trunc(size)) : 1;
         const cursor = this.tables.captchas?.aggregate([
             {$match: {datasetId: datasetId, solution: {$exists: solved}}},
             {$sample: {size: sampleSize}}
         ])
+        const docs = await cursor?.toArray();
+        if (docs) {
+            // drop the _id field
+            return docs.map(({_id, ...keepAttrs}) => keepAttrs) as Captcha[];
+        } else {
+            throw(ERRORS.DATABASE.CAPTCHA_GET_FAILED.message)
+        }
+    }
+
+    /**
+     * @description Get captchas by id
+     * @param {string[]} captchaId
+     */
+    async getCaptchaById(captchaId: string[]): Promise<Captcha[] | undefined> {
+        const cursor = this.tables.captchas?.find({id: {$in: captchaId}});
         const docs = await cursor?.toArray();
         if (docs) {
             // drop the _id field
@@ -116,6 +132,30 @@ export class ProsopoDatabase implements Database {
         } else {
             throw(ERRORS.DATABASE.DATASET_GET_FAILED.message)
         }
+    }
+
+    /**
+     * @description Store a Dapp User's captcha solution
+     */
+    async storeDappUserCaptchaSolution(captchas: Captcha[], treeRoot: string) {
+        // create a bulk upsert operation and execute
+        // @ts-ignore
+        await this.tables.solutions?.bulkWrite(captchas.map(captchaDoc =>
+            ({
+                updateOne: {
+                    filter: {_id: captchaDoc.captchaId},
+                    update: {
+                        $set:
+                            {
+                                solution: captchaDoc.solution,
+                                salt: captchaDoc.salt,
+                                treeRoot: treeRoot
+                            }
+                    },
+                    upsert: true
+                }
+            })
+        ))
     }
 
 }
