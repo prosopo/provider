@@ -45,6 +45,15 @@ export const ERRORS = {
         PARAMETER_UNDEFINED: {
             message: 'Parameters must be defined in API POST call'
         },
+        CAPTCHA_FAILED: {
+            message: 'You answered one or more captchas incorrectly. Please try again'
+        },
+        CAPTCHA_PASSED: {
+            message: 'You correctly answered the captchas'
+        },
+        BAD_REQUEST: {
+            message: 'BadRequest'
+        }
 
     },
     CONTRACT: {

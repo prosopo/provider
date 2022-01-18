@@ -12,11 +12,16 @@ export class CaptchaMerkleTree {
         this.layers = [];
     }
 
-    async build(captchas: Captcha[]) {
+    async build(captchas: Captcha[], computeHashes: boolean) {
 
         let layerZero: string[] = []
         for (let captcha of captchas) {
-            let node = new MerkleNode(await this.computeCaptchaHash(captcha))
+            let node
+            if (computeHashes) {
+                node = new MerkleNode(await this.computeCaptchaHash(captcha))
+            } else {
+                node = new MerkleNode(captcha.captchaId)
+            }
             this.leaves.push(node)
             layerZero.push(node.hash);
         }

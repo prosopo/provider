@@ -1,13 +1,13 @@
 //Tasks that are shared by the API and CLI. Tasks will be database only, blockchain only, and a mixture
 import {loadJSONFile} from "../util";
-import {addHashesToDataset, compareCaptchaSolutions, parseCaptchaDataset, parseSolvedCaptchas} from "../captcha";
+import {addHashesToDataset, compareCaptchaSolutions, parseCaptchaDataset, parseCaptchaSolutions} from "../captcha";
 import {hexToU8a} from "@polkadot/util";
 import {contractApiInterface, Dapp, Provider} from "../types/contract";
 import {prosopoContractApi} from "../contract";
 import {Database} from "../types";
 import {ERRORS} from "../errors";
 import {CaptchaMerkleTree} from "../merkle";
-import {CaptchaWithProof} from "../types/api";
+import {CaptchaSolutionBody, CaptchaSolutionResponse, CaptchaWithProof} from "../types/api";
 import {GovernanceStatus} from "../types/provider";
 import {buildDecodeVector} from "../codec/codec";
 import {AnyJson} from "@polkadot/types/types/codec";
@@ -45,7 +45,7 @@ export class Tasks {
     async providerAddDataset(file: string): Promise<Object> {
         let dataset = parseCaptchaDataset(loadJSONFile(file));
         let tree = new CaptchaMerkleTree();
-        await tree.build(dataset['captchas']);
+        await tree.build(dataset['captchas'], true);
         let datasetHashes = addHashesToDataset(dataset, tree);
         datasetHashes['datasetId'] = tree.root?.hash;
         datasetHashes['tree'] = tree.layers;
@@ -158,23 +158,24 @@ export class Tasks {
      * @param {CaptchaWithProof} captchas
      * @return JSON result containing the contract event
      */
-    async dappUserSolution(userAccount: AccountId, dappAccount: AccountId, captchas: JSON) {
-        // Check captchas have valid structure solutions
-        const receivedCaptchas = parseSolvedCaptchas(captchas);
-        // Check captchas exist in DB
-        const captchaIds = receivedCaptchas.map(captcha => [captcha.captchaId]);
+    async dappUserSolution(userAccount: AccountId, dappAccount: AccountId, captchas: JSON): Promise<CaptchaSolutionResponse[]> {
+        const receivedCaptchas = parseCaptchaSolutions(captchas);
+        const captchaIds = receivedCaptchas.map(captcha => captcha.captchaId);
+        console.log(captchaIds);
         const storedCaptchas = await this.db.getCaptchaById(captchaIds);
+        console.log(storedCaptchas);
+        console.log(receivedCaptchas);
         if (!storedCaptchas || receivedCaptchas.length !== storedCaptchas.length) {
             throw new Error(ERRORS.CAPTCHA.INVALID_CAPTCHA_ID.message)
         }
         let tree = new CaptchaMerkleTree();
-        await tree.build(receivedCaptchas);
+        await tree.build(receivedCaptchas, false);
         await this.db.storeDappUserCaptchaSolution(receivedCaptchas, tree.root!.hash);
         let success = compareCaptchaSolutions(receivedCaptchas, storedCaptchas)
         if (success) {
-            // TODO return captchas with merkle branches so that client can confirm that they belong to the dataset
+            return captchaIds.map(id => ({captchaId: id, proof: tree.proof(id)}))
         } else {
-            // TODO return some kind of error message
+            return []
         }
     }
 

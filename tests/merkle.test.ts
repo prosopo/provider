@@ -41,7 +41,7 @@ describe("PROVIDER MERKLE TREE", () => {
             format: "SelectAll"
         }
         const tree = new CaptchaMerkleTree()
-        await tree.build(dataset['captchas']);
+        await tree.build(dataset['captchas'], true);
         return tree
     }
 

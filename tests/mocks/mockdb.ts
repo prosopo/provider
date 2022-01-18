@@ -1,109 +1,107 @@
-import {Database, Table} from "../../src/types";
+import {Database, Table, Tables} from "../../src/types";
 import {Captcha, Dataset} from "../../src/types/captcha";
+import {Hash} from "@polkadot/types/interfaces";
 
 const DEFAULT_ENDPOINT = "test"
 
 const SOLVED_CAPTCHA = {
     //"_id" : "0x9e7ef7b1093e1a9a74a6384a773d4e7ee25575d4fecc8a6fd7c9fe3357cbfad3",
-    "captchaId" : "0x9e7ef7b1093e1a9a74a6384a773d4e7ee25575d4fecc8a6fd7c9fe3357cbfad3",
-    "datasetId" : "0x0282715bd2de51935c8ed3bf101ad150861d91b2af0e6c50281740a0c072650a",
-    "index" : 0,
-    "items" : [
+    "captchaId": "0x9e7ef7b1093e1a9a74a6384a773d4e7ee25575d4fecc8a6fd7c9fe3357cbfad3",
+    "datasetId": "0x0282715bd2de51935c8ed3bf101ad150861d91b2af0e6c50281740a0c072650a",
+    "index": 0,
+    "items": [
         {
-            "path" : "/home/user/dev/prosopo/data/img/01.01.jpeg",
-            "type" : "image"
+            "path": "/home/user/dev/prosopo/data/img/01.01.jpeg",
+            "type": "image"
         },
         {
-            "path" : "/home/user/dev/prosopo/data/img/01.02.jpeg",
-            "type" : "image"
+            "path": "/home/user/dev/prosopo/data/img/01.02.jpeg",
+            "type": "image"
         },
         {
-            "path" : "/home/user/dev/prosopo/data/img/01.03.jpeg",
-            "type" : "image"
+            "path": "/home/user/dev/prosopo/data/img/01.03.jpeg",
+            "type": "image"
         },
         {
-            "path" : "/home/user/dev/prosopo/data/img/01.04.jpeg",
-            "type" : "image"
+            "path": "/home/user/dev/prosopo/data/img/01.04.jpeg",
+            "type": "image"
         },
         {
-            "path" : "/home/user/dev/prosopo/data/img/01.05.jpeg",
-            "type" : "image"
+            "path": "/home/user/dev/prosopo/data/img/01.05.jpeg",
+            "type": "image"
         },
         {
-            "path" : "/home/user/dev/prosopo/data/img/01.06.jpeg",
-            "type" : "image"
+            "path": "/home/user/dev/prosopo/data/img/01.06.jpeg",
+            "type": "image"
         },
         {
-            "path" : "/home/user/dev/prosopo/data/img/01.07.jpeg",
-            "type" : "image"
+            "path": "/home/user/dev/prosopo/data/img/01.07.jpeg",
+            "type": "image"
         },
         {
-            "path" : "/home/user/dev/prosopo/data/img/01.08.jpeg",
-            "type" : "image"
+            "path": "/home/user/dev/prosopo/data/img/01.08.jpeg",
+            "type": "image"
         },
         {
-            "path" : "/home/user/dev/prosopo/data/img/01.09.jpeg",
-            "type" : "image"
+            "path": "/home/user/dev/prosopo/data/img/01.09.jpeg",
+            "type": "image"
         }
     ],
-    "salt" : "0x01",
-    "solution" : [
+    "salt": "0x01",
+    "solution": [
         2,
         3,
         4
     ],
-    "target" : "bus"
+    "target": "bus"
 };
-
-
-
 
 
 const UNSOLVED_CAPTCHA = {
     //"_id" : "0x1b3336e2e69ca56f44e44cef13cc96e87972175a2d48068cb72327c73ca22268",
-    "captchaId" : "0x1b3336e2e69ca56f44e44cef13cc96e87972175a2d48068cb72327c73ca22268",
-    "datasetId" : "0x0282715bd2de51935c8ed3bf101ad150861d91b2af0e6c50281740a0c072650a",
-    "index" : 1,
-    "items" : [
+    "captchaId": "0x1b3336e2e69ca56f44e44cef13cc96e87972175a2d48068cb72327c73ca22268",
+    "datasetId": "0x0282715bd2de51935c8ed3bf101ad150861d91b2af0e6c50281740a0c072650a",
+    "index": 1,
+    "items": [
         {
-            "path" : "/home/user/dev/prosopo/data/img/01.01.jpeg",
-            "type" : "image"
+            "path": "/home/user/dev/prosopo/data/img/01.01.jpeg",
+            "type": "image"
         },
         {
-            "path" : "/home/user/dev/prosopo/data/img/01.02.jpeg",
-            "type" : "image"
+            "path": "/home/user/dev/prosopo/data/img/01.02.jpeg",
+            "type": "image"
         },
         {
-            "path" : "/home/user/dev/prosopo/data/img/01.03.jpeg",
-            "type" : "image"
+            "path": "/home/user/dev/prosopo/data/img/01.03.jpeg",
+            "type": "image"
         },
         {
-            "path" : "/home/user/dev/prosopo/data/img/01.04.jpeg",
-            "type" : "image"
+            "path": "/home/user/dev/prosopo/data/img/01.04.jpeg",
+            "type": "image"
         },
         {
-            "path" : "/home/user/dev/prosopo/data/img/01.05.jpeg",
-            "type" : "image"
+            "path": "/home/user/dev/prosopo/data/img/01.05.jpeg",
+            "type": "image"
         },
         {
-            "path" : "/home/user/dev/prosopo/data/img/01.06.jpeg",
-            "type" : "image"
+            "path": "/home/user/dev/prosopo/data/img/01.06.jpeg",
+            "type": "image"
         },
         {
-            "path" : "/home/user/dev/prosopo/data/img/01.07.jpeg",
-            "type" : "image"
+            "path": "/home/user/dev/prosopo/data/img/01.07.jpeg",
+            "type": "image"
         },
         {
-            "path" : "/home/user/dev/prosopo/data/img/01.08.jpeg",
-            "type" : "image"
+            "path": "/home/user/dev/prosopo/data/img/01.08.jpeg",
+            "type": "image"
         },
         {
-            "path" : "/home/user/dev/prosopo/data/img/01.09.jpeg",
-            "type" : "image"
+            "path": "/home/user/dev/prosopo/data/img/01.09.jpeg",
+            "type": "image"
         }
     ],
-    "salt" : "0x02",
-    "target" : "train"
+    "salt": "0x02",
+    "target": "train"
 };
 
 const DATASET = {
@@ -139,7 +137,7 @@ const DATASET = {
 
 export class ProsopoDatabase implements Database {
     dbname: string;
-    tables: { captcha?: Table; dataset?: Table };
+    tables: Tables
     readonly url: string;
 
     constructor(url, dbname) {
@@ -175,4 +173,15 @@ export class ProsopoDatabase implements Database {
         return Promise.resolve(undefined);
     }
 
+    getRandomCaptcha(solved: boolean, datasetId: Hash | string | Uint8Array, size?: number): Promise<Captcha[] | undefined> {
+        return Promise.resolve(undefined);
+    }
+
+    getCaptchaById(captchaId: string[]): Promise<Captcha[] | undefined> {
+        return Promise.resolve(undefined);
+    }
+
+    storeDappUserCaptchaSolution(captchas: Captcha[], treeRoot: string) {
+        return Promise.resolve(undefined);
+    }
 }

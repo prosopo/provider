@@ -1,5 +1,4 @@
 import {z} from "zod";
-import {MerkleNodeSchema} from './merkle'
 import {Hash} from "@polkadot/types/interfaces";
 
 export type Dataset = {
@@ -15,12 +14,11 @@ export type Captcha = {
     solution?: any
 }
 
-export type CaptchaWithIdAndSolution = {
+export type CaptchaSolution = {
     captchaId: string
     salt: string,
     solution: any
 }
-
 
 export enum CaptchaTypes { SelectAll = "SelectAll"}
 
@@ -56,6 +54,14 @@ export const SelectAllSolvedCaptchaSchema = CaptchaWithIdAndSolutionSchema.exten
 )
 
 export const CaptchasSchema = z.array(SelectAllCaptchaSchema)
+
+export const CaptchaSolution = z.object({
+    captchaId: z.string(),
+    solution: z.number().array(),
+    salt: z.string()
+})
+
+export const CaptchaSolutionSchema = z.array(CaptchaSolution)
 
 export const CaptchasSolvedSchema = z.array(SelectAllSolvedCaptchaSchema)
 

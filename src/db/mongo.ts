@@ -3,7 +3,7 @@ import {
     Db,
     MongoClient, ObjectId, WithId,
 } from "mongodb";
-import {Database} from '../types'
+import {Database, Tables} from '../types'
 import {ERRORS} from '../errors'
 import {Captcha, Dataset} from "../types/captcha";
 import {Hash} from "@polkadot/types/interfaces";
@@ -19,13 +19,13 @@ const DEFAULT_ENDPOINT = "mongodb://127.0.0.1:27017"
  */
 export class ProsopoDatabase implements Database {
     readonly url: string;
-    tables: { captchas: Collection, dataset: Collection, solutions: Collection }
+    tables: Tables
     dbname: string
 
 
     constructor(url, dbname) {
         this.url = url || DEFAULT_ENDPOINT;
-        this.tables = {dataset: new Collection(), captchas: new Collection(), solutions: new Collection()};
+        this.tables = {};
         this.dbname = dbname;
     }
 
@@ -97,7 +97,7 @@ export class ProsopoDatabase implements Database {
      * @param {string[]} captchaId
      */
     async getCaptchaById(captchaId: string[]): Promise<Captcha[] | undefined> {
-        const cursor = this.tables.captchas?.find({id: {$in: captchaId}});
+        const cursor = this.tables.captchas?.find({_id: {$in: captchaId}});
         const docs = await cursor?.toArray();
         if (docs) {
             // drop the _id field

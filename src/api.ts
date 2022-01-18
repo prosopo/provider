@@ -3,6 +3,7 @@ import {Tasks} from './tasks/tasks'
 import {BadRequest, ERRORS} from './errors'
 import {shuffleArray} from "./util";
 import {parseCaptchas} from "./captcha";
+import {CaptchaSolutionBody} from "./types/api";
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -350,14 +351,26 @@ export function prosopoMiddleware(env): Router {
      * @param {Captcha[]} captchas - The Captcha solutions
      * @return {CaptchaSolutionResponse} - The Captcha solution result and proof
      */
-    router.post('/v1/prosopo/provider/captcha', async function (req, res, next) {
-        const {userAccount, dappAccount, captchas} = req.body;
-        if (!userAccount || !dappAccount || !captchas) {
-            throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
+    router.post('/v1/prosopo/provider/solution', async function (req, res, next) {
+        try {
+            CaptchaSolutionBody.parse(req.body);
+        } catch(err) {
+            throw new BadRequest(err);
         }
-        const result = await tasks.dappUserSolution(userAccount, dappAccount, captchas)
-        res.json(result);
+        const {userAccount, dappAccount, captchas} = req.body;
+        try {
+            const result = await tasks.dappUserSolution(userAccount, dappAccount, captchas)
+            if (result.length === 0) {
+                res.json({status: ERRORS.API.CAPTCHA_FAILED.message, captchas: []})
+            } else {
+                res.json({status: ERRORS.API.CAPTCHA_PASSED.message, captchas: result});
+            }
+        } catch (err: any) {
+            console.log(err);
+            let msg = ERRORS.API.BAD_REQUEST.message;
+            next(new BadRequest(msg));
+        }
     });
 
     return router;
-};
+}

@@ -150,7 +150,7 @@ async function setupDappUser(env) {
         // TODO add salt to solution https://github.com/prosopo-io/provider/issues/35
         console.log(" - build Merkle tree")
         let tree = new CaptchaMerkleTree();
-        await tree.build([solved[0].captcha, unsolved[0].captcha]);
+        await tree.build([solved[0].captcha, unsolved[0].captcha], true);
         // TODO send solution to Provider database https://github.com/prosopo-io/provider/issues/35
         await env.changeSigner(DAPP_USER.mnemonic);
         let captchaData = await tasks.getCaptchaData(provider.captcha_dataset_id.toString());
