@@ -6,6 +6,7 @@ import {Tasks} from "../src/tasks/tasks";
 import {hexHash} from "../src/util"
 import BN from "bn.js";
 import {blake2AsHex, decodeAddress, encodeAddress} from "@polkadot/util-crypto";
+import {convertCaptchaToCaptchaSolution} from "../src/captcha";
 
 require('dotenv').config()
 
@@ -145,12 +146,16 @@ async function setupDappUser(env) {
     if (provider) {
         const solved = await tasks.getCaptchaWithProof(provider.captcha_dataset_id, true, 1)
         const unsolved = await tasks.getCaptchaWithProof(provider.captcha_dataset_id, false, 1)
-        solved[0].captcha.solution = [1];
+        solved[0].captcha.solution = [2, 3, 4];
         unsolved[0].captcha.solution = [1];
+        solved[0].captcha.salt = "0xuser1";
+        unsolved[0].captcha.salt = "0xuser2";
         // TODO add salt to solution https://github.com/prosopo-io/provider/issues/35
         console.log(" - build Merkle tree")
         let tree = new CaptchaMerkleTree();
-        await tree.build([solved[0].captcha, unsolved[0].captcha], true);
+        let captchas = [solved[0].captcha, unsolved[0].captcha];
+        let captchaSols = captchas.map(captcha => convertCaptchaToCaptchaSolution(captcha, captcha.captchaId));
+        await tree.build(captchaSols);
         // TODO send solution to Provider database https://github.com/prosopo-io/provider/issues/35
         await env.changeSigner(DAPP_USER.mnemonic);
         let captchaData = await tasks.getCaptchaData(provider.captcha_dataset_id.toString());
@@ -164,6 +169,7 @@ async function setupDappUser(env) {
             console.log(" -   Captcha Dataset ID: ", provider.captcha_dataset_id);
             console.log(" -   Solution Root Hash: ", commitment_id);
             console.log(" -   Provider Address: ", process.env.PROVIDER_ADDRESS);
+            console.log(" -   Captchas: ", captchas);
             await tasks.dappUserCommit(DAPP.contractAccount, provider.captcha_dataset_id, commitment_id, process.env.PROVIDER_ADDRESS);
             let commitment = await tasks.getCaptchaSolutionCommitment(commitment_id);
             console.log("Commitment: ", commitment)

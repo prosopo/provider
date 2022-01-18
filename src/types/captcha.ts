@@ -11,6 +11,8 @@ export type Dataset = {
 export type Captcha = {
     captchaId?: string
     salt: string,
+    items: any[],
+    target: string,
     solution?: any
 }
 

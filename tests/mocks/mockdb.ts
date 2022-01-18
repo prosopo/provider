@@ -1,5 +1,5 @@
 import {Database, Table, Tables} from "../../src/types";
-import {Captcha, Dataset} from "../../src/types/captcha";
+import {Captcha, CaptchaSolution, Dataset} from "../../src/types/captcha";
 import {Hash} from "@polkadot/types/interfaces";
 
 const DEFAULT_ENDPOINT = "test"
@@ -174,14 +174,14 @@ export class ProsopoDatabase implements Database {
     }
 
     getRandomCaptcha(solved: boolean, datasetId: Hash | string | Uint8Array, size?: number): Promise<Captcha[] | undefined> {
-        return Promise.resolve(undefined);
+        return Promise.resolve([SOLVED_CAPTCHA]);
     }
 
     getCaptchaById(captchaId: string[]): Promise<Captcha[] | undefined> {
         return Promise.resolve(undefined);
     }
 
-    storeDappUserCaptchaSolution(captchas: Captcha[], treeRoot: string) {
+    storeDappUserCaptchaSolution(captchas: CaptchaSolution[], treeRoot: string) {
         return Promise.resolve(undefined);
     }
 }

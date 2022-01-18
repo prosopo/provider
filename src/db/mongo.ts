@@ -5,7 +5,7 @@ import {
 } from "mongodb";
 import {Database, Tables} from '../types'
 import {ERRORS} from '../errors'
-import {Captcha, Dataset} from "../types/captcha";
+import {Captcha, CaptchaSolution, Dataset} from "../types/captcha";
 import {Hash} from "@polkadot/types/interfaces";
 
 //mongodb://username:password@127.0.0.1:27017
@@ -81,7 +81,8 @@ export class ProsopoDatabase implements Database {
         const sampleSize = size ? Math.abs(Math.trunc(size)) : 1;
         const cursor = this.tables.captchas?.aggregate([
             {$match: {datasetId: datasetId, solution: {$exists: solved}}},
-            {$sample: {size: sampleSize}}
+            {$sample: {size: sampleSize}},
+            {$project: {datasetId: 1, captchaId: 1, items: 1, target: 1}}
         ])
         const docs = await cursor?.toArray();
         if (docs) {
@@ -137,7 +138,7 @@ export class ProsopoDatabase implements Database {
     /**
      * @description Store a Dapp User's captcha solution
      */
-    async storeDappUserCaptchaSolution(captchas: Captcha[], treeRoot: string) {
+    async storeDappUserCaptchaSolution(captchas: CaptchaSolution[], treeRoot: string) {
         // create a bulk upsert operation and execute
         // @ts-ignore
         await this.tables.solutions?.bulkWrite(captchas.map(captchaDoc =>
