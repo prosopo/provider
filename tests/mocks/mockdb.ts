@@ -154,10 +154,14 @@ export class ProsopoDatabase implements Database {
         if (size && size > 1) {
             throw("NotImplemented");
         }
+
         if (solved) {
-            return Promise.resolve([SOLVED_CAPTCHA]);
+            // We clone because `solution` is deleted from the object in the code
+            let clonedSolved = {...SOLVED_CAPTCHA};
+            return Promise.resolve([clonedSolved]);
         } else {
-            return Promise.resolve([UNSOLVED_CAPTCHA]);
+            let clonedUnsolved = {...UNSOLVED_CAPTCHA};
+            return Promise.resolve([clonedUnsolved]);
         }
     }
 
@@ -174,12 +178,14 @@ export class ProsopoDatabase implements Database {
     }
 
     getRandomCaptcha(solved: boolean, datasetId: Hash | string | Uint8Array, size?: number): Promise<Captcha[] | undefined> {
-        return Promise.resolve([SOLVED_CAPTCHA]);
+        let clonedSolved = {...SOLVED_CAPTCHA};
+        return Promise.resolve([clonedSolved]);
     }
 
     getCaptchaById(captchaId: string[]): Promise<Captcha[] | undefined> {
         if (captchaId.indexOf(SOLVED_CAPTCHA.captchaId) > -1) {
-            return Promise.resolve([SOLVED_CAPTCHA]);
+            let clonedSolved = {...SOLVED_CAPTCHA};
+            return Promise.resolve([clonedSolved]);
         } else {
             return Promise.resolve([]);
         }
