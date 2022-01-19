@@ -16,7 +16,7 @@ import {CaptchaSolutionResponse, CaptchaWithProof} from "../types/api";
 import {GovernanceStatus} from "../types/provider";
 import {buildDecodeVector} from "../codec/codec";
 import {AnyJson} from "@polkadot/types/types/codec";
-import {AccountId, Hash} from "@polkadot/types/interfaces";
+import {Hash} from "@polkadot/types/interfaces";
 
 
 /**
@@ -60,7 +60,6 @@ export class Tasks {
         datasetHashes['datasetId'] = tree.root?.hash;
         datasetHashes['tree'] = tree.layers;
         await this.db?.loadDataset(datasetHashes);
-        console.log("Data set hash", tree.root?.hash);
         return await this.contractApi.contractCall('providerAddDataset', [hexToU8a(tree.root?.hash)])
     }
 
@@ -89,15 +88,6 @@ export class Tasks {
     }
 
     async dappOperatorIsHumanUser() {
-    }
-
-    async dappOperatorCheckRecentSolution() {
-    }
-
-    async addProsopoOperator() {
-    }
-
-    async captchaSolutionCommitment() {
     }
 
     async getProviderDetails(accountId: string): Promise<Provider> {
@@ -163,10 +153,10 @@ export class Tasks {
 
     /**
      * Validate and store the clear text captcha solution(s) from the Dapp User
-     * @param userAccount
-     * @param dappAccount
-     * @param {CaptchaWithProof} captchas
-     * @return JSON result containing the contract event
+     * @param {string | Uint8Array} userAccount
+     * @param {string | Uint8Array} dappAccount
+     * @param {JSON} captchas
+     * @return {Promise<CaptchaSolutionResponse[]>} result containing the contract event
      */
     async dappUserSolution(userAccount: string | Uint8Array, dappAccount: string | Uint8Array, captchas: JSON): Promise<CaptchaSolutionResponse[]> {
         const receivedCaptchas = parseCaptchaSolutions(captchas);

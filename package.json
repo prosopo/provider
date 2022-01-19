@@ -9,7 +9,7 @@
     "start": "ts-node ./build/src/cli/cli.js",
     "setup": "yarn ts-node ./build/scripts/setupdev.js",
     "mnemonic": "yarn ts-node ./scripts/generateMnemonic.ts",
-    "test": "npx redspot test",
+    "test": "yarn redspot test",
     "dev-provider-register": "yarn build && yarn start provider_register --fee=10 --serviceOrigin=https://localhost:8282 --payee=Provider --address=$(printenv | grep '^PROVIDER_ADDRESS' | cut -d '=' -f2)",
     "dev-provider-stake": "yarn build && yarn start provider_stake --value 10 --address=$(printenv | grep '^PROVIDER_ADDRESS' | cut -d '=' -f2)",
     "dev-provider-dataset": "yarn build && yarn start provider_add_data_set --file /usr/src/data/captchas.json"
