@@ -4,7 +4,7 @@ import {Hash} from "@polkadot/types/interfaces";
 
 const DEFAULT_ENDPOINT = "test"
 
-const SOLVED_CAPTCHA = {
+export const SOLVED_CAPTCHA = {
     //"_id" : "0x9e7ef7b1093e1a9a74a6384a773d4e7ee25575d4fecc8a6fd7c9fe3357cbfad3",
     "captchaId": "0x9e7ef7b1093e1a9a74a6384a773d4e7ee25575d4fecc8a6fd7c9fe3357cbfad3",
     "datasetId": "0x0282715bd2de51935c8ed3bf101ad150861d91b2af0e6c50281740a0c072650a",
