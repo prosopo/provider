@@ -5,11 +5,11 @@ import {CaptchaMerkleTree} from "../../src/merkle";
 import {PROVIDER, DAPP_USER, DAPP} from "../mocks/accounts"
 import {ERRORS} from "../../src/errors";
 
-const chaiAsPromised = require('chai-as-promised');
-const chai = require('chai');
+const chai = require("chai");
+const chaiAsPromised = require("chai-as-promised");
+chai.should()
 chai.use(chaiAsPromised);
-const expect = chai.expect
-
+const expect = chai.expect;
 
 
 describe("PROVIDER TASKS", () => {
@@ -127,7 +127,7 @@ describe("PROVIDER TASKS", () => {
         tree.build(captchaSols);
         await mockEnv.changeSigner(DAPP_USER.mnemonic);
         let solutionPromise = tasks.dappUserSolution(mockEnv.signer?.address!, DAPP.contractAccount!, JSON.parse(JSON.stringify(captchaSols)));
-        return solutionPromise.should.throw("Invalid captcha id")
+        solutionPromise.catch(e => e.message.should.match(`/${ERRORS.CAPTCHA.INVALID_CAPTCHA_ID.message}/`));
     });
 
     it.only("Dapp User sending duplicate data causes error", async () => {
