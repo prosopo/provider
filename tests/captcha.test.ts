@@ -113,31 +113,31 @@ describe("PROVIDER CAPTCHA", () => {
         expect(compareCaptchaSolutions(received, stored)).to.be.false
     })
 
-    it.only("Two captchas are correctly compared when solutions and captchaIds are identical", () => {
+    it("Two captchas are correctly compared when solutions and captchaIds are identical", () => {
         const c1 = {solution: [1, 2, 3, 4], captchaId: "1", salt: ""}
         const c2 = {solution: [1, 3, 2, 4], captchaId: "1", salt: "", items: [], target: ""}
         expect(compareCaptcha(c1, c2)).to.be.true
     })
 
-    it.only("Two captchas are correctly compared when solutions and captchaIds are different", () => {
+    it("Two captchas are correctly compared when solutions and captchaIds are different", () => {
         const c1 = {solution: [1, 2, 3, 4], captchaId: "1", salt: ""}
         const c2 = {solution: [1, 3,], captchaId: "1", salt: "", items: [], target: ""}
         expect(compareCaptcha(c1, c2)).to.be.false
     })
 
-    it.only("Mismatched captchas are correctly compared", () => {
+    it("Mismatched captchas are correctly compared", () => {
         const c1 = {solution: [1, 2, 3, 4], captchaId: "1", salt: ""}
         const c2 = {solution: [1, 3, 2, 4], captchaId: "2", salt: "", items: [], target: ""}
         expect(compareCaptcha(c1, c2)).to.be.false
     })
 
-    it.only("Captchas with zero length solutions are automatically assumed to be correct", () => {
+    it("Captchas with zero length solutions are automatically assumed to be correct", () => {
         const c1 = {solution: [1, 2, 3, 4], captchaId: "1", salt: ""}
         const c2 = {solution: [], captchaId: "2", salt: "", items: [], target: ""}
         expect(compareCaptcha(c1, c2)).to.be.true
     })
 
-    it.only("Captchas with no solutions are automatically assumed to be correct", () => {
+    it("Captchas with no solutions are automatically assumed to be correct", () => {
         const c1 = {solution: [1, 2, 3, 4], captchaId: "1", salt: ""}
         const c2 = {solution: undefined, captchaId: "2", salt: "", items: [], target: ""}
         expect(compareCaptcha(c1, c2)).to.be.true
