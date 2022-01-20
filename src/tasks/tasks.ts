@@ -17,6 +17,7 @@ import {GovernanceStatus} from "../types/provider";
 import {buildDecodeVector} from "../codec/codec";
 import {AnyJson} from "@polkadot/types/types/codec";
 import {Hash} from "@polkadot/types/interfaces";
+import {CaptchaSolutionCommitment, CaptchaStatus} from "../types/captcha";
 
 
 /**
@@ -102,19 +103,17 @@ export class Tasks {
         return await this.contractApi.contractCall("getCaptchaData", [captchaDatasetId])
     }
 
-    async getCaptchaSolutionCommitment(solutionId: string): Promise<Provider> {
+    async getCaptchaSolutionCommitment(solutionId: string): Promise<CaptchaSolutionCommitment> {
         return await this.contractApi.contractCall("getCaptchaSolutionCommitment", [solutionId])
     }
 
     async providerAccounts(providerId: string, status: GovernanceStatus): Promise<AnyJson> {
         const providerAccountsList = await this.contractApi.getStorage("provider_accounts", buildDecodeVector('ProviderAccounts'));
-        console.log(providerAccountsList);
         return providerAccountsList
     }
 
     async dappAccounts(dappId: string, status: GovernanceStatus): Promise<AnyJson> {
         const dappAccountsList = await this.contractApi.getStorage("dapp_accounts", buildDecodeVector('DappAccounts'));
-        console.log(dappAccountsList);
         return dappAccountsList
     }
 
@@ -159,6 +158,8 @@ export class Tasks {
      * @return {Promise<CaptchaSolutionResponse[]>} result containing the contract event
      */
     async dappUserSolution(userAccount: string | Uint8Array, dappAccount: string | Uint8Array, captchas: JSON): Promise<CaptchaSolutionResponse[]> {
+        // inactive checks
+        let response: CaptchaSolutionResponse[] = [];
         const receivedCaptchas = parseCaptchaSolutions(captchas);
         const captchaIds = receivedCaptchas.map(captcha => captcha.captchaId);
         const storedCaptchas = await this.db.getCaptchaById(captchaIds);
@@ -167,16 +168,28 @@ export class Tasks {
         }
         let tree = new CaptchaMerkleTree();
         tree.build(receivedCaptchas);
-        let commitment = await this.getCaptchaSolutionCommitment(tree.root!.hash);
+        let commitmentId = tree.root!.hash
+        let commitment = await this.getCaptchaSolutionCommitment(commitmentId);
         if (!commitment) {
             throw new Error(ERRORS.CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST.message)
         }
-        await this.db.storeDappUserCaptchaSolution(receivedCaptchas, tree.root!.hash);
-        if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
-            return captchaIds.map(id => ({captchaId: id, proof: tree.proof(id)}))
+        // Only do stuff if the commitment is Pending
+        if (commitment.status === CaptchaStatus.Pending) {
+            await this.db.storeDappUserCaptchaSolution(receivedCaptchas, commitmentId);
+            if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
+                // TODO refund their tx fee
+                await this.providerApprove(commitmentId);
+                response = captchaIds.map(id => ({captchaId: id, proof: tree.proof(id)}))
+            } else {
+                await this.providerDisapprove(commitmentId);
+            }
+            // store this response for future requests
+            await this.db.storeCaptchaSolutionResponse(response, commitmentId)
         } else {
-            return []
+            response = await this.db.getCaptchaSolutionResponse(commitmentId)
         }
+
+        return response
     }
 
     /**

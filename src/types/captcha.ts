@@ -1,11 +1,21 @@
 import {z} from "zod";
-import {Hash} from "@polkadot/types/interfaces";
+import {AccountId, Hash} from "@polkadot/types/interfaces";
 
 export type Dataset = {
     datasetId?: Hash | string | Uint8Array,
     captchas: Captcha[],
     format: CaptchaTypes,
     tree?: string[][]
+}
+
+export enum CaptchaStatus { Pending = "Pending", Approved = "Approved", Disapproved = "Disapproved" }
+
+export interface CaptchaSolutionCommitment {
+    account: AccountId,
+    captcha_dataset_id: Hash,
+    status: CaptchaStatus,
+    contract: AccountId,
+    provider: AccountId,
 }
 
 export type Captcha = {
@@ -20,6 +30,10 @@ export type CaptchaSolution = {
     captchaId: string
     salt: string,
     solution: any
+}
+
+export type CaptchaResult = {
+
 }
 
 export enum CaptchaTypes { SelectAll = "SelectAll"}

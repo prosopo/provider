@@ -106,9 +106,12 @@ describe("PROVIDER TASKS", () => {
         const {mockEnv, tasks, captchaSolutions} = await setup();
         let tree = new CaptchaMerkleTree();
         tree.build(captchaSolutions);
-        let commitment_id = tree.root!.hash;
+        let commitmentId = tree.root!.hash;
         const provider = await tasks.getProviderDetails(process.env.PROVIDER_ADDRESS!);
-        await tasks.dappUserCommit(DAPP.contractAccount!, provider.captcha_dataset_id, commitment_id, process.env.PROVIDER_ADDRESS!);
+        console.log(commitmentId);
+        await tasks.dappUserCommit(DAPP.contractAccount!, provider.captcha_dataset_id, commitmentId, process.env.PROVIDER_ADDRESS!);
+        // next part contains contract calls that must be run by provider
+        await mockEnv.changeSigner(process.env.PROVIDER_MNEMONIC!);
         let result = await tasks.dappUserSolution(mockEnv.signer?.address!, DAPP.contractAccount!, JSON.parse(JSON.stringify(captchaSolutions)));
         expect(result.length).to.be.eq(1);
         let expected_proof = tree.proof(captchaSolutions[0].captchaId);
@@ -138,9 +141,12 @@ describe("PROVIDER TASKS", () => {
         const captchaSolutionsBad = captchaSolutions.map(original => ({...original, solution: [3]}));
         let tree = new CaptchaMerkleTree();
         tree.build(captchaSolutionsBad);
-        let commitment_id = tree.root!.hash;
+        let commitmentId = tree.root!.hash;
+        console.log(commitmentId);
         const provider = await tasks.getProviderDetails(process.env.PROVIDER_ADDRESS!);
-        await tasks.dappUserCommit(DAPP.contractAccount!, provider.captcha_dataset_id, commitment_id, process.env.PROVIDER_ADDRESS!);
+        await tasks.dappUserCommit(DAPP.contractAccount!, provider.captcha_dataset_id, commitmentId, process.env.PROVIDER_ADDRESS!);
+        // next part contains contract calls that must be run by provider
+        await mockEnv.changeSigner(process.env.PROVIDER_MNEMONIC!);
         let result = await tasks.dappUserSolution(mockEnv.signer?.address!, DAPP.contractAccount!, JSON.parse(JSON.stringify(captchaSolutionsBad)));
         expect(result.length).to.be.eq(0);
 

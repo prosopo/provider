@@ -36,6 +36,9 @@ export const ERRORS = {
         },
         NO_CAPTCHAS_FOUND: {
             message: 'No captcha matching datasetId'
+        },
+        COMMITMENT_SOLUTION_RESPONSE_NOT_FOUND: {
+            message: 'No captcha solution response found'
         }
     },
     API: {

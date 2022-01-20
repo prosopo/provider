@@ -1,6 +1,7 @@
 import {Collection} from "mongodb";
 import {Captcha, CaptchaSolution, Dataset} from "./captcha";
 import {Hash} from "@polkadot/types/interfaces";
+import {CaptchaSolutionResponse} from "./api";
 
 export interface Database {
     readonly url: string;
@@ -20,6 +21,10 @@ export interface Database {
     getDatasetDetails(datasetId: Hash | string | Uint8Array);
 
     storeDappUserCaptchaSolution(captchas: CaptchaSolution[],treeRoot: string);
+
+    storeCaptchaSolutionResponse(captchaSolutionResponse: CaptchaSolutionResponse[], commitmentId: string)
+
+    getCaptchaSolutionResponse(commitmentId: string): Promise<CaptchaSolutionResponse[]>
 }
 
 // Other table types from other database engines go here

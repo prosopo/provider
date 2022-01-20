@@ -7,6 +7,7 @@ import {Database, Tables} from '../types'
 import {ERRORS} from '../errors'
 import {Captcha, CaptchaSolution, Dataset} from "../types/captcha";
 import {Hash} from "@polkadot/types/interfaces";
+import {CaptchaSolutionResponse} from "../types/api";
 
 //mongodb://username:password@127.0.0.1:27017
 const DEFAULT_ENDPOINT = "mongodb://127.0.0.1:27017"
@@ -39,6 +40,7 @@ export class ProsopoDatabase implements Database {
         this.tables.dataset = db.collection("dataset");
         this.tables.captchas = db.collection("captchas");
         this.tables.solutions = db.collection("solutions");
+        this.tables.responses = db.collection("responses");
     }
 
     /**
@@ -158,6 +160,30 @@ export class ProsopoDatabase implements Database {
             })
         ))
     }
+
+    /**
+     * @description Store a Dapp User's captcha solution response
+     */
+    async storeCaptchaSolutionResponse(captchaSolutionResponse: CaptchaSolutionResponse[], commitmentId: string) {
+        await this.tables.responses?.updateOne(
+            {_id: commitmentId},
+            {$set: {response: captchaSolutionResponse}},
+            {upsert: true}
+        )
+    }
+
+    /**
+     * @description Get a captcha solution response
+     */
+    async getCaptchaSolutionResponse(commitmentId: string): Promise<CaptchaSolutionResponse[]> {
+        const doc = await this.tables.responses?.findOne({_id: commitmentId});
+        if (doc) {
+            return doc.response
+        } else {
+            throw(ERRORS.DATABASE.COMMITMENT_SOLUTION_RESPONSE_NOT_FOUND.message)
+        }
+    }
+
 
 }
 

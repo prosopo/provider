@@ -1,6 +1,8 @@
 import {Database, Table, Tables} from "../../src/types";
 import {Captcha, CaptchaSolution, Dataset} from "../../src/types/captcha";
 import {Hash} from "@polkadot/types/interfaces";
+import {CaptchaSolutionResponse} from "../../src/types/api";
+import {ERRORS} from "../../src/errors";
 
 const DEFAULT_ENDPOINT = "test"
 
@@ -147,6 +149,8 @@ export class ProsopoDatabase implements Database {
     }
 
     connect(): Promise<void> {
+        // @ts-ignore
+        this.tables.responses = {};
         return Promise.resolve(undefined);
     }
 
@@ -193,5 +197,13 @@ export class ProsopoDatabase implements Database {
 
     storeDappUserCaptchaSolution(captchas: CaptchaSolution[], treeRoot: string) {
         return Promise.resolve(undefined);
+    }
+
+    async storeCaptchaSolutionResponse(captchaSolutionResponse: CaptchaSolutionResponse[], commitmentId: string) {
+        this.tables.responses![commitmentId] = {response: captchaSolutionResponse};
+    }
+
+    async getCaptchaSolutionResponse(commitmentId: string): Promise<CaptchaSolutionResponse[]> {
+        return this.tables.responses![commitmentId]
     }
 }
