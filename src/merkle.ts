@@ -1,5 +1,4 @@
-import {Captcha, CaptchaSolution} from "./types/captcha";
-import {hexHash, readFile} from "./util";
+import {hexHash} from "./util";
 import {MerkleNodeInterface} from "./types/merkle";
 
 export class CaptchaMerkleTree {
@@ -13,22 +12,20 @@ export class CaptchaMerkleTree {
     }
 
 
-
-    build(captchas: CaptchaSolution[]) {
+    build(leaves: string[]) {
         // allow rebuild
         if (this.layers.length) {
             this.layers = [];
         }
         let layerZero: string[] = []
-        for (let captcha of captchas) {
-            let node = new MerkleNode(captcha.captchaId)
+        for (let leaf of leaves) {
+            let node = new MerkleNode(leaf)
             this.leaves.push(node)
             layerZero.push(node.hash);
         }
         this.layers.push(layerZero);
         this.root = this.buildMerkleTree(this.leaves)
     }
-
 
 
     buildMerkleTree(leaves) {

@@ -49,8 +49,8 @@ describe("PROVIDER CAPTCHA", () => {
 
     it("Captcha data set is hashed correctly", async () => {
         let captchasWithHashes = await computeCaptchaHashes(DATASET['captchas'])
-        expect(captchasWithHashes[0].captchaId).to.equal("0x83f378619ef1d3cced90ad760b33d24995e81583b4cd269358fa53b690d560b5");
-        expect(captchasWithHashes[1].captchaId).to.equal("0x0977061f4bca26f49f2657b582944ce7c549862a4be7e0fc8f9a9a6cdb788475");
+        expect(captchasWithHashes[0].captchaId).to.equal("0x5ca830bbf3dcb0b080f6a03636c348a86a045a094ba58d687d347c53d2c9524a");
+        expect(captchasWithHashes[1].captchaId).to.equal("0xf371668e49f2b9bfe48e6a1066f0a4155e6604cb721b1aedfc8f50de22fad67b");
     });
 
     it("Captcha hashes are successfully added to dataset", async () => {
@@ -67,7 +67,7 @@ describe("PROVIDER CAPTCHA", () => {
             },
         ]
         const tree = new CaptchaMerkleTree();
-        await tree.build(captchasWithHashes);
+        tree.build(captchasWithHashes.map(c=>c.captchaId));
         // tree is not required anymore, this could be changed to addHashesToDataset(DATASET, captchasWithHashes)
         const dataset = addHashesToDataset(DATASET, tree);
         expect(dataset.captchas[0].captchaId).to.equal("0x83f378619ef1d3cced90ad760b33d24995e81583b4cd269358fa53b690d560b5");

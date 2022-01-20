@@ -47,7 +47,7 @@ export class ProsopoDatabase implements Database {
      * @description Load a dataset to the database
      * @param {Dataset}  dataset
      */
-    async loadDataset(dataset: Dataset): Promise<void> {
+    async storeDataset(dataset: Dataset): Promise<void> {
         if (dataset.datasetId) {
             const datasetDoc = {
                 datasetId: dataset.datasetId,

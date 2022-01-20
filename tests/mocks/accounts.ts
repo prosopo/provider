@@ -4,15 +4,17 @@ export const PROVIDER = {
     payee: "Provider",
     stake: 10,
     datasetFile: '/usr/src/data/captchas.json',
-    datasetHash: undefined
+    datasetHash: undefined,
+    mnemonic: "",
+    address: ""
 }
 
 export const DAPP = {
     serviceOrigin: "http://localhost:9393",
     mnemonic: "//Ferdie",
-    contractAccount: process.env.DAPP_CONTRACT_ADDRESS,
+    contractAccount: process.env.DAPP_CONTRACT_ADDRESS, // Must be deployed
     optionalOwner: "5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL", //Ferdie's address
-    fundAmount: 100
+    fundAmount: 100,
 }
 
 export const DAPP_USER = {

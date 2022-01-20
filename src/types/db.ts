@@ -10,7 +10,7 @@ export interface Database {
 
     connect(): Promise<void>;
 
-    loadDataset(dataset: Dataset): Promise<void>;
+    storeDataset(dataset: Dataset): Promise<void>;
 
     getRandomCaptcha(solved: boolean, datasetId: Hash | string | Uint8Array, size?: number): Promise<Captcha[] | undefined>;
 

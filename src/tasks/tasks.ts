@@ -1,8 +1,8 @@
 import {loadJSONFile} from "../util";
 import {
     addHashesToDataset,
-    compareCaptchaSolutions,
-    computeCaptchaHashes,
+    compareCaptchaSolutions, computeCaptchaHash,
+    computeCaptchaHashes, computeCaptchaSolutionHash,
     parseCaptchaDataset,
     parseCaptchaSolutions
 } from "../captcha";
@@ -55,12 +55,12 @@ export class Tasks {
     async providerAddDataset(file: string): Promise<Object> {
         let dataset = parseCaptchaDataset(loadJSONFile(file));
         let tree = new CaptchaMerkleTree();
-        let captchasWithHashes = await computeCaptchaHashes(dataset['captchas']);
-        await tree.build(captchasWithHashes);
+        let captchaHashes = await Promise.all(dataset['captchas'].map(computeCaptchaHash));
+        await tree.build(captchaHashes);
         let datasetHashes = addHashesToDataset(dataset, tree);
         datasetHashes['datasetId'] = tree.root?.hash;
         datasetHashes['tree'] = tree.layers;
-        await this.db?.loadDataset(datasetHashes);
+        await this.db?.storeDataset(datasetHashes);
         return await this.contractApi.contractCall('providerAddDataset', [hexToU8a(tree.root?.hash)])
     }
 
@@ -120,7 +120,7 @@ export class Tasks {
     // Other tasks
 
     /**
-     * @description Get captchas that are solved or not solved, along with the merkle proof for each
+     * @description Get random captchas that are solved or not solved, along with the merkle proof for each
      * @param {string}   datasetId  the id of the data set
      * @param {boolean}  solved    `true` when captcha is solved
      * @param {number}   size       the number of records to be returned
@@ -167,27 +167,29 @@ export class Tasks {
             throw new Error(ERRORS.CAPTCHA.INVALID_CAPTCHA_ID.message)
         }
         let tree = new CaptchaMerkleTree();
-        tree.build(receivedCaptchas);
+        let solutionsHashed = receivedCaptchas.map(captcha => computeCaptchaSolutionHash(captcha));
+        tree.build(solutionsHashed);
         let commitmentId = tree.root!.hash
         let commitment = await this.getCaptchaSolutionCommitment(commitmentId);
         if (!commitment) {
             throw new Error(ERRORS.CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST.message)
         }
         // Only do stuff if the commitment is Pending
-        if (commitment.status === CaptchaStatus.Pending) {
-            await this.db.storeDappUserCaptchaSolution(receivedCaptchas, commitmentId);
-            if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
-                // TODO refund their tx fee
-                await this.providerApprove(commitmentId);
-                response = captchaIds.map(id => ({captchaId: id, proof: tree.proof(id)}))
-            } else {
-                await this.providerDisapprove(commitmentId);
-            }
-            // store this response for future requests
-            await this.db.storeCaptchaSolutionResponse(response, commitmentId)
+        // if (commitment.status === CaptchaStatus.Pending) {
+        await this.db.storeDappUserCaptchaSolution(receivedCaptchas, commitmentId);
+        if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
+            // TODO refund their tx fee
+            await this.providerApprove(commitmentId);
+            response = captchaIds.map(id => ({captchaId: id, proof: tree.proof(id)}))
         } else {
-            response = await this.db.getCaptchaSolutionResponse(commitmentId)
+            await this.providerDisapprove(commitmentId);
         }
+        // store this response for future requests
+        await this.db.storeCaptchaSolutionResponse(response, commitmentId)
+        // } else {
+        //     console.log("captcha commitment approved")
+        //     response = await this.db.getCaptchaSolutionResponse(commitmentId)
+        // }
 
         return response
     }

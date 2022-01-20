@@ -8,7 +8,7 @@ import {
 } from "./types/captcha";
 import {ERRORS} from './errors'
 import {CaptchaMerkleTree} from "./merkle";
-import {hexHash, readFile} from "./util";
+import {hexHash, imageHash, readFile} from "./util";
 
 export function addHashesToDataset(dataset: Dataset, tree: CaptchaMerkleTree): Dataset {
     try {
@@ -74,18 +74,18 @@ export async function computeCaptchaHash(captcha: Captcha) {
     let itemHashes: string[] = [];
     for (let item of captcha['items']) {
         if (item['type'] === 'image') {
-            // data must remain in the same order so load images synchronously
-            const fileBuffer = await readFile(item['path']);
-            itemHashes.push(hexHash(fileBuffer));
+            itemHashes.push(await imageHash(item['path']))
         } else if (item['type'] === 'text') {
             itemHashes.push(hexHash(item['text']));
         } else {
-            throw('NotImplemented: only image and text item types allowed')
+            throw(new Error('NotImplemented: only image and text item types allowed'))
         }
     }
-    //TODO what about target? Salt should avoid collisions but...
-    return hexHash([captcha['solution'], captcha['salt'], itemHashes].join())
+    return hexHash([captcha['target'], captcha['solution'], captcha['salt'], itemHashes].join())
+}
 
+export function computeCaptchaSolutionHash(captcha: CaptchaSolution) {
+    return hexHash([captcha['captchaId'], captcha['solution'], captcha['salt']].join())
 }
 
 export async function computeCaptchaHashes(captchas: Captcha[]): Promise<CaptchaSolution[]> {
@@ -97,6 +97,7 @@ export async function computeCaptchaHashes(captchas: Captcha[]): Promise<Captcha
     }
     return captchasWithHashes
 }
+
 
 export function convertCaptchaToCaptchaSolution(captcha: Captcha, captchaId): CaptchaSolution {
     return {captchaId: captchaId, salt: captcha.salt, solution: captcha.solution}

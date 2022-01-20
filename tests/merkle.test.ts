@@ -1,8 +1,8 @@
 import {CaptchaMerkleTree} from "../src/merkle";
 import {expect} from "chai";
 import {hexHash} from "../src/util";
-import {CaptchaSolution, CaptchaTypes, Dataset} from "../src/types/captcha";
-import {computeCaptchaHashes} from "../src/captcha";
+import {CaptchaTypes, Dataset} from "../src/types/captcha";
+import {computeCaptchaHash} from "../src/captcha";
 
 describe("PROVIDER MERKLE TREE", () => {
     after(() => {
@@ -41,36 +41,17 @@ describe("PROVIDER MERKLE TREE", () => {
         format: CaptchaTypes.SelectAll
     }
 
-    let CAPTCHAS_WITH_LEAF_HASHES: CaptchaSolution[] = [
-        {
-            captchaId: "1",
-            salt: "0x01020304",
-            solution: [1, 2]
-        },
-        {
-            captchaId: "2",
-            salt: "0x02020304",
-            solution: [3]
-        },
-        {
-            captchaId: "3",
-            salt: "0x03020304",
-            solution: [2]
-        }
-
-    ]
-
 
     it("Tree contains correct leaf hashes when computing leaf hashes", async () => {
             let dataset = DATASET;
             const tree = new CaptchaMerkleTree()
-            const captchasWithHashes = await computeCaptchaHashes(dataset['captchas']);
-            await tree.build(captchasWithHashes);
+            const captchaHashes = await Promise.all(dataset['captchas'].map(computeCaptchaHash));
+            await tree.build(captchaHashes);
             const leafHashes = tree.leaves.map(leaf => leaf.hash);
             expect(leafHashes).to.deep.equal([
-                    "0x0712abea4b4307c161ea64227ae1f9400f6844287ec4d574b9facfddbf5f542a",
-                    "0x9ce0e95f8a9095c2c336015255d67248ad3344f9d07d95147ca8d661a678ba3f",
-                    "0xe08fd047f9591da52974567f36c9c91003e302cb39b6313aeac636142c0d4dce"
+                    "0x20dad7322b9b7a12f6ccaa6171cb85f2ad095e6fff2dc6050d9fb47092cb4b1a",
+                    "0xda4d2b3bfd078084e2a127b6f9e2b7ac8f8d434f9c20be5ac2c1e2e70046e4dd",
+                    "0x16357d26d412fcf32335f0820691b623ab90ace94f1463ef81bc335d3a3dbe1d"
                 ]
             )
         }
@@ -78,16 +59,16 @@ describe("PROVIDER MERKLE TREE", () => {
     it("Tree root is correct when computing leaf hashes", async () => {
             let dataset = DATASET;
             const tree = new CaptchaMerkleTree()
-            const captchasWithHashes = await computeCaptchaHashes(dataset['captchas']);
-            await tree.build(captchasWithHashes);
-            expect(tree.root!.hash).to.equal("0x37c909d29a8f41d53142f4acb317bb9496719825073fb452768a64878f6724f8");
+            const captchaHashes = await Promise.all(dataset['captchas'].map(computeCaptchaHash));
+            await tree.build(captchaHashes);
+            expect(tree.root!.hash).to.equal("0x6c301d8dcc54d6836d6cf3845f09647845aeb44159853cb46ed30a5b683874e6");
         }
     )
     it("Tree proof works when computing leaf hashes", async () => {
             let dataset = DATASET;
             const tree = new CaptchaMerkleTree()
-            const captchasWithHashes = await computeCaptchaHashes(dataset['captchas']);
-            await tree.build(captchasWithHashes);
+            const captchaHashes = await Promise.all(dataset['captchas'].map(computeCaptchaHash));
+            await tree.build(captchaHashes);
             const proof = tree.proof("0x0712abea4b4307c161ea64227ae1f9400f6844287ec4d574b9facfddbf5f542a");
             const layerZeroHash = hexHash(proof[0].join());
             expect(tree.layers[1].indexOf(layerZeroHash) > -1);
@@ -96,10 +77,8 @@ describe("PROVIDER MERKLE TREE", () => {
         }
     )
     it("Tree contains correct leaf hashes when not computing leaf hashes", async () => {
-            let captchas = CAPTCHAS_WITH_LEAF_HASHES;
             const tree = new CaptchaMerkleTree()
-            await tree.build(captchas);
-
+            tree.build(["1", "2", "3"]);
             const leafHashes = tree.leaves.map(leaf => leaf.hash);
             expect(leafHashes).to.deep.equal([
                     "1",
@@ -110,16 +89,14 @@ describe("PROVIDER MERKLE TREE", () => {
         }
     )
     it("Tree root is correct when not computing leaf hashes", async () => {
-            let captchas = CAPTCHAS_WITH_LEAF_HASHES;
             const tree = new CaptchaMerkleTree()
-            await tree.build(captchas);
+            await tree.build(["1", "2", "3"]);
             expect(tree.root!.hash).to.equal("0x940abe0b0c80705b3a2563f171adf819a946a4d1b353755afc44e6c5a4224a8a");
         }
     )
     it("Tree proof works when not computing leaf hashes", async () => {
-            let captchas = CAPTCHAS_WITH_LEAF_HASHES;
             const tree = new CaptchaMerkleTree()
-            await tree.build(captchas);
+            await tree.build(["1", "2", "3"]);
             const proof = tree.proof("1");
             const layerZeroHash = hexHash(proof[0].join());
             expect(tree.layers[1].indexOf(layerZeroHash) > -1);
@@ -129,9 +106,8 @@ describe("PROVIDER MERKLE TREE", () => {
     )
 
     it("Tree proof works when there is only one leaf", async () => {
-            let captchas = [CAPTCHAS_WITH_LEAF_HASHES[0]];
             const tree = new CaptchaMerkleTree()
-            await tree.build(captchas);
+            await tree.build(["1"]);
             const proof = tree.proof("1");
             expect(proof).to.deep.equal([["1"]]);
         }
