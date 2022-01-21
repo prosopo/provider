@@ -327,16 +327,12 @@ export function prosopoMiddleware(env): Router {
      * @return {Captcha} - The Captcha data
      */
     router.get('/v1/prosopo/provider/captcha/:datasetId', async function (req, res, next) {
+        const {datasetId, userAccount} = req.params;
+        if (!datasetId || !userAccount) {
+            throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
+        }
         try {
-            const {datasetId} = req.params;
-            if (!datasetId) {
-                throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
-            }
-            //return one solved and one unsolved
-            const solved = await tasks.getCaptchaWithProof(datasetId, true, 1)
-            const unsolved = await tasks.getCaptchaWithProof(datasetId, false, 1)
-            let result = shuffleArray([solved[0], unsolved[0]]);
-            res.json(result);
+            res.json(await tasks.getRandomCaptchasAndRequestHash(datasetId, userAccount));
         } catch (err: any) {
             let msg = `${ERRORS.CONTRACT.TX_ERROR.message}:${err}`;
             next(new BadRequest(msg));
@@ -354,12 +350,12 @@ export function prosopoMiddleware(env): Router {
     router.post('/v1/prosopo/provider/solution', async function (req, res, next) {
         try {
             CaptchaSolutionBody.parse(req.body);
-        } catch(err) {
+        } catch (err) {
             throw new BadRequest(err);
         }
-        const {userAccount, dappAccount, captchas} = req.body;
+        const {userAccount, dappAccount, captchas, requestHash} = req.body;
         try {
-            const result = await tasks.dappUserSolution(userAccount, dappAccount, captchas)
+            const result = await tasks.dappUserSolution(userAccount, dappAccount, requestHash, captchas)
             if (result.length === 0) {
                 res.json({status: ERRORS.API.CAPTCHA_FAILED.message, captchas: []})
             } else {

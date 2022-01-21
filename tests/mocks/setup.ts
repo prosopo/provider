@@ -82,7 +82,7 @@ export async function setupDappUser(env, dapp_user, provider, dapp): Promise<str
         console.log(" - build Merkle tree")
         let tree = new CaptchaMerkleTree();
         let captchas = [solved[0].captcha, unsolved[0].captcha];
-        let captchaSols = captchas.map(captcha => convertCaptchaToCaptchaSolution(captcha, captcha.captchaId));
+        let captchaSols = captchas.map(captcha => convertCaptchaToCaptchaSolution(captcha));
         let captchaSolHashes = captchaSols.map(computeCaptchaSolutionHash)
         await tree.build(captchaSolHashes);
         // TODO send solution to Provider database https://github.com/prosopo-io/provider/issues/35

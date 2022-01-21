@@ -19,4 +19,5 @@ export const DAPP = {
 
 export const DAPP_USER = {
     mnemonic: "//Charlie",
+    address: "5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y"
 }

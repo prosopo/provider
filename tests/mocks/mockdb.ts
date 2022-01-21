@@ -2,6 +2,7 @@ import {Database, Tables} from "../../src/types";
 import {Captcha, CaptchaSolution, Dataset} from "../../src/types/captcha";
 import {Hash} from "@polkadot/types/interfaces";
 import {CaptchaSolutionResponse} from "../../src/types/api";
+
 const DEFAULT_ENDPOINT = "test"
 
 export const SOLVED_CAPTCHAS = [
@@ -158,10 +159,10 @@ const UNSOLVED_CAPTCHAS = [
 ]
 
 export const DATASET = {
-    "_id" : "0x4e5b2ae257650340b493e94b4b4a4ac0e0dded8b1ecdad8252fe92bbd5b26605",
-    "datasetId" : "0x4e5b2ae257650340b493e94b4b4a4ac0e0dded8b1ecdad8252fe92bbd5b26605",
-    "format" : "SelectAll",
-    "tree" : [
+    "_id": "0x4e5b2ae257650340b493e94b4b4a4ac0e0dded8b1ecdad8252fe92bbd5b26605",
+    "datasetId": "0x4e5b2ae257650340b493e94b4b4a4ac0e0dded8b1ecdad8252fe92bbd5b26605",
+    "format": "SelectAll",
+    "tree": [
         [
             "0x73f15c36e0600922aed7d0ea1f4580c188c087e5d8be5470a4ca8382c792e6b9",
             "0x894d733d37d2df738deba781cf6d5b66bd5b2ef1041977bf27908604e7b3e604",
@@ -214,6 +215,9 @@ export class ProsopoDatabase implements mockDatabase {
         // @ts-ignore
         this.tables.dataset = {};
         this.tables.dataset![DATASET.datasetId] = DATASET;
+        // @ts-ignore
+        this.tables.pending = {};
+
         return Promise.resolve(undefined);
     }
 
@@ -261,17 +265,29 @@ export class ProsopoDatabase implements mockDatabase {
         return Promise.resolve(matching)
     }
 
-    storeDappUserCaptchaSolution(captchas: CaptchaSolution[], treeRoot: string) {
+    storeDappUserSolution(captchas: CaptchaSolution[], treeRoot: string) {
         return Promise.resolve(undefined);
     }
 
-    async storeCaptchaSolutionResponse(captchaSolutionResponse: CaptchaSolutionResponse[], commitmentId: string) {
-        console.log("storing captcha solution response with ID:", commitmentId);
-        this.tables.responses![commitmentId] = {response: captchaSolutionResponse};
+    storeDappUserPending(userAccount: string, responseHash: string, salt: string) {
+        this.tables.pending![responseHash] = {
+            accountId: userAccount,
+            pending: true,
+            salt: salt
+        }
+        return Promise.resolve(undefined);
     }
 
-    async getCaptchaSolutionResponse(commitmentId: string): Promise<CaptchaSolutionResponse[]> {
-        console.log("getting captcha solution response with ID:", commitmentId);
-        return this.tables.responses![commitmentId]
+    updateDappUserPendingStatus(userAccount: string, requestHash: string, approve: boolean) {
+        let pendingRequest = this.tables.pending![requestHash];
+        pendingRequest.accountId = userAccount;
+        pendingRequest.pending = false;
+        pendingRequest.approved = approve;
+        return Promise.resolve(undefined);
     }
+
+    getDappUserPending(requestHash: string): Promise<any> {
+        return Promise.resolve(this.tables.pending![requestHash]);
+    }
+
 }

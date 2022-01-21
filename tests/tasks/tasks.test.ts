@@ -4,9 +4,10 @@ import {CaptchaMerkleTree} from "../../src/merkle";
 import {PROVIDER, DAPP_USER, DAPP} from "../mocks/accounts"
 import {ERRORS} from "../../src/errors";
 import {SOLVED_CAPTCHAS, DATASET} from "../mocks/mockdb"
-import {CaptchaSolution} from "../../src/types/captcha";
-import {computeCaptchaSolutionHash} from "../../src/captcha";
+import {CaptchaSolution, CaptchaStatus} from "../../src/types/captcha";
+import {computeCaptchaSolutionHash, computePendingRequestHash} from "../../src/captcha";
 import {sendFunds, setupDapp, setupProvider} from "../mocks/setup"
+import {randomAsHex} from "@polkadot/util-crypto";
 
 const chai = require("chai");
 const chaiAsPromised = require("chai-as-promised");
@@ -16,10 +17,24 @@ const expect = chai.expect;
 
 
 describe("PROVIDER TASKS", () => {
+    let datasetId;
+    let provider;
+
     before(async () => {
+        // Register the dapp
         const mockEnv = new MockEnvironment()
         await mockEnv.isReady();
         await setupDapp(mockEnv, DAPP);
+
+        // Register a NEW provider otherwise commitments already exist in contract when Dapp User tries to use
+        // dappUserCommit function
+        const [providerMnemonic, providerSigner] = await mockEnv.createAccountAndAddToKeyring();
+        await mockEnv.changeSigner("//Alice");
+        await sendFunds(mockEnv, providerSigner.address, "Provider", "10000000000000000000")
+        provider = {...PROVIDER};
+        provider.mnemonic = providerMnemonic;
+        provider.address = providerSigner.address;
+        datasetId = await setupProvider(mockEnv, providerSigner.address, provider)
     })
 
     after(() => {
@@ -35,19 +50,14 @@ describe("PROVIDER TASKS", () => {
             solution: captcha.solution,
             salt: "usersalt"
         }))
+        const salt = randomAsHex();
+        // console.log("Request Hash Salt:", salt);
+        // console.log("Dapp User AccountId:\t", mockEnv.signer!.address);
+        // console.log("CaptchaIds:\t", captchaSolutions.map(c => c.captchaId).sort());
+        const requestHash = computePendingRequestHash(captchaSolutions.map(c => c.captchaId), mockEnv.signer!.address, salt)
+        await mockEnv.db!.storeDappUserPending(mockEnv.signer!.address, requestHash, salt);
         let tasks = new Tasks(mockEnv);
-        return {mockEnv, tasks, captchaSolutions}
-    }
-
-    async function providerSetup(mockEnv) {
-        const [providerMnemonic, providerSigner] = await mockEnv.createAccountAndAddToKeyring();
-        await mockEnv.changeSigner("//Alice");
-        await sendFunds(mockEnv, providerSigner.address, "Provider", "10000000000000000000")
-        let provider = {...PROVIDER};
-        provider.mnemonic = providerMnemonic;
-        provider.address = providerSigner.address;
-        const datasetId = await setupProvider(mockEnv, providerSigner.address, provider)
-        return {datasetId, provider}
+        return {mockEnv, tasks, captchaSolutions, requestHash}
     }
 
     it("Captchas are correctly formatted before being passed to the API layer", async () => {
@@ -100,60 +110,64 @@ describe("PROVIDER TASKS", () => {
         });
     });
 
-    it.only("Captcha proofs are returned if commitment found and solution is correct", async () => {
-        const {mockEnv, tasks, captchaSolutions} = await setup();
-        const {datasetId, provider} = await providerSetup(mockEnv);
-
+    it("Captcha proofs are returned if commitment found and solution is correct", async () => {
+        const {mockEnv, tasks, captchaSolutions, requestHash} = await setup();
+        // salt ensures captcha commitment is different each time
+        // console.log("Request Hash: ", requestHash);
+        const salt = randomAsHex();
+        // console.log("User Captchas Salt: ", salt);
         let tree = new CaptchaMerkleTree();
-        let captchasHashed = captchaSolutions.map(captcha => computeCaptchaSolutionHash(captcha))
+        let captchaSolutionsSalted = captchaSolutions.map(captcha => ({...captcha, salt: salt}))
+        let captchasHashed = captchaSolutionsSalted.map(captcha => computeCaptchaSolutionHash(captcha))
         tree.build(captchasHashed);
         let commitmentId = tree.root!.hash;
+        // console.log("Sending Commitment to contract")
+        // console.log("CommitmentId: ", commitmentId);
         await tasks.dappUserCommit(DAPP.contractAccount!, datasetId, commitmentId, provider.address);
-        // next part contains contract calls that must be run by provider
+        let commitment = await tasks.getCaptchaSolutionCommitment(commitmentId);
+        //console.log("Commitment:\n",commitment);
+
+        // next part contains internal contract calls that must be run by provider
         await mockEnv.changeSigner(provider.mnemonic);
-        console.log("commitmentId", commitmentId);
-        // TODO need to mock contract to get this to work, otherwise commitment has been Approved already and response
-        //   is expected to be in the database but it's not as the database is mocked
-        let result = await tasks.dappUserSolution(mockEnv.signer?.address!, DAPP.contractAccount!, JSON.parse(JSON.stringify(captchaSolutions)));
-        console.log(JSON.stringify(result));
+        let result = await tasks.dappUserSolution(DAPP_USER.address, DAPP.contractAccount!, requestHash, JSON.parse(JSON.stringify(captchaSolutionsSalted)));
+        // console.log(JSON.stringify(result));
         expect(result.length).to.be.eq(2);
-        let expected_proof = tree.proof(captchaSolutions[0].captchaId);
+        let expected_proof = tree.proof(captchaSolutionsSalted[0].captchaId);
         expect(result[0].proof).to.deep.eq(expected_proof);
-        expect(result[0].captchaId).to.eq(captchaSolutions[0].captchaId);
+        expect(result[0].captchaId).to.eq(captchaSolutionsSalted[0].captchaId);
     });
 
     it("Dapp User sending an invalid captchas causes error", async () => {
-        const {mockEnv, tasks} = await setup()
+        const {mockEnv, tasks, requestHash} = await setup()
         let captchaSolutions = [{captchaId: "blah", solution: [21], salt: "blah"}]
         let tree = new CaptchaMerkleTree();
         let captchasHashed = captchaSolutions.map(captcha => computeCaptchaSolutionHash(captcha))
         tree.build(captchasHashed);
-        let solutionPromise = tasks.dappUserSolution(mockEnv.signer?.address!, DAPP.contractAccount!, JSON.parse(JSON.stringify(captchaSolutions)));
+        let solutionPromise = tasks.dappUserSolution(DAPP_USER.address, DAPP.contractAccount!, requestHash, JSON.parse(JSON.stringify(captchaSolutions)));
         solutionPromise.catch(e => e.message.should.match(`/${ERRORS.CAPTCHA.INVALID_CAPTCHA_ID.message}/`));
     });
 
     it("Dapp User sending solutions without committing to blockchain causes error", async () => {
-        const {mockEnv, tasks, captchaSolutions} = await setup();
+        const {mockEnv, tasks, captchaSolutions, requestHash} = await setup();
         let tree = new CaptchaMerkleTree();
         let captchasHashed = captchaSolutions.map(captcha => computeCaptchaSolutionHash(captcha))
         tree.build(captchasHashed);
-        let solutionPromise = tasks.dappUserSolution(mockEnv.signer?.address!, DAPP.contractAccount!, JSON.parse(JSON.stringify(captchaSolutions)));
+        let solutionPromise = tasks.dappUserSolution(DAPP_USER.address, DAPP.contractAccount!, requestHash, JSON.parse(JSON.stringify(captchaSolutions)));
         solutionPromise.catch(e => e.message.should.match(`/${ERRORS.CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST.message}/`));
     })
 
     it("No proofs are returned if commitment found and solution is incorrect", async () => {
-        const {mockEnv, tasks, captchaSolutions} = await setup()
+        const {mockEnv, tasks, captchaSolutions, requestHash} = await setup()
         const captchaSolutionsBad = captchaSolutions.map(original => ({...original, solution: [3]}));
         let tree = new CaptchaMerkleTree();
         let captchasHashed = captchaSolutionsBad.map(captcha => computeCaptchaSolutionHash(captcha))
         tree.build(captchasHashed);
         let commitmentId = tree.root!.hash;
-        const provider = await tasks.getProviderDetails(process.env.PROVIDER_ADDRESS!);
-        await tasks.dappUserCommit(DAPP.contractAccount!, provider.captcha_dataset_id, commitmentId, process.env.PROVIDER_ADDRESS!);
-        // next part contains contract calls that must be run by provider
-        await mockEnv.changeSigner(process.env.PROVIDER_MNEMONIC!);
-        console.log("commitmentId", commitmentId);
-        let result = await tasks.dappUserSolution(mockEnv.signer?.address!, DAPP.contractAccount!, JSON.parse(JSON.stringify(captchaSolutionsBad)));
+        await tasks.dappUserCommit(DAPP.contractAccount!, datasetId, commitmentId, provider.address);
+        // next part contains internal contract calls that must be run by provider
+        await mockEnv.changeSigner(provider.mnemonic);
+        // console.log("commitmentId", commitmentId);
+        let result = await tasks.dappUserSolution(DAPP_USER.address, DAPP.contractAccount!, requestHash, JSON.parse(JSON.stringify(captchaSolutionsBad)));
         expect(result.length).to.be.eq(0);
 
     })

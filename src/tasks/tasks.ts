@@ -1,8 +1,8 @@
-import {loadJSONFile} from "../util";
+import {loadJSONFile, shuffleArray} from "../util";
 import {
     addHashesToDataset,
     compareCaptchaSolutions, computeCaptchaHash,
-    computeCaptchaHashes, computeCaptchaSolutionHash,
+    computeCaptchaHashes, computeCaptchaSolutionHash, computePendingRequestHash,
     parseCaptchaDataset,
     parseCaptchaSolutions
 } from "../captcha";
@@ -13,11 +13,12 @@ import {Database} from "../types";
 import {ERRORS} from "../errors";
 import {CaptchaMerkleTree} from "../merkle";
 import {CaptchaSolutionResponse, CaptchaWithProof} from "../types/api";
-import {GovernanceStatus} from "../types/provider";
+import {GovernanceStatus} from "../types/contract";
 import {buildDecodeVector} from "../codec/codec";
 import {AnyJson} from "@polkadot/types/types/codec";
 import {Hash} from "@polkadot/types/interfaces";
-import {CaptchaSolutionCommitment, CaptchaStatus} from "../types/captcha";
+import {Captcha, CaptchaSolution, CaptchaSolutionCommitment, CaptchaStatus} from "../types/captcha";
+import {randomAsHex} from "@polkadot/util-crypto";
 
 
 /**
@@ -152,46 +153,114 @@ export class Tasks {
 
     /**
      * Validate and store the clear text captcha solution(s) from the Dapp User
-     * @param {string | Uint8Array} userAccount
-     * @param {string | Uint8Array} dappAccount
+     * @param {string} userAccount
+     * @param {string} dappAccount
+     * @param {string} pendingHash  The hash associated with the DApp User's request
      * @param {JSON} captchas
      * @return {Promise<CaptchaSolutionResponse[]>} result containing the contract event
      */
-    async dappUserSolution(userAccount: string | Uint8Array, dappAccount: string | Uint8Array, captchas: JSON): Promise<CaptchaSolutionResponse[]> {
-        // inactive checks
+    async dappUserSolution(userAccount: string, dappAccount: string, requestHash: string, captchas: JSON): Promise<CaptchaSolutionResponse[]> {
+        if (!await this.dappIsActive(dappAccount)) {
+            throw new Error(ERRORS.CONTRACT.DAPP_NOT_ACTIVE.message);
+        }
+
         let response: CaptchaSolutionResponse[] = [];
+        const {storedCaptchas, receivedCaptchas, captchaIds} = await this.validateCaptchasLength(captchas);
+        const {tree, commitment, commitmentId} = await this.buildTreeAndGetCommitment(receivedCaptchas);
+        const pendingRequest = await this.validateDappUserSolutionRequestIsPending(requestHash, userAccount, captchaIds)
+
+        // Only do stuff if the commitment is Pending on chain and in local DB (avoid using Approved commitments twice)
+        if (pendingRequest && commitment.status === CaptchaStatus.Pending) {
+            await this.db.storeDappUserSolution(receivedCaptchas, commitmentId);
+            if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
+                // TODO refund their tx fee
+                await this.providerApprove(commitmentId);
+                response = captchaIds.map(id => ({captchaId: id, proof: tree.proof(id)}))
+            } else {
+                await this.providerDisapprove(commitmentId);
+            }
+        }
+
+        return response
+    }
+
+    /**
+     * Validate that the dapp is active in the contract
+     */
+    async dappIsActive(dappAccount: string): Promise<boolean> {
+        let dapp = await this.getDappDetails(dappAccount)
+        return dapp.status === GovernanceStatus.Active
+    }
+
+    /**
+     * Validate that the provider is active in the contract
+     */
+    async providerIsActive(providerAccount: string): Promise<boolean> {
+        let provider = await this.getProviderDetails(providerAccount)
+        return provider.status === GovernanceStatus.Active
+    }
+
+    /**
+     * Validate length of received captchas array matches length of captchas found in database
+     */
+    async validateCaptchasLength(captchas: JSON): Promise<{ storedCaptchas: Captcha[], receivedCaptchas: CaptchaSolution[], captchaIds: string[] }> {
         const receivedCaptchas = parseCaptchaSolutions(captchas);
         const captchaIds = receivedCaptchas.map(captcha => captcha.captchaId);
         const storedCaptchas = await this.db.getCaptchaById(captchaIds);
         if (!storedCaptchas || receivedCaptchas.length !== storedCaptchas.length) {
             throw new Error(ERRORS.CAPTCHA.INVALID_CAPTCHA_ID.message)
         }
+        return {storedCaptchas, receivedCaptchas, captchaIds}
+    }
+
+    /**
+     * Build merkle tree and get commitment from contract, returning the tree, commitment, and commitmentId
+     * @param {CaptchaSolution[]} captchas
+     * @returns {Promise<{ tree: CaptchaMerkleTree, commitment: CaptchaSolutionCommitment, commitmentId: string }>}
+     */
+    async buildTreeAndGetCommitment(captchas: CaptchaSolution[]): Promise<{ tree: CaptchaMerkleTree, commitment: CaptchaSolutionCommitment, commitmentId: string }> {
         let tree = new CaptchaMerkleTree();
-        let solutionsHashed = receivedCaptchas.map(captcha => computeCaptchaSolutionHash(captcha));
+        let solutionsHashed = captchas.map(captcha => computeCaptchaSolutionHash(captcha));
         tree.build(solutionsHashed);
         let commitmentId = tree.root!.hash
         let commitment = await this.getCaptchaSolutionCommitment(commitmentId);
         if (!commitment) {
             throw new Error(ERRORS.CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST.message)
         }
-        // Only do stuff if the commitment is Pending
-        // if (commitment.status === CaptchaStatus.Pending) {
-        await this.db.storeDappUserCaptchaSolution(receivedCaptchas, commitmentId);
-        if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
-            // TODO refund their tx fee
-            await this.providerApprove(commitmentId);
-            response = captchaIds.map(id => ({captchaId: id, proof: tree.proof(id)}))
-        } else {
-            await this.providerDisapprove(commitmentId);
-        }
-        // store this response for future requests
-        await this.db.storeCaptchaSolutionResponse(response, commitmentId)
-        // } else {
-        //     console.log("captcha commitment approved")
-        //     response = await this.db.getCaptchaSolutionResponse(commitmentId)
-        // }
+        return {tree, commitment, commitmentId}
+    }
 
-        return response
+    /**
+     * Validate that a Dapp User is responding to their own pending captcha request
+     * @param {string} requestHash
+     * @param {string} userAccount
+     * @param {string[]} captchaIds
+     */
+    async validateDappUserSolutionRequestIsPending(requestHash: string, userAccount: string, captchaIds: string[]): Promise<boolean> {
+        const pendingRecord = await this.db.getDappUserPending(requestHash);
+        if (pendingRecord) {
+            const pendingHashComputed = computePendingRequestHash(captchaIds, userAccount, pendingRecord.salt);
+            return requestHash === pendingHashComputed
+        }
+        return false
+    }
+
+    /**
+     * Get two random captchas from specified dataset, create the response and store a hash of it, marked as pending
+     * @param {string} datasetId
+     * @param {string} userAccount
+     */
+    async getRandomCaptchasAndRequestHash(datasetId: string, userAccount: string): Promise<{ captchas: Captcha[], requestHash: string }> {
+        // TODO Config the number, style, and state of captchas sent back. For now return one solved and one unsolved
+        const solved = await this.getCaptchaWithProof(datasetId, true, 1);
+        const unsolved = await this.getCaptchaWithProof(datasetId, false, 1);
+        const captchas: Captcha[] = shuffleArray([solved[0], unsolved[0]]);
+        const salt = randomAsHex();
+        const requestHash = computePendingRequestHash(captchas.map(c => c.captchaId), userAccount, salt);
+        // TODO Should this be committed to contract? What are the downsides if not?
+        //   - Provider could lie about having a pending request and Dapp User would not be able to prove otherwise
+        await this.db.storeDappUserPending(userAccount, requestHash, salt)
+        return {captchas, requestHash: requestHash}
     }
 
     /**

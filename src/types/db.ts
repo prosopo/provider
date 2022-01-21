@@ -1,7 +1,6 @@
 import {Collection} from "mongodb";
 import {Captcha, CaptchaSolution, Dataset} from "./captcha";
 import {Hash} from "@polkadot/types/interfaces";
-import {CaptchaSolutionResponse} from "./api";
 
 export interface Database {
     readonly url: string;
@@ -18,13 +17,16 @@ export interface Database {
 
     updateCaptcha(captcha: Captcha, datasetId: string): Promise<void>;
 
-    getDatasetDetails(datasetId: Hash | string | Uint8Array);
+    getDatasetDetails(datasetId: Hash | string | Uint8Array): Promise<any>;
 
-    storeDappUserCaptchaSolution(captchas: CaptchaSolution[],treeRoot: string);
+    storeDappUserSolution(captchas: CaptchaSolution[], treeRoot: string): Promise<void>;
 
-    storeCaptchaSolutionResponse(captchaSolutionResponse: CaptchaSolutionResponse[], commitmentId: string)
+    storeDappUserPending(userAccount: string, requestHash: string, salt: string): Promise<void>;
 
-    getCaptchaSolutionResponse(commitmentId: string): Promise<CaptchaSolutionResponse[]>
+    getDappUserPending(requestHash: string): Promise<any>
+
+    updateDappUserPendingStatus(userAccount: string, requestHash: string, approve: boolean): Promise<void>;
+
 }
 
 // Other table types from other database engines go here
