@@ -1,7 +1,7 @@
-import {ProsopoConfig} from './config'
-import {Database} from './db'
-import Contract from "@redspot/patract/contract"
-import {Network, Signer} from "redspot/types"
+import Contract from '@redspot/patract/contract'
+import { Network, Signer } from 'redspot/types'
+import { ProsopoConfig } from './config'
+import { Database } from './db'
 
 export interface ProsopoEnvironment {
     network: Network

@@ -1,11 +1,11 @@
-import {Environment} from "../env";
-import {Registry} from "redspot/types/provider";
-import {AccountId, Balance, Hash} from "@polkadot/types/interfaces";
-import {u16, u32} from "@polkadot/types";
-import Contract from "@redspot/patract/contract";
+import { Registry } from 'redspot/types/provider'
+import { AccountId, Balance, Hash } from '@polkadot/types/interfaces'
+import { u16, u32 } from '@polkadot/types'
+import Contract from '@redspot/patract/contract'
+import { Environment } from '../env'
 
 export enum GovernanceStatus {
-    Active = "Active", Inactive = "Inactive", Deactivated = "Deactivated"
+    Active = 'Active', Inactive = 'Inactive', Deactivated = 'Deactivated'
 }
 
 export enum Payee {
@@ -19,16 +19,16 @@ export interface Provider {
     balance: Balance,
     fee: u32,
     payee: Payee,
-    service_origin: Hash,
-    captcha_dataset_id: Hash,
+    serviceOrigin: Hash | string,
+    captchaDatasetId: Hash | string,
 }
 
 export interface Dapp {
     status: GovernanceStatus,
     balance: Balance,
     owner: AccountId,
-    min_difficulty: u16,
-    client_origin: Hash,
+    minDifficulty: u16,
+    clientOrigin: Hash,
 }
 
 export interface contractApiInterface {
@@ -42,7 +42,7 @@ export interface contractApiInterface {
 
     encodeArgs(methodObj: object, args: any[], value?: number): any[]
 
-    getContractMethod(contractMethodName: string): Object
+    getContractMethod(contractMethodName: string): Record<string, unknown>
 
     getEventNameFromMethodName(contractMethodName: string): string
 
