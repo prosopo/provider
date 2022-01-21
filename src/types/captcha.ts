@@ -3,6 +3,13 @@ import {AccountId, Hash} from "@polkadot/types/interfaces";
 
 export type Dataset = {
     datasetId?: Hash | string | Uint8Array,
+    captchas: CaptchaWithoutId[] | Captcha[],
+    format: CaptchaTypes,
+    tree?: string[][]
+}
+
+export type DatasetWithIds = {
+    datasetId?: Hash | string | Uint8Array,
     captchas: Captcha[],
     format: CaptchaTypes,
     tree?: string[][]
@@ -18,12 +25,15 @@ export interface CaptchaSolutionCommitment {
     provider: AccountId,
 }
 
-export type Captcha = {
-    captchaId?: string
+export type CaptchaWithoutId = {
     salt: string,
     items: any[],
     target: string,
     solution?: any
+}
+
+export interface Captcha extends CaptchaWithoutId {
+    captchaId: string
 }
 
 export type CaptchaSolution = {
@@ -32,9 +42,6 @@ export type CaptchaSolution = {
     solution: any
 }
 
-export type CaptchaResult = {
-
-}
 
 export enum CaptchaTypes { SelectAll = "SelectAll"}
 

@@ -17,5 +17,6 @@ export interface CaptchaSolutionResponse {
 export const CaptchaSolutionBody = z.object({
     userAccount: z.string(),
     dappAccount: z.string(),
-    captchas: CaptchaSolutionSchema
+    captchas: CaptchaSolutionSchema,
+    requestHash: z.string(),
 })

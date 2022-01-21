@@ -4,18 +4,20 @@ import {
     DatasetSchema,
     CaptchasSchema,
     CaptchaSolutionSchema,
-    CaptchaSolution
+    CaptchaSolution, CaptchaWithoutId, DatasetWithIds
 } from "./types/captcha";
 import {ERRORS} from './errors'
 import {CaptchaMerkleTree} from "./merkle";
 import {hexHash, imageHash, readFile} from "./util";
 
-export function addHashesToDataset(dataset: Dataset, tree: CaptchaMerkleTree): Dataset {
+
+export function addHashesToDataset(dataset: Dataset, tree: CaptchaMerkleTree): DatasetWithIds {
     try {
         dataset['captchas'] = dataset['captchas'].map((captcha, index) => (
-            {captchaId: tree.leaves[index].hash, ...captcha}
-        ))
-        return dataset
+                {...captcha, captchaId: tree.leaves[index].hash} as Captcha
+            )
+        ) as Captcha[]
+        return <DatasetWithIds>dataset
     } catch (err) {
         throw(`${ERRORS.DATASET.HASH_ERROR.message}:\n${err}`);
     }
@@ -31,7 +33,7 @@ export function parseCaptchaDataset(datasetJSON: JSON): Dataset {
 }
 
 
-export function parseCaptchas(captchaJSON: JSON): Captcha[] {
+export function parseCaptchas(captchaJSON: JSON): CaptchaWithoutId[] {
     try {
         return CaptchasSchema.parse(captchaJSON)
     } catch (err) {
@@ -58,6 +60,12 @@ export function compareCaptchaSolutions(received: CaptchaSolution[], stored: Cap
     }
 }
 
+/**
+ * Check whether the `solution` arrays in a CaptchaSolution and stored Captcha are equivalent
+ * @param  {CaptchaSolution} received
+ * @param  {Captcha} stored
+ * @return {boolean}
+ */
 export function compareCaptcha(received: CaptchaSolution, stored: Captcha): boolean {
     if (stored.solution && stored.solution.length > 0) {
         // this is a captcha we know the solution for
@@ -70,7 +78,12 @@ export function compareCaptcha(received: CaptchaSolution, stored: Captcha): bool
     }
 }
 
-export async function computeCaptchaHash(captcha: Captcha) {
+/**
+ * Compute the hash of various types of captcha, loading any images and hashing them in the process
+ * @param  {Captcha} captcha
+ * @return {string} the hex string hash
+ */
+export async function computeCaptchaHash(captcha: CaptchaWithoutId) {
     let itemHashes: string[] = [];
     for (let item of captcha['items']) {
         if (item['type'] === 'image') {
@@ -84,22 +97,48 @@ export async function computeCaptchaHash(captcha: Captcha) {
     return hexHash([captcha['target'], captcha['solution'], captcha['salt'], itemHashes].join())
 }
 
+/**
+ * Create a unique solution commitment
+ * @param  {CaptchaSolution} captcha
+ * @return {string} the hex string hash
+ */
 export function computeCaptchaSolutionHash(captcha: CaptchaSolution) {
     return hexHash([captcha['captchaId'], captcha['solution'], captcha['salt']].join())
 }
 
-export async function computeCaptchaHashes(captchas: Captcha[]): Promise<CaptchaSolution[]> {
+/**
+ * Compute hashes for an array of captchas
+ * @param  {Captcha[]} captchas
+ * @return {Promise<CaptchaSolution[]>} captchasWithHashes
+ */
+export async function computeCaptchaHashes(captchas: CaptchaWithoutId[]): Promise<CaptchaSolution[]> {
     let captchasWithHashes: CaptchaSolution[] = []
     for (let captcha of captchas) {
         let captchaId = await computeCaptchaHash(captcha)
-        let captchaSol = convertCaptchaToCaptchaSolution(captcha, captchaId);
+        let captchaWithId: Captcha = {captchaId: captchaId, ...captcha}
+        let captchaSol = convertCaptchaToCaptchaSolution(captchaWithId);
         captchasWithHashes.push(captchaSol);
     }
     return captchasWithHashes
 }
 
-
-export function convertCaptchaToCaptchaSolution(captcha: Captcha, captchaId): CaptchaSolution {
-    return {captchaId: captchaId, salt: captcha.salt, solution: captcha.solution}
+/**
+ * Map a Captcha to a Captcha solution (drop items, target, etc.)
+ * @param  {Captcha} captcha
+ * @param  {string} captchaId
+ * @return {CaptchaSolution}
+ */
+export function convertCaptchaToCaptchaSolution(captcha: Captcha): CaptchaSolution {
+    return {captchaId: captcha.captchaId, salt: captcha.salt, solution: captcha.solution}
 }
 
+/**
+ * Compute hash for an array of captcha ids, userAccount, and salt, which serves as the identifier for a pending request
+ * @param  {string[]} captchaIds
+ * @param  {string} userAccount
+ * @param  {string} salt
+ * @return {string}
+ */
+export function computePendingRequestHash(captchaIds: string[], userAccount: string, salt: string): string {
+    return hexHash([...captchaIds.sort(), userAccount, salt].join())
+}

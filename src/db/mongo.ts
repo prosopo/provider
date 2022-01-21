@@ -121,14 +121,13 @@ export class ProsopoDatabase implements Database {
             {$set: captcha},
             {upsert: false}
         )
-
     }
 
 
     /**
      * @description Get a captcha that is solved or not solved
      */
-    async getDatasetDetails(datasetId: Hash) {
+    async getDatasetDetails(datasetId: Hash): Promise<any> {
         const doc = await this.tables.dataset?.findOne({datasetId: datasetId});
         if (doc) {
             return doc
@@ -140,7 +139,7 @@ export class ProsopoDatabase implements Database {
     /**
      * @description Store a Dapp User's captcha solution
      */
-    async storeDappUserCaptchaSolution(captchas: CaptchaSolution[], treeRoot: string) {
+    async storeDappUserSolution(captchas: CaptchaSolution[], treeRoot: string) {
         // create a bulk upsert operation and execute
         // @ts-ignore
         await this.tables.solutions?.bulkWrite(captchas.map(captchaDoc =>
@@ -162,29 +161,38 @@ export class ProsopoDatabase implements Database {
     }
 
     /**
-     * @description Store a Dapp User's captcha solution response
+     * @description Store a Dapp User's pending record
      */
-    async storeCaptchaSolutionResponse(captchaSolutionResponse: CaptchaSolutionResponse[], commitmentId: string) {
-        await this.tables.responses?.updateOne(
-            {_id: commitmentId},
-            {$set: {response: captchaSolutionResponse}},
+    async storeDappUserPending(userAccount: string, requestHash: string, salt: string): Promise<void> {
+        await this.tables.pending?.updateOne(
+            {_id: requestHash},
+            {$set: {accountId: userAccount, pending: true, salt: salt}},
             {upsert: true}
         )
     }
 
     /**
-     * @description Get a captcha solution response
+     * @description Get a Dapp user's pending record
      */
-    async getCaptchaSolutionResponse(commitmentId: string): Promise<CaptchaSolutionResponse[]> {
-        const doc = await this.tables.responses?.findOne({_id: commitmentId});
+    async getDappUserPending(requestHash: string): Promise<any> {
+        const doc = await this.tables.pending?.findOne({_id: requestHash});
         if (doc) {
-            return doc.response
+            return doc
         } else {
-            throw(ERRORS.DATABASE.COMMITMENT_SOLUTION_RESPONSE_NOT_FOUND.message)
+            throw(ERRORS.DATABASE.PENDING_RECORD_NOT_FOUND.message)
         }
     }
 
-
+    /**
+     * @description Update a Dapp User's pending record
+     */
+    async updateDappUserPendingStatus(userAccount: string, requestHash: string, approve: boolean): Promise<void> {
+        await this.tables.pending?.updateOne(
+            {_id: requestHash},
+            {$set: {accountId: userAccount, pending: false, approved: approve}},
+            {upsert: true}
+        )
+    }
 }
 
 
