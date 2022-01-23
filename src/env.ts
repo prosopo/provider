@@ -43,7 +43,7 @@ export class Environment implements ProsopoEnvironment {
         this.network = network
         this.patract = patract
         this.mnemonic = mnemonic
-        if (this.config.defaultEnvironment && this.config.networks.hasOwnProperty(this.config.defaultEnvironment)) {
+        if (this.config.defaultEnvironment && Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultEnvironment)) {
             this.defaultEnvironment = this.config.defaultEnvironment
             this.deployerAddress = this.config.networks[this.defaultEnvironment].contract.deployer.address
             this.contractAddress = this.config.networks[this.defaultEnvironment].contract.address
@@ -58,7 +58,7 @@ export class Environment implements ProsopoEnvironment {
         await this.importDatabase()
         await this.db?.connect()
         // redspot will do this if using `npx redspot` commands. do it here anyway in case using `yarn ts-node ...`
-        await this.network.registry.register(contractDefinitions)
+        this.network.registry.register(contractDefinitions)
         assert(this.contract instanceof Contract)
     }
 
@@ -77,7 +77,7 @@ export class Environment implements ProsopoEnvironment {
     async getContract (): Promise<void> {
         await this.network.api.isReadyOrError
         const contractFactory = await patract.getContractFactory(CONTRACT_NAME, this.signer)
-        this.contract = await contractFactory.attach(this.contractAddress)
+        this.contract = contractFactory.attach(this.contractAddress)
     }
 
     async getSigner (): Promise<void> {
@@ -96,7 +96,7 @@ export class Environment implements ProsopoEnvironment {
         await this.getSigner()
     }
 
-    async createAccountAndAddToKeyring (): Promise<string[]> {
+    createAccountAndAddToKeyring (): string[] {
         const mnemonic: string = mnemonicGenerate()
         const account = this.network.keyring.addFromMnemonic(mnemonic)
         const { address } = account

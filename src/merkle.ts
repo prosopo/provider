@@ -1,5 +1,16 @@
 import { hexHash } from './util'
-import { MerkleNodeInterface } from './types/merkle'
+import { MerkleNodeInterface } from './types'
+
+class MerkleNode implements MerkleNodeInterface {
+    hash: string;
+
+    parent: string | null;
+
+    constructor (hash) {
+        this.hash = hash
+        this.parent = null
+    }
+}
 
 export class CaptchaMerkleTree {
     leaves: MerkleNode[]
@@ -32,7 +43,7 @@ export class CaptchaMerkleTree {
         // Builds the Merkle tree from a list of leaves. In case of an odd number of leaves, the last leaf is duplicated.
 
         const numLeaves = leaves.length
-        if (numLeaves == 1) {
+        if (numLeaves === 1) {
             return leaves[0]
         }
 
@@ -84,16 +95,5 @@ export class CaptchaMerkleTree {
         }
 
         return proofTree
-    }
-}
-
-class MerkleNode implements MerkleNodeInterface {
-    hash: string;
-
-    parent: string | null;
-
-    constructor (hash) {
-        this.hash = hash
-        this.parent = null
     }
 }
