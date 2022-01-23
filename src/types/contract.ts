@@ -35,7 +35,7 @@ export interface Dapp {
 export interface contractApiInterface {
     env: Environment
 
-    contractCall(contractFunction: string, args: any[], value?: number): Promise<any>
+    contractCall(contractFunction: string, args: any[], value?: number): Promise<Record<string, unknown>>
 
     contractTx(signedContract: Contract, contractMethodName: string, encodedArgs: any[], value: number | undefined)
 

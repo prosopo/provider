@@ -46,11 +46,11 @@ export class Tasks {
     // Contract tasks
 
     // TODO These functions could all be constructed automatically from the contract ABI
-    async providerRegister (serviceOrigin: string, fee: number, payee: Payee, address: string): Promise<Object> {
+    async providerRegister (serviceOrigin: string, fee: number, payee: Payee, address: string): Promise<Record<string, unknown>> {
         return await this.contractApi.contractCall('providerRegister', [serviceOrigin, fee, payee, address])
     }
 
-    async providerUpdate (serviceOrigin: string, fee: number, payee: Payee, address: string, value: number | undefined): Promise<Object> {
+    async providerUpdate (serviceOrigin: string, fee: number, payee: Payee, address: string, value: number | undefined): Promise<Record<string, unknown>> {
         return await this.contractApi.contractCall('providerUpdate', [serviceOrigin, fee, payee, address], value)
     }
 
@@ -99,11 +99,11 @@ export class Tasks {
     }
 
     async getProviderDetails (accountId: string): Promise<Provider> {
-        return await this.contractApi.contractCall('getProviderDetails', [accountId])
+        return await this.contractApi.contractCall('getProviderDetails', [accountId]) as unknown as Provider
     }
 
     async getDappDetails (accountId: string): Promise<Dapp> {
-        return await this.contractApi.contractCall('getDappDetails', [accountId])
+        return await this.contractApi.contractCall('getDappDetails', [accountId]) as unknown as Dapp
     }
 
     async getCaptchaData (captchaDatasetId: string) {
@@ -111,7 +111,7 @@ export class Tasks {
     }
 
     async getCaptchaSolutionCommitment (solutionId: string): Promise<CaptchaSolutionCommitment> {
-        return await this.contractApi.contractCall('getCaptchaSolutionCommitment', [solutionId])
+        return await this.contractApi.contractCall('getCaptchaSolutionCommitment', [solutionId]) as unknown as CaptchaSolutionCommitment
     }
 
     async providerAccounts (): Promise<AnyJson> {
