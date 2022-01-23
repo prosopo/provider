@@ -5,6 +5,7 @@ import { ERRORS } from '../../src/errors'
 import { network, patract } from 'redspot'
 import { contractDefinitions } from '../../src/contract/definitions'
 import { strict as assert } from 'assert'
+import { KeyringPair } from '@polkadot/keyring/types'
 
 const { mnemonicGenerate } = require('@polkadot/util-crypto')
 
@@ -43,7 +44,7 @@ export class MockEnvironment implements ProsopoEnvironment {
         this.mnemonic = '//Alice'
         this.network = network
         this.patract = patract
-        if (this.config.defaultEnvironment && this.config.networks.hasOwnProperty(this.config.defaultEnvironment)) {
+        if (this.config.defaultEnvironment && Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultEnvironment)) {
             this.defaultEnvironment = this.config.defaultEnvironment
             this.deployerAddress = this.config.networks[this.defaultEnvironment].contract.deployer.address
             this.contractAddress = this.config.networks[this.defaultEnvironment].contract.address
@@ -57,7 +58,7 @@ export class MockEnvironment implements ProsopoEnvironment {
         await this.getContract()
         await this.importDatabase()
         await this.db?.connect()
-        await this.network.registry.register(contractDefinitions)
+        this.network.registry.register(contractDefinitions)
         assert(this.contract instanceof Contract)
     }
 
@@ -79,7 +80,7 @@ export class MockEnvironment implements ProsopoEnvironment {
     async getContract (): Promise<void> {
         await this.network.api.isReadyOrError
         const contractFactory = await patract.getContractFactory(CONTRACT_NAME, this.signer)
-        this.contract = await contractFactory.attach(this.contractAddress)
+        this.contract = contractFactory.attach(this.contractAddress)
     }
 
     async getSigner (): Promise<void> {
@@ -98,10 +99,10 @@ export class MockEnvironment implements ProsopoEnvironment {
         await this.getSigner()
     }
 
-    async createAccountAndAddToKeyring (): Promise<[string, Signer]> {
+    createAccountAndAddToKeyring (): [string, string] {
         const mnemonic: string = mnemonicGenerate()
-        const keyringPair = this.network.keyring.addFromMnemonic(mnemonic)
-        const signer = network.createSigner(keyringPair)
-        return [mnemonic, signer]
+        const account = this.network.keyring.addFromMnemonic(mnemonic)
+        const { address } = account
+        return [mnemonic, address]
     }
 }

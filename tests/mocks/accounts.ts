@@ -28,7 +28,7 @@ export const PROVIDER: TestProvider = {
 export interface TestDapp {
     serviceOrigin: string,
     mnemonic: string,
-    contractAccount: string | undefined,
+    contractAccount: string,
     optionalOwner: string
     fundAmount: number
 }
@@ -36,7 +36,7 @@ export interface TestDapp {
 export const DAPP: TestDapp = {
     serviceOrigin: 'http://localhost:9393',
     mnemonic: '//Ferdie',
-    contractAccount: process.env.DAPP_CONTRACT_ADDRESS, // Must be deployed
+    contractAccount: process.env.DAPP_CONTRACT_ADDRESS || '', // Must be deployed
     optionalOwner: '5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL', // Ferdie's address
     fundAmount: 100
 }
