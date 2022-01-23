@@ -3,6 +3,7 @@ import { AccountId, Balance, Hash } from '@polkadot/types/interfaces'
 import { u16, u32 } from '@polkadot/types'
 import Contract from '@redspot/patract/contract'
 import { Environment } from '../env'
+import { AbiMessage } from '@polkadot/api-contract/types'
 
 export enum GovernanceStatus {
     Active = 'Active', Inactive = 'Inactive', Deactivated = 'Deactivated'
@@ -42,7 +43,7 @@ export interface contractApiInterface {
 
     encodeArgs(methodObj: object, args: any[], value?: number): any[]
 
-    getContractMethod(contractMethodName: string): Record<string, unknown>
+    getContractMethod(contractMethodName: string): AbiMessage
 
     getEventNameFromMethodName(contractMethodName: string): string
 

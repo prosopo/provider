@@ -20,7 +20,7 @@ export const CaptchaSolutionBody = z.object({
     requestHash: z.string()
 })
 
-export interface pendingCaptchaRequest {
+export interface PendingCaptchaRequest {
     accountId: string,
     pending: boolean,
     salt: string

@@ -1,7 +1,7 @@
 import express, { Router } from 'express'
 import { Tasks } from './tasks/tasks'
 import { BadRequest, ERRORS } from './errors'
-import { CaptchaSolutionBody } from './types'
+import { CaptchaSolutionBody, Payee } from './types'
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -25,7 +25,7 @@ export function prosopoMiddleware (env): Router {
             throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message)
         }
         try {
-            const result = await tasks.providerRegister(serviceOrigin as string, fee as number, payee as string, address as string)
+            const result = await tasks.providerRegister(serviceOrigin as string, fee as number, payee as Payee, address as string)
             res.json(result)
         } catch (err: unknown) {
             const msg = `${ERRORS.CONTRACT.TX_ERROR.message}:${err}`
@@ -46,7 +46,7 @@ export function prosopoMiddleware (env): Router {
             throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message)
         }
         try {
-            const result = await tasks.providerUpdate(serviceOrigin as string, fee as number, payee as string, address as string, value as number)
+            const result = await tasks.providerUpdate(serviceOrigin as string, fee as number, payee as Payee, address as string, value as number)
             res.json(result)
         } catch (err: unknown) {
             const msg = `${ERRORS.CONTRACT.TX_ERROR.message}:${err}`

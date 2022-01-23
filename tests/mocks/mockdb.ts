@@ -1,7 +1,6 @@
-import { Database, Tables } from '../../src/types'
+import { Database, DatasetRecord, DatasetWithIds, Tables } from '../../src/types'
 import { Captcha, CaptchaSolution, Dataset } from '../../src/types/captcha'
 import { Hash } from '@polkadot/types/interfaces'
-import { CaptchaSolutionResponse } from '../../src/types/api'
 
 const DEFAULT_ENDPOINT = 'test'
 
@@ -235,8 +234,8 @@ export class ProsopoDatabase implements mockDatabase {
         }
     }
 
-    getDatasetDetails (datasetId: string) {
-        const matching = this.tables.dataset![datasetId]
+    getDatasetDetails (datasetId: string): Promise<DatasetRecord> {
+        const matching = this.tables.dataset![datasetId] as DatasetRecord
         return Promise.resolve(matching)
     }
 

@@ -1,10 +1,13 @@
 import { Payee } from '../../src/types'
 
-export interface TestProvider {
+export interface TestAccount {
+    mnemonic: string
+    address: string
+}
+
+export interface TestProvider extends TestAccount {
     serviceOrigin: string,
     fee: number,
-    mnemonic: string,
-    address: string,
     datasetFile: string,
     stake: number,
     payee: Payee
@@ -22,7 +25,15 @@ export const PROVIDER: TestProvider = {
     address: ''
 }
 
-export const DAPP = {
+export interface TestDapp {
+    serviceOrigin: string,
+    mnemonic: string,
+    contractAccount: string | undefined,
+    optionalOwner: string
+    fundAmount: number
+}
+
+export const DAPP: TestDapp = {
     serviceOrigin: 'http://localhost:9393',
     mnemonic: '//Ferdie',
     contractAccount: process.env.DAPP_CONTRACT_ADDRESS, // Must be deployed

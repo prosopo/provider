@@ -21,7 +21,7 @@ import {
     CaptchaWithProof,
     contractApiInterface,
     Dapp,
-    Database,
+    Database, DatasetRecord,
     GovernanceStatus, Payee,
     Provider
 } from '../types'
@@ -74,7 +74,7 @@ export class Tasks {
         return await this.contractApi.contractCall('providerAddDataset', [hexToU8a(tree.root?.hash)])
     }
 
-    async dappRegister (dappServiceOrigin: string, dappContractAddress: string, dappOwner?: string): Promise<Object> {
+    async dappRegister (dappServiceOrigin: string, dappContractAddress: string, dappOwner?: string): Promise<Record<string, unknown>> {
         return await this.contractApi.contractCall('dappRegister', [dappServiceOrigin, dappContractAddress, dappOwner])
     }
 
@@ -86,7 +86,7 @@ export class Tasks {
         return await this.contractApi.contractCall('dappCancel', [contractAccount])
     }
 
-    async dappUserCommit (contractAccount: string, captchaDatasetId: Hash, userMerkleTreeRoot: string, providerAddress: string) {
+    async dappUserCommit (contractAccount: string, captchaDatasetId: Hash | string, userMerkleTreeRoot: string, providerAddress: string) {
         return await this.contractApi.contractCall('dappUserCommit', [contractAccount, captchaDatasetId, userMerkleTreeRoot, providerAddress])
     }
 
@@ -139,7 +139,7 @@ export class Tasks {
         if (captchaDocs) {
             const captchas: CaptchaWithProof[] = []
             for (const captcha of captchaDocs) {
-                const datasetDetails = await this.db.getDatasetDetails(datasetId)
+                const datasetDetails: DatasetRecord = await this.db.getDatasetDetails(datasetId)
                 const tree = new CaptchaMerkleTree()
                 tree.layers = datasetDetails.tree
                 const proof = tree.proof(captcha.captchaId)

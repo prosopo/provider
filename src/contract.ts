@@ -2,7 +2,7 @@ import { isU8a, isHex } from '@polkadot/util'
 import { Registry } from 'redspot/types/provider'
 import { AbiMessage } from '@polkadot/api-contract/types'
 import Contract from '@redspot/patract/contract'
-import { Codec } from '@polkadot/types/types'
+import { AnyJson, Codec } from '@polkadot/types/types'
 import { contractApiInterface } from './types/contract'
 import { ERRORS } from './errors'
 import { Environment } from './env'
@@ -72,8 +72,7 @@ export class ProsopoContractApi implements contractApiInterface {
     async contractQuery (signedContract: Contract, contractMethodName: string, encodedArgs: any[]): Promise<any> {
         const response = await signedContract.query[contractMethodName](...encodedArgs)
         if (response.result.isOk && response.output) {
-        // @ts-ignore
-            return this.unwrap(response.output.toJSON())
+            return this.unwrap(response.output)
         }
         throw (new Error(response.result.asErr.asModule.message.unwrap().toString()))
     }
@@ -89,7 +88,7 @@ export class ProsopoContractApi implements contractApiInterface {
     /** Encodes arguments that should be hashes using blake2AsU8a
      * @return encoded arguments
      */
-    encodeArgs (methodObj: object, args: any[], value?: number): any[] {
+    encodeArgs (methodObj: AbiMessage, args: any[], value?: number): any[] {
         const encodedArgs: any[] = []
         // args must be in the same order as methodObj['args']
         const createTypes = ['Hash']
@@ -108,7 +107,7 @@ export class ProsopoContractApi implements contractApiInterface {
      * @return the contract method object
      */
     getContractMethod (contractMethodName: string): AbiMessage {
-        const methodObj = this.env.contract?.abi.messages.filter((obj) => obj.method === contractMethodName)[0]
+        const methodObj = this.env.contract?.abi.messages.filter((obj) => obj.method === contractMethodName)[0] as AbiMessage
         if (methodObj) {
             return methodObj
         }
@@ -150,11 +149,11 @@ export class ProsopoContractApi implements contractApiInterface {
     async getStorage<T> (name: string, decodingFn: (registry: Registry, data: Uint8Array) => T): Promise<T> {
         await this.env.isReady()
         const storageKey = this.getStorageKey(name)
-        if (this.env.contract) {
-            const promiseresult = await this.env.network.api.rpc.contracts.getStorage(this.env.contract.address, storageKey)
-            const data = promiseresult.unwrapOrDefault()
-            return decodingFn(this.env.network.registry, data)
+        if (this.env.contract === undefined) {
+            throw new Error(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message)
         }
-        return undefined
+        const promiseresult = await this.env.network.api.rpc.contracts.getStorage(this.env.contract.address, storageKey)
+        const data = promiseresult.unwrapOrDefault()
+        return decodingFn(this.env.network.registry, data)
     }
 }

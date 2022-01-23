@@ -4,10 +4,11 @@ import {
     MongoClient, ObjectId, WithId
 } from 'mongodb'
 import { Hash } from '@polkadot/types/interfaces'
-import { Database, pendingCaptchaRequest, Tables } from '../types'
+import { Database, DatasetRecord, PendingCaptchaRequest, PendingCaptchaRequestRecord, Tables } from '../types'
 import { ERRORS } from '../errors'
 import { Captcha, CaptchaSolution, Dataset } from '../types/captcha'
 import { CaptchaSolutionResponse } from '../types/api'
+import { u8aToString } from '@polkadot/util'
 
 // mongodb://username:password@127.0.0.1:27017
 const DEFAULT_ENDPOINT = 'mongodb://127.0.0.1:27017'
@@ -56,8 +57,7 @@ export class ProsopoDatabase implements Database {
                 tree: dataset.tree
             }
             // const datasetId = new ObjectId(dataset.datasetId)
-            // @ts-ignore
-            this.tables.dataset?.updateOne({ _id: dataset.datasetId }, { $set: datasetDoc }, { upsert: true })
+            await this.tables.dataset?.updateOne({ _id: dataset.datasetId }, { $set: datasetDoc }, { upsert: true })
             // put the dataset id on each of the captcha docs
             const captchaDocs = dataset.captchas.map((captcha, index) => ({
                 ...captcha,
@@ -66,7 +66,6 @@ export class ProsopoDatabase implements Database {
             }))
 
             // create a bulk upsert operation and execute
-            // @ts-ignore
             await this.tables.captchas?.bulkWrite(captchaDocs.map((captchaDoc) => ({ updateOne: { filter: { _id: captchaDoc.captchaId }, update: { $set: captchaDoc }, upsert: true } })))
         }
     }
@@ -126,10 +125,10 @@ export class ProsopoDatabase implements Database {
     /**
      * @description Get a captcha that is solved or not solved
      */
-    async getDatasetDetails (datasetId: Hash): Promise<any> {
+    async getDatasetDetails (datasetId: Hash | string | Uint8Array): Promise<DatasetRecord> {
         const doc = await this.tables.dataset?.findOne({ datasetId })
         if (doc) {
-            return doc
+            return doc as DatasetRecord
         }
         throw (ERRORS.DATABASE.DATASET_GET_FAILED.message)
     }
@@ -139,7 +138,6 @@ export class ProsopoDatabase implements Database {
      */
     async storeDappUserSolution (captchas: CaptchaSolution[], treeRoot: string) {
         // create a bulk upsert operation and execute
-        // @ts-ignore
         await this.tables.solutions?.bulkWrite(captchas.map((captchaDoc) => ({
             updateOne: {
                 filter: { _id: captchaDoc.captchaId },
@@ -170,10 +168,10 @@ export class ProsopoDatabase implements Database {
     /**
      * @description Get a Dapp user's pending record
      */
-    async getDappUserPending (requestHash: string): Promise<pendingCaptchaRequest> {
+    async getDappUserPending (requestHash: string): Promise<PendingCaptchaRequestRecord> {
         const doc = await this.tables.pending?.findOne({ _id: requestHash })
         if (doc) {
-            return doc as unknown as pendingCaptchaRequest
+            return doc as PendingCaptchaRequestRecord
         }
         throw (ERRORS.DATABASE.PENDING_RECORD_NOT_FOUND.message)
     }

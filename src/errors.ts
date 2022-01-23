@@ -77,6 +77,9 @@ export const ERRORS = {
         },
         DAPP_NOT_ACTIVE: {
             message: 'Dapp is not active'
+        },
+        CONTRACT_UNDEFINED: {
+            message: 'Contract undefined'
         }
     },
     CLI: {

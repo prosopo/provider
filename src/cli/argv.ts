@@ -2,19 +2,18 @@ import yargs from 'yargs'
 import { Compact, u128 } from '@polkadot/types'
 import { encodeStringAddress } from '../util'
 import { ERRORS } from '../errors'
-// @ts-ignore
 import { Tasks } from '../tasks/tasks'
+import { Payee } from '../types'
 
 const validateAddress = (argv) => {
-    let address
-    address = encodeStringAddress(argv.address)
+    const address = encodeStringAddress(argv.address as string)
     return { address }
 }
 
 // TODO use zod for this
 const validatePayee = (argv) => {
-    let payee = argv.payee[0].toUpperCase() + argv.payee.slice(1).toLowerCase()
-    payee = ['Provider', 'Dapp'].indexOf(payee) > -1 ? payee : undefined
+    const payeeArg: string = argv.payee[0].toUpperCase() + argv.payee.slice(1).toLowerCase() || ''
+    const payee = ['Provider', 'Dapp'].indexOf(payeeArg) > -1 ? payeeArg : undefined
     return { payee }
 }
 
@@ -27,7 +26,7 @@ const validateValue = (argv) => {
     throw new Error(`${ERRORS.CLI.PARAMETER_ERROR.message}::value::${argv.value}`)
 }
 
-export async function processArgs (args, env) {
+export function processArgs (args, env) {
     const tasks = new Tasks(env)
     return yargs
         .usage('Usage: $0 [global options] <command> [options]')
@@ -41,7 +40,7 @@ export async function processArgs (args, env) {
                 .option('payee', { type: 'string', demand: true })
                 .option('address', { type: 'string', demand: true }),
             async (argv) => {
-                const result = await tasks.providerRegister(argv.serviceOrigin, argv.fee, argv.payee, argv.address)
+                const result = await tasks.providerRegister(argv.serviceOrigin as string, argv.fee as number, argv.payee as Payee, argv.address as string)
                 console.log(JSON.stringify(result, null, 2))
             },
             [validateAddress, validatePayee]
@@ -57,7 +56,7 @@ export async function processArgs (args, env) {
                 .option('address', { type: 'string', demand: true })
                 .option('value', { type: 'number', demand: false }),
             async (argv) => {
-                const result = await tasks.providerUpdate(argv.serviceOrigin, argv.fee, argv.payee, argv.address, argv.value)
+                const result = await tasks.providerUpdate(argv.serviceOrigin as string, argv.fee as number, argv.payee as Payee, argv.address as string, argv.value as number)
                 console.log(JSON.stringify(result, null, 2))
             },
             [validateAddress, validatePayee]
@@ -69,7 +68,7 @@ export async function processArgs (args, env) {
                 .option('address', { type: 'string', demand: true }),
             async (argv) => {
                 try {
-                    const result = await tasks.providerDeregister(argv.address)
+                    const result = await tasks.providerDeregister(argv.address as string)
                     console.log(JSON.stringify(result, null, 2))
                 } catch (err) {
                     console.log(err)
@@ -84,7 +83,7 @@ export async function processArgs (args, env) {
                 .option('value', { type: 'number', demand: true }),
             async (argv) => {
                 try {
-                    const result = await tasks.providerUnstake(argv.value)
+                    const result = await tasks.providerUnstake(argv.value as number)
                     console.log(JSON.stringify(result, null, 2))
                 } catch (err) {
                     console.log(err)
@@ -99,7 +98,7 @@ export async function processArgs (args, env) {
                 .option('file', { type: 'string', demand: true }),
             async (argv) => {
                 try {
-                    const result = await tasks.providerAddDataset(argv.file)
+                    const result = await tasks.providerAddDataset(argv.file as string)
                     console.log(JSON.stringify(result, null, 2))
                 } catch (err) {
                     console.log(err)
@@ -113,9 +112,9 @@ export async function processArgs (args, env) {
             (yargs) => yargs
                 .option('providerId', { type: 'string', demand: false })
                 .option('status', { type: 'string', demand: false }),
-            async (argv) => {
+            async () => {
                 try {
-                    const result = await tasks.providerAccounts(argv.providerId, argv.status)
+                    const result = await tasks.providerAccounts()
                     console.log(JSON.stringify(result, null, 2))
                 } catch (err) {
                     console.log(err)
