@@ -15,7 +15,7 @@ chai.should()
 chai.use(chaiAsPromised)
 const expect = chai.expect
 
-describe('PROVIDER TASKS', () => {
+describe('CONTRACT TASKS', () => {
     let datasetId
     let provider
     let dapp
