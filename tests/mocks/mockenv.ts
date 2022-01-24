@@ -1,10 +1,13 @@
 import {Database, ProsopoConfig, ProsopoEnvironment} from "../../src/types";
 import {Network} from "redspot/types";
 import Contract from "@redspot/patract/contract";
-import {Signer} from "redspot/provider";
+import {Signer} from "redspot/types";
 import {ERRORS} from "../../src/errors";
 import {network, patract} from 'redspot';
-import {Environment} from "../../src/env"
+import {contractDefinitions} from "../../src/contract/definitions";
+import {strict as assert} from "assert";
+
+const {mnemonicGenerate} = require('@polkadot/util-crypto');
 
 const CONTRACT_NAME = "prosopo"
 
@@ -24,7 +27,15 @@ export class MockEnvironment implements ProsopoEnvironment {
         this.config = {
             defaultEnvironment: "development",
             networks: {
-                development: {endpoint: "ws://substrate-node:9944", contract: {address: "", deployer: {address: ""}}}
+                development: {
+                    endpoint: "ws://substrate-node:9944",
+                    contract: {
+                        address: process.env.CONTRACT_ADDRESS!,
+                        deployer: {
+                            address: "//Alice"
+                        }
+                    }
+                }
             },
             database: {
                 development: {type: "mockdb", endpoint: "", dbname: ""}
@@ -42,14 +53,16 @@ export class MockEnvironment implements ProsopoEnvironment {
         }
     }
 
-    async isReady() {
+    async isReady(): Promise<void> {
         await this.getSigner();
         await this.getContract();
         await this.importDatabase();
         await this.db?.connect();
+        await this.network.registry.register(contractDefinitions);
+        assert(this.contract instanceof Contract);
     }
 
-    async importDatabase() {
+    async importDatabase(): Promise<void> {
         try {
             let {ProsopoDatabase} = await import(`./${this.config.database[this.defaultEnvironment].type}`);
             this.db = new ProsopoDatabase(
@@ -64,13 +77,13 @@ export class MockEnvironment implements ProsopoEnvironment {
     /*
         Direct copy of functions from env.ts as contract is not currently mocked
     */
-    async getContract() {
+    async getContract(): Promise<void> {
         await this.network.api.isReadyOrError;
         const contractFactory = await patract.getContractFactory(CONTRACT_NAME, this.signer);
         this.contract = await contractFactory.attach(this.contractAddress);
     }
 
-    async getSigner() {
+    async getSigner(): Promise<void> {
         await this.network.api.isReadyOrError;
         let mnemonic = this.mnemonic;
         if (mnemonic) {
@@ -80,6 +93,17 @@ export class MockEnvironment implements ProsopoEnvironment {
         }
     }
 
+    async changeSigner(mnemonic: string): Promise<void> {
+        await this.network.api.isReadyOrError;
+        this.mnemonic = mnemonic;
+        await this.getSigner();
+    }
 
+    async createAccountAndAddToKeyring(): Promise<[string, Signer]> {
+        const mnemonic: string = mnemonicGenerate();
+        const keyringPair = this.network.keyring.addFromMnemonic(mnemonic);
+        const signer = network.createSigner(keyringPair);
+        return [mnemonic, signer]
+    }
 
 }
