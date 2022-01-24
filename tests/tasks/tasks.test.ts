@@ -43,7 +43,7 @@ describe("PROVIDER TASKS", () => {
     provider = { ...PROVIDER };
     provider.mnemonic = providerMnemonic;
     provider.address = providerSigner.address;
-    // datasetId = await setupProvider(mockEnv, providerSigner.address, provider);
+    datasetId = await setupProvider(mockEnv, providerSigner.address, provider);
   });
 
   after(() => {
