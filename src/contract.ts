@@ -2,12 +2,12 @@ import { isU8a, isHex } from '@polkadot/util'
 import { Registry } from 'redspot/types/provider'
 import { AbiMessage } from '@polkadot/api-contract/types'
 import Contract from '@redspot/patract/contract'
-import { AnyJson, Codec } from '@polkadot/types/types'
-import { contractApiInterface } from './types/contract'
+import { Codec } from '@polkadot/types/types'
+import { ContractApiInterface, ContractTxResponse } from './types'
 import { ERRORS } from './errors'
 import { Environment } from './env'
 
-export class ProsopoContractApi implements contractApiInterface {
+export class ProsopoContractApi implements ContractApiInterface {
     env: Environment
 
     constructor (env) {
@@ -32,7 +32,15 @@ export class ProsopoContractApi implements contractApiInterface {
         return await this.contractQuery(signedContract, contractMethodName, encodedArgs)
     }
 
-    async contractTx (signedContract: Contract, contractMethodName: string, encodedArgs: any[], value: number | undefined): Promise<any> {
+    /**
+     * Perform a contract tx (mutating) calling the specified method
+     * @param {Contract} signedContract
+     * @param {string} contractMethodName
+     * @param {Array}  encodedArgs
+     * @param {number | undefined} value   The value of token that is sent with the transaction
+     * @return JSON result containing the contract event
+     */
+    async contractTx (signedContract: Contract, contractMethodName: string, encodedArgs: any[], value: number | undefined): Promise<ContractTxResponse[]> {
         let response
         if (value) {
             response = await signedContract.tx[contractMethodName](...encodedArgs, { value })
@@ -57,8 +65,8 @@ export class ProsopoContractApi implements contractApiInterface {
             //  sometimes - e.g. the case where a Provider tries to register twice. This returns ProviderExists
             //  https://github.com/polkadot-js/apps/issues/6465
             //  https://github.com/polkadot-js/api/issues/4389
-            return {}
         }
+        return []
     }
 
     /**
@@ -88,7 +96,7 @@ export class ProsopoContractApi implements contractApiInterface {
     /** Encodes arguments that should be hashes using blake2AsU8a
      * @return encoded arguments
      */
-    encodeArgs (methodObj: AbiMessage, args: any[], value?: number): any[] {
+    encodeArgs (methodObj: AbiMessage, args: any[]): any[] {
         const encodedArgs: any[] = []
         // args must be in the same order as methodObj['args']
         const createTypes = ['Hash']

@@ -19,7 +19,7 @@ import {
     CaptchaSolutionResponse,
     CaptchaStatus,
     CaptchaWithProof,
-    contractApiInterface,
+    ContractApiInterface,
     Dapp,
     Database, DatasetRecord,
     GovernanceStatus, Payee,
@@ -34,7 +34,7 @@ import { buildDecodeVector } from '../codec/codec'
  * @description Tasks that are shared by the API and CLI
  */
 export class Tasks {
-    contractApi: contractApiInterface
+    contractApi: ContractApiInterface
 
     db: Database
 

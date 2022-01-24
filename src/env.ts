@@ -96,7 +96,7 @@ export class Environment implements ProsopoEnvironment {
         await this.getSigner()
     }
 
-    createAccountAndAddToKeyring (): string[] {
+    createAccountAndAddToKeyring (): [string, string] {
         const mnemonic: string = mnemonicGenerate()
         const account = this.network.keyring.addFromMnemonic(mnemonic)
         const { address } = account

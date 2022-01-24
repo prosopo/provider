@@ -5,7 +5,7 @@ import {
     CaptchasSchema,
     CaptchaSolutionSchema,
     CaptchaSolution, CaptchaWithoutId, DatasetWithIds
-} from './types/captcha'
+} from './types'
 import { ERRORS } from './errors'
 import { CaptchaMerkleTree } from './merkle'
 import { hexHash, imageHash } from './util'
@@ -21,6 +21,11 @@ export function addHashesToDataset (dataset: Dataset, tree: CaptchaMerkleTree): 
     }
 }
 
+/**
+ * Parse a dataset
+ * @return {JSON} captcha dataset, stored in JSON
+ * @param datasetJSON
+ */
 export function parseCaptchaDataset (datasetJSON: JSON): Dataset {
     try {
         return DatasetSchema.parse(datasetJSON)
@@ -29,6 +34,11 @@ export function parseCaptchaDataset (datasetJSON: JSON): Dataset {
     }
 }
 
+/**
+ * Make sure captchas are in the correct format
+ * @param {JSON} captchaJSON captchas that have been passed in via dataset file
+ * @return {CaptchaWithoutId[]} an array of parsed captchas that have not yet been hashed and have no IDs
+ */
 export function parseCaptchas (captchaJSON: JSON): CaptchaWithoutId[] {
     try {
         return CaptchasSchema.parse(captchaJSON)
@@ -37,6 +47,11 @@ export function parseCaptchas (captchaJSON: JSON): CaptchaWithoutId[] {
     }
 }
 
+/**
+ * Make sure captcha solutions are in the correct format
+ * @param {JSON} captchaJSON captcha solutions received from the api
+ * @return {CaptchaSolution[]} an array of parsed captcha solutions
+ */
 export function parseCaptchaSolutions (captchaJSON: JSON): CaptchaSolution[] {
     try {
         return CaptchaSolutionSchema.parse(captchaJSON)
@@ -45,6 +60,12 @@ export function parseCaptchaSolutions (captchaJSON: JSON): CaptchaSolution[] {
     }
 }
 
+/**
+ * Take an array of CaptchaSolutions and Captchas and check if the solutions are the same for each pair
+ * @param  {CaptchaSolution[]} received
+ * @param  {Captcha[]} stored
+ * @return {boolean}
+ */
 export function compareCaptchaSolutions (received: CaptchaSolution[], stored: Captcha[]): boolean {
     if (received.length && stored.length && received.length === stored.length) {
         const arr1Sorted = received.sort((a, b) => (a.captchaId > b.captchaId ? 1 : -1))
@@ -81,9 +102,9 @@ export async function computeCaptchaHash (captcha: CaptchaWithoutId) {
     const itemHashes: string[] = []
     for (const item of captcha.items) {
         if (item.type === 'image') {
-            itemHashes.push(await imageHash(item.path))
+            itemHashes.push(await imageHash(item.path as string))
         } else if (item.type === 'text') {
-            itemHashes.push(hexHash(item.text))
+            itemHashes.push(hexHash(item.text as string))
         } else {
             throw (new Error('NotImplemented: only image and text item types allowed'))
         }
