@@ -1,3 +1,4 @@
+require('dotenv').config()
 import {Database, ProsopoConfig, ProsopoEnvironment} from "../../src/types";
 import {Network} from "redspot/types";
 import Contract from "@redspot/patract/contract";
@@ -41,7 +42,7 @@ export class MockEnvironment implements ProsopoEnvironment {
                 development: {type: "mockdb", endpoint: "", dbname: ""}
             }
         }
-        this.mnemonic = "//Alice";
+        this.mnemonic = process.env.PROVIDER_MNEMONIC || "//Alice";
         this.network = network;
         this.patract = patract;
         if (this.config.defaultEnvironment && this.config.networks.hasOwnProperty(this.config.defaultEnvironment)) {
