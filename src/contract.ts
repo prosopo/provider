@@ -6,6 +6,7 @@ import { Codec } from '@polkadot/types/types'
 import { ContractApiInterface, ContractTxResponse } from './types'
 import { ERRORS } from './errors'
 import { Environment } from './env'
+import {blake2AsHex} from "@polkadot/util-crypto";
 
 export class ProsopoContractApi implements ContractApiInterface {
     env: Environment
@@ -103,8 +104,8 @@ export class ProsopoContractApi implements ContractApiInterface {
         methodObj.args.forEach((methodArg, idx) => {
             let argVal = args[idx]
             // hash values that have been passed as strings
-            if (createTypes.indexOf(methodArg.type.type) > -1 && !(isU8a(args[idx]) || isHex(args[idx]))) {
-                argVal = this.env.network.api.registry.createType(methodArg.type.type, args[idx])
+            if (createTypes.indexOf(methodArg['type']['type']) > -1 && !(isU8a(args[idx]) || isHex(args[idx]))) {
+                argVal = blake2AsHex(args[idx])
             }
             encodedArgs.push(argVal)
         })
