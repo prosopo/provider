@@ -1,14 +1,10 @@
 import {
-    Collection,
     Db,
-    MongoClient, ObjectId, WithId
+    MongoClient
 } from 'mongodb'
 import { Hash } from '@polkadot/types/interfaces'
-import { Database, DatasetRecord, PendingCaptchaRequest, PendingCaptchaRequestRecord, Tables } from '../types'
+import { Database, DatasetRecord, PendingCaptchaRequestRecord, Tables, Captcha, CaptchaSolution, Dataset } from '../types'
 import { ERRORS } from '../errors'
-import { Captcha, CaptchaSolution, Dataset } from '../types/captcha'
-import { CaptchaSolutionResponse } from '../types/api'
-import { u8aToString } from '@polkadot/util'
 
 // mongodb://username:password@127.0.0.1:27017
 const DEFAULT_ENDPOINT = 'mongodb://127.0.0.1:27017'

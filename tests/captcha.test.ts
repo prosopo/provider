@@ -51,7 +51,7 @@ const DATASET = {
         }]
 }
 
-describe('PROVIDER CAPTCHA', () => {
+describe('CAPTCHA FUNCTIONS', () => {
     it('Parses a captcha dataset correctly', () => {
         expect(function () { parseCaptchaDataset(JSON.parse(JSON.stringify(DATASET)) as JSON) }).to.not.throw()
     })

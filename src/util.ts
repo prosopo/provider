@@ -1,14 +1,10 @@
 import { ERRORS } from './errors'
-
 const { decodeAddress, encodeAddress } = require('@polkadot/keyring')
 const { hexToU8a, isHex } = require('@polkadot/util')
 const { blake2AsHex } = require('@polkadot/util-crypto')
 const fs = require('fs')
 
 export function encodeStringAddress (address: string) {
-    if (address.startsWith('0x')) {
-        address = address.slice(2)
-    }
     try {
         return encodeAddress(
             isHex(address)
@@ -37,7 +33,7 @@ export async function readFile (filePath): Promise<Buffer> {
     })
 }
 
-export function shuffleArray (array) {
+export function shuffleArray<T> (array: T[]): T[] {
     for (let arrayIndex = array.length - 1; arrayIndex > 0; arrayIndex--) {
         const randIndex = Math.floor(Math.random() * (arrayIndex + 1));
         [array[arrayIndex], array[randIndex]] = [array[randIndex], array[arrayIndex]]

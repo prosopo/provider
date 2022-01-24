@@ -63,7 +63,7 @@ export interface ContractApiInterface {
 
     contractQuery(signedContract: Contract, contractMethodName: string, encodedArgs: any[]): Promise<any>
 
-    encodeArgs(methodObj: object, args: any[], value?: number): any[]
+    encodeStringArgs(methodObj: object, args: any[], value?: number): any[]
 
     getContractMethod(contractMethodName: string): AbiMessage
 

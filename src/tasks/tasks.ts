@@ -25,10 +25,11 @@ import {
     GovernanceStatus, Payee,
     Provider
 } from '../types'
-import { ProsopoContractApi } from '../contract'
+import { ProsopoContractApi } from '../contract/contract'
 import { ERRORS } from '../errors'
 import { CaptchaMerkleTree } from '../merkle'
 import { buildDecodeVector } from '../codec/codec'
+import { AbiMetadata } from 'redspot/types'
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -224,7 +225,10 @@ export class Tasks {
         const tree = new CaptchaMerkleTree()
         const solutionsHashed = captchas.map((captcha) => computeCaptchaSolutionHash(captcha))
         tree.build(solutionsHashed)
-        const commitmentId = tree.root!.hash
+        const commitmentId = tree.root?.hash
+        if (!commitmentId) {
+            throw new Error(ERRORS.CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST.message)
+        }
         const commitment = await this.getCaptchaSolutionCommitment(commitmentId)
         if (!commitment) {
             throw new Error(ERRORS.CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST.message)
@@ -252,13 +256,13 @@ export class Tasks {
      * @param {string} datasetId
      * @param {string} userAccount
      */
-    async getRandomCaptchasAndRequestHash (datasetId: string, userAccount: string): Promise<{ captchas: Captcha[], requestHash: string }> {
+    async getRandomCaptchasAndRequestHash (datasetId: string, userAccount: string): Promise<{ captchas: CaptchaWithProof[], requestHash: string }> {
         // TODO Config the number, style, and state of captchas sent back. For now return one solved and one unsolved
         const solved = await this.getCaptchaWithProof(datasetId, true, 1)
         const unsolved = await this.getCaptchaWithProof(datasetId, false, 1)
-        const captchas: Captcha[] = shuffleArray([solved[0], unsolved[0]])
+        const captchas: CaptchaWithProof[] = shuffleArray([solved[0], unsolved[0]])
         const salt = randomAsHex()
-        const requestHash = computePendingRequestHash(captchas.map((c) => c.captchaId), userAccount, salt)
+        const requestHash = computePendingRequestHash(captchas.map((c) => c.captcha.captchaId), userAccount, salt)
         // TODO Should this be committed to contract? What are the downsides if not?
         //   - Provider could lie about having a pending request and Dapp User would not be able to prove otherwise
         await this.db.storeDappUserPending(userAccount, requestHash, salt)
