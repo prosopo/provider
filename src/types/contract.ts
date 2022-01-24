@@ -5,7 +5,6 @@ import Contract from '@redspot/patract/contract'
 import { Environment } from '../env'
 import { AbiMessage } from '@polkadot/api-contract/types'
 import { TypeDef } from '@polkadot/types-create/types'
-import { string } from 'zod'
 
 export enum GovernanceStatus {
     Active = 'Active', Inactive = 'Inactive', Deactivated = 'Deactivated'
@@ -63,11 +62,7 @@ export interface ContractApiInterface {
 
     contractQuery(signedContract: Contract, contractMethodName: string, encodedArgs: any[]): Promise<any>
 
-    encodeStringArgs(methodObj: object, args: any[], value?: number): any[]
-
     getContractMethod(contractMethodName: string): AbiMessage
-
-    getEventNameFromMethodName(contractMethodName: string): string
 
     getStorage<T>(key: string, decodingFn: (registry: Registry, data: Uint8Array) => T): Promise<T>
 }

@@ -25,11 +25,10 @@ import {
     GovernanceStatus, Payee,
     Provider
 } from '../types'
-import { ProsopoContractApi } from '../contract/contract'
+import { ProsopoContractApi } from '../contract/interface'
 import { ERRORS } from '../errors'
 import { CaptchaMerkleTree } from '../merkle'
 import { buildDecodeVector } from '../codec/codec'
-import { AbiMetadata } from 'redspot/types'
 
 /**
  * @description Tasks that are shared by the API and CLI

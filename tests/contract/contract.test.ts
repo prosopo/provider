@@ -1,5 +1,5 @@
 import { MockEnvironment } from '../mocks/mockenv'
-import { ProsopoContractApi } from '../../src/contract/contract'
+import { ProsopoContractApi } from '../../src/contract/interface'
 
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')

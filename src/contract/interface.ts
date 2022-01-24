@@ -1,13 +1,11 @@
-import { isU8a, isHex } from '@polkadot/util'
 import { Registry } from 'redspot/types/provider'
 import { AbiMessage } from '@polkadot/api-contract/types'
 import Contract from '@redspot/patract/contract'
 import { ContractApiInterface, ContractTxResponse } from '../types'
 import { ERRORS } from '../errors'
 import { Environment } from '../env'
-import { AnyJson } from '@polkadot/types/types/codec'
-import { blake2AsU8a } from '@polkadot/util-crypto'
 import { AbiMetadata } from 'redspot/types'
+import { unwrap, encodeStringArgs, getEventNameFromMethodName } from './helpers'
 
 export class ProsopoContractApi implements ContractApiInterface {
     env: Environment
@@ -23,7 +21,7 @@ export class ProsopoContractApi implements ContractApiInterface {
      * @param {number} value    A value to send with the transaction, e.g. a stake
      * @return JSON result containing the contract event
      */
-    async contractCall (contractMethodName: string, args: Array<any>, value?: number): Promise<any> {
+    async contractCall<T> (contractMethodName: string, args: T[], value?: number): Promise<any> {
         await this.env.isReady()
         if (!this.env.contract) {
             throw new Error(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message)
@@ -33,7 +31,7 @@ export class ProsopoContractApi implements ContractApiInterface {
         }
         const signedContract: Contract = this.env.contract.connect(this.env.signer)
         const methodObj = this.getContractMethod(contractMethodName)
-        const encodedArgs = this.encodeStringArgs(methodObj, args)
+        const encodedArgs = encodeStringArgs(methodObj, args)
         if (methodObj.isMutating) {
             return await this.contractTx(signedContract, contractMethodName, encodedArgs, value)
         }
@@ -63,7 +61,7 @@ export class ProsopoContractApi implements ContractApiInterface {
             if (response.result.status.isInvalid) {
                 throw (response.status.asInvalid)
             }
-            const eventName = this.getEventNameFromMethodName(contractMethodName)
+            const eventName = getEventNameFromMethodName(contractMethodName)
             if (response[property]) {
                 return response[property].filter((x) => x.name === eventName)
             }
@@ -83,38 +81,9 @@ export class ProsopoContractApi implements ContractApiInterface {
     async contractQuery <T> (signedContract: Contract, contractMethodName: string, encodedArgs: T[]): Promise<any> {
         const response = await signedContract.query[contractMethodName](...encodedArgs)
         if (response.result.isOk && response.output) {
-            return this.unwrap(response.output.toHuman())
+            return unwrap(response.output.toHuman())
         }
         throw (new Error(response.result.asErr.asModule.message.unwrap().toString()))
-    }
-
-    unwrap (item: AnyJson) {
-        const prop = 'Ok'
-        if (item && typeof (item) === 'object') {
-            if (prop in item) {
-                return item[prop]
-            }
-        }
-        return item
-    }
-
-    /** Encodes arguments that should be hashes using blake2AsU8a
-     * @return encoded arguments
-     */
-    encodeStringArgs <T> (methodObj: AbiMessage, args: T[]): T[] {
-        const encodedArgs: T[] = []
-        // args must be in the same order as methodObj['args']
-        const typesToHash = ['Hash']
-        methodObj.args.forEach((methodArg, idx) => {
-            const argVal = args[idx]
-            // hash values that have been passed as strings
-            if (typesToHash.indexOf(methodArg.type.type) > -1 && !(isU8a(argVal) || isHex(argVal))) {
-                encodedArgs.push(blake2AsU8a(argVal as unknown as string) as unknown as T)
-            } else {
-                encodedArgs.push(argVal)
-            }
-        })
-        return encodedArgs
     }
 
     /** Get the contract method from the ABI
@@ -157,22 +126,13 @@ export class ProsopoContractApi implements ContractApiInterface {
     }
 
     /**
-     * Get the event name from the contract method name
-     * Each of the ink contract methods returns an event with a capitalised version of the method name
-     * @return {string} event name
-     */
-    getEventNameFromMethodName (contractMethodName: string): string {
-        return contractMethodName[0].toUpperCase() + contractMethodName.substring(1)
-    }
-
-    /**
      * Get the data at specified storage key
      * @return {any} data
      */
     async getStorage<T> (name: string, decodingFn: (registry: Registry, data: Uint8Array) => T): Promise<T> {
         await this.env.isReady()
         const storageKey = this.getStorageKey(name)
-        if (this.env.contract === undefined) {
+        if (!this.env.contract) {
             throw new Error(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message)
         }
         const promiseResult = await this.env.network.api.rpc.contracts.getStorage(this.env.contract.address, storageKey)
