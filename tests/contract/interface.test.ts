@@ -30,7 +30,8 @@ describe('CONTRACT WRAPPER', () => {
         }).to.throw(/Invalid contract method/)
     })
 
-    // it('Gets the storage key from the ABI', () => {
-    //     contractApi.getStorageKey(storageName)
-    // })
+    it('Gets the storage key from the ABI', async () => {
+        const accounts = await contractApi.getStorageKey('provider_accounts')
+        expect(accounts).to.equal('0x0100000000000000000000000000000000000000000000000000000000000000')
+    })
 })
