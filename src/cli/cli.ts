@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-#!/usr/bin/env node
 import express from 'express'
 import { Environment } from '../env'
 import { prosopoMiddleware } from '../api'
