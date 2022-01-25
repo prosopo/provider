@@ -6,7 +6,7 @@ import { Codec } from '@polkadot/types/types'
 import { ContractApiInterface, ContractTxResponse } from './types'
 import { ERRORS } from './errors'
 import { Environment } from './env'
-import {blake2AsHex} from "@polkadot/util-crypto";
+import { blake2AsHex } from "@polkadot/util-crypto"
 import { AnyJson } from '@polkadot/types/types/codec'
 
 export class ProsopoContractApi implements ContractApiInterface {
