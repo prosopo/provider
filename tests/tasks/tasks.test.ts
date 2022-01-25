@@ -42,7 +42,6 @@ describe('CONTRACT TASKS', () => {
         // await setupDapp(mockEnv, DAPP)
 
         // Register a NEW provider otherwise commitments already exist in contract when Dapp User tries to use
-        // dappUserCommit function
         const [providerMnemonic, providerAddress] = mockEnv.createAccountAndAddToKeyring()
         await mockEnv.changeSigner('//Alice')
         await sendFunds(mockEnv, providerAddress, 'Provider', '10000000000000000000')
@@ -68,9 +67,6 @@ describe('CONTRACT TASKS', () => {
             salt: 'usersalt'
         }))
         const salt = randomAsHex()
-        // console.log("Request Hash Salt:", salt);
-        // console.log("Dapp User AccountId:\t", mockEnv.signer!.address);
-        // console.log("CaptchaIds:\t", captchaSolutions.map(c => c.captchaId).sort());
         const requestHash = computePendingRequestHash(captchaSolutions.map(c => c.captchaId), mockEnv.signer!.address, salt)
         await mockEnv.db!.storeDappUserPending(mockEnv.signer!.address, requestHash, salt)
         const tasks = new Tasks(mockEnv)
@@ -129,24 +125,17 @@ describe('CONTRACT TASKS', () => {
     it('Captcha proofs are returned if commitment found and solution is correct', async () => {
         const { mockEnv, tasks, captchaSolutions, requestHash } = await setup()
         // salt ensures captcha commitment is different each time
-        // console.log("Request Hash: ", requestHash);
         const salt = randomAsHex()
-        // console.log("User Captchas Salt: ", salt);
         const tree = new CaptchaMerkleTree()
         const captchaSolutionsSalted = captchaSolutions.map(captcha => ({ ...captcha, salt: salt }))
         const captchasHashed = captchaSolutionsSalted.map(captcha => computeCaptchaSolutionHash(captcha))
         tree.build(captchasHashed)
         const commitmentId = tree.root!.hash
-        // console.log("Sending Commitment to contract")
-        // console.log("CommitmentId: ", commitmentId);
         await tasks.dappUserCommit(dapp.contractAccount as string, datasetId as string, commitmentId, provider.address as string)
-        // const commitment = await tasks.getCaptchaSolutionCommitment(commitmentId)
-        // console.log("Commitment:\n",commitment);
 
         // next part contains internal contract calls that must be run by provider
         await mockEnv.changeSigner(provider.mnemonic as string)
         const result = await tasks.dappUserSolution(DAPP_USER.address, dapp.contractAccount as string, requestHash, JSON.parse(JSON.stringify(captchaSolutionsSalted)) as JSON)
-        // console.log(JSON.stringify(result));
         expect(result.length).to.be.eq(2)
         const expectedProof = tree.proof(captchaSolutionsSalted[0].captchaId)
         expect(result[0].proof).to.deep.eq(expectedProof)
@@ -172,7 +161,7 @@ describe('CONTRACT TASKS', () => {
         solutionPromise.catch(e => e.message.should.match(`/${ERRORS.CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST.message}/`))
     })
 
-    it.only('No proofs are returned if commitment found and solution is incorrect', async () => {
+    it('No proofs are returned if commitment found and solution is incorrect', async () => {
         const { mockEnv, tasks, captchaSolutions, requestHash } = await setup()
         const captchaSolutionsBad = captchaSolutions.map(original => ({ ...original, solution: [3] }))
         const tree = new CaptchaMerkleTree()
@@ -186,7 +175,6 @@ describe('CONTRACT TASKS', () => {
         await tasks.dappUserCommit(dapp.contractAccount as string, datasetId as string, commitmentId, provider.address as string)
         // next part contains internal contract calls that must be run by provider
         await mockEnv.changeSigner(provider.mnemonic as string)
-        // console.log('commitmentId', commitmentId)
         const result = await tasks.dappUserSolution(DAPP_USER.address, dapp.contractAccount as string, requestHash, JSON.parse(JSON.stringify(captchaSolutionsSalted)) as JSON)
         expect(result.length).to.be.eq(0)
     })
