@@ -12,6 +12,7 @@ import {
 } from "../../src/captcha";
 import { sendFunds, setupDapp, setupProvider } from "../mocks/setup";
 import { randomAsHex } from "@polkadot/util-crypto";
+import { Payee } from "../../src/types";
 
 const chai = require("chai");
 const chaiAsPromised = require("chai-as-promised");
@@ -22,8 +23,9 @@ const expect = chai.expect;
 describe("PROVIDER TASKS", () => {
   let datasetId;
   let provider;
-
-  before(async () => {
+  
+  
+  beforeEach(async () => {
     // Register the dapp
     const mockEnv = new MockEnvironment();
     await mockEnv.isReady();
@@ -36,14 +38,14 @@ describe("PROVIDER TASKS", () => {
     await mockEnv.changeSigner("//Alice");
     await sendFunds(
       mockEnv,
-      providerSigner.address,
+      providerSigner,
       "Provider",
       "10000000000000000000"
     );
     provider = { ...PROVIDER };
     provider.mnemonic = providerMnemonic;
-    provider.address = providerSigner.address;
-    datasetId = await setupProvider(mockEnv, providerSigner.address, provider);
+    provider.address = providerSigner;
+    datasetId = await setupProvider(mockEnv, providerSigner, provider);
   });
 
   after(() => {
@@ -83,7 +85,7 @@ describe("PROVIDER TASKS", () => {
     const { tasks } = await setup();
     const fee = 10;
     const serviceOrigin = "http://localhost:8282";
-    const payee = "Provider";
+    const payee = Payee.Provider;
     const address = provider.address;
     try {
       const provider = await tasks.providerRegister(
@@ -92,7 +94,7 @@ describe("PROVIDER TASKS", () => {
         payee,
         address
       );
-      expect(provider).to.deep.equal({});
+      expect(provider).to.deep.equal([]);
     } catch (error) {
       console.log(error);
       throw new Error("Error in regestering provider");
@@ -103,12 +105,11 @@ describe("PROVIDER TASKS", () => {
     const { tasks } = await setup();
     const fee = 10;
     const serviceOrigin = "http://localhost:8282";
-    const payee = "Provider";
-    console.log(provider.address);
+    const payee = Payee.Provider;
     const address = provider.address;
     const value = 1;
     try {
-      const provider = await tasks.providerUpdate(
+      const provider: any = await tasks.providerUpdate(
         serviceOrigin,
         fee,
         payee,
@@ -126,7 +127,7 @@ describe("PROVIDER TASKS", () => {
     const { tasks } = await setup();
     const address = process.env.PROVIDER_ADDRESS || "";
     try {
-      const provider = await tasks.providerDeregister(address);
+      const provider: any = await tasks.providerDeregister(address);
       expect(provider[0].args[0]).to.equal(address);
     } catch (error) {
       console.log(error);
@@ -139,7 +140,7 @@ describe("PROVIDER TASKS", () => {
     const address = process.env.PROVIDER_ADDRESS || "";
     const value = 1;
     try {
-      const provider = await tasks.providerUnstake(value);
+      const provider: any = await tasks.providerUnstake(value);
       expect(provider[0].args[0]).to.equal(address);
     } catch (error) {
       console.log(error);
@@ -149,14 +150,14 @@ describe("PROVIDER TASKS", () => {
 
   it("Provider add dataset", async () => {
     const { tasks } = await setup();
-    const address = process.env.PROVIDER_ADDRESS || "";
+    const address = provider.address;
     const value = 1;
     try {
       const captchaFilePath = path.resolve(
         __dirname,
         "../mocks/data/captchas.json"
       );
-      const provider = await tasks.providerAddDataset(captchaFilePath);
+      const provider: any = await tasks.providerAddDataset(captchaFilePath);
       console.log(provider);
       expect(provider[0].args[0]).to.equal(address);
     } catch (error) {
