@@ -51,13 +51,9 @@ export async function setupDapp (env, dapp: TestDapp): Promise<void> {
     const tasks = new Tasks(env)
     await env.changeSigner(dapp.mnemonic)
     console.log(' - dappRegister')
-    if (typeof (dapp.contractAccount) === 'string') {
-        await tasks.dappRegister(hexHash(dapp.serviceOrigin), dapp.contractAccount, blake2AsHex(decodeAddress(dapp.optionalOwner)))
-        console.log(' - dappFund')
-        await tasks.dappFund(dapp.contractAccount, dapp.fundAmount)
-    } else {
-        throw new Error('DAPP_CONTRACT_ACCOUNT not set in environment variables')
-    }
+    await tasks.dappRegister(hexHash(dapp.serviceOrigin), dapp.contractAccount, blake2AsHex(decodeAddress(dapp.optionalOwner)))
+    console.log(' - dappFund')
+    await tasks.dappFund(dapp.contractAccount, dapp.fundAmount)
 }
 
 export async function setupDappUser (env, dappUser: TestAccount, provider: TestProvider, dapp: TestDapp): Promise<string | undefined> {
