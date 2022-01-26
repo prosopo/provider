@@ -260,6 +260,7 @@ export class Tasks {
         const pendingRecord = await this.db.getDappUserPending(requestHash)
         if (pendingRecord) {
             const pendingHashComputed = computePendingRequestHash(captchaIds, userAccount, pendingRecord.salt)
+            console.log(pendingHashComputed, requestHash)
             return requestHash === pendingHashComputed
         }
         return false

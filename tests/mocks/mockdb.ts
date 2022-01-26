@@ -238,15 +238,14 @@ export class ProsopoDatabase implements mockDatabase {
         if (size && size > this.solved.length) {
             throw (new Error('NotImplemented'))
         }
-
+        let cloned
         if (solved) {
             // We clone because `solution` is deleted from the object in the code
-            const clonedSolved = { ...this.solved[0] }
-            return Promise.resolve([clonedSolved])
+            cloned = { ...this.solved[0] }
         } else {
-            const clonedUnsolved = { ...this.unsolved[0] }
-            return Promise.resolve([clonedUnsolved])
+            cloned = { ...this.unsolved[0] }
         }
+        return Promise.resolve([cloned])
     }
 
     getDatasetDetails (datasetId: string): Promise<DatasetRecord> {
@@ -268,8 +267,13 @@ export class ProsopoDatabase implements mockDatabase {
     }
 
     getRandomCaptcha (solved: boolean, datasetId: Hash | string | Uint8Array, size?: number): Promise<Captcha[] | undefined> {
-        const clonedSolved = { ...this.solved[0] }
-        return Promise.resolve([clonedSolved])
+        let cloned
+        if (solved) {
+            cloned = { ...this.unsolved[0] }
+        } else {
+            cloned = { ...this.solved[0] }
+        }
+        return Promise.resolve([cloned])
     }
 
     getCaptchaById (captchaId: string[]): Promise<Captcha[] | undefined> {

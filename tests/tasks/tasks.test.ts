@@ -178,6 +178,14 @@ describe('CONTRACT TASKS', () => {
         expect(result.length).to.be.eq(0)
     })
 
+    it('Validates the received captchas length', async () => {
+        const { tasks, captchaSolutions } = await setup()
+        // All of the captchaIds present in the solutions should be in the database
+        expect(async function () {
+            await tasks.validateCaptchasLength(JSON.parse(JSON.stringify(captchaSolutions)) as JSON)
+        }).to.not.throw()
+    })
+
     it('Builds the tree and gets the commitment', async () => {
         const { tasks, captchaSolutions } = await setup()
         const initialTree = new CaptchaMerkleTree()
@@ -191,10 +199,24 @@ describe('CONTRACT TASKS', () => {
         expect(commitmentId).to.equal(initialCommitmentId)
     })
 
-    it.only('Validates the Dapp User Solution Request is Pending', async () => {
-        const { tasks, mockEnv, requestHash, captchaSolutions } = await setup()
-        const captchasHashed = captchaSolutions.map(captcha => computeCaptchaSolutionHash(captcha))
-        const valid = await tasks.validateDappUserSolutionRequestIsPending(requestHash, mockEnv.signer!.address, captchasHashed)
+    it('Validates the Dapp User Solution Request is Pending', async () => {
+        const { tasks, mockEnv, captchaSolutions } = await setup()
+        const pendingRequestSalt = randomAsHex()
+        const captchaIds = captchaSolutions.map(c => c.captchaId)
+        const requestHash = computePendingRequestHash(captchaIds, mockEnv.signer!.address, pendingRequestSalt)
+        await mockEnv.db!.storeDappUserPending(mockEnv.signer!.address, requestHash, pendingRequestSalt)
+        const valid = await tasks.validateDappUserSolutionRequestIsPending(requestHash, mockEnv.signer!.address, captchaIds)
         return expect(valid).to.be.true
+    })
+
+    it.only('Get random captchas and request hash', async () => {
+        const { tasks, mockEnv } = await setup()
+        const {
+            captchas,
+            requestHash
+        } = await tasks.getRandomCaptchasAndRequestHash(datasetId as string, mockEnv.signer!.address)
+        expect(captchas.length).to.equal(2)
+        const pendingRequest = mockEnv.db?.getDappUserPending(requestHash)
+        return expect(pendingRequest).to.not.be.null
     })
 })
