@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { Environment } from '../src/env'
-// @ts-ignore
 import yargs from 'yargs'
 import BN from 'bn.js'
 import { approveOrDisapproveCommitment, sendFunds, setupDapp, setupDappUser, setupProvider } from '../tests/mocks/setup'
