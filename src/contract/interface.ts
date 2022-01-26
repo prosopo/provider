@@ -69,7 +69,10 @@ export class ProsopoContractApi implements ContractApiInterface {
             response = await signedContract.tx[contractMethodName](...encodedArgs)
         }
         const property = 'events'
-        if (response.result.isInBlock) {
+
+        // TODO add a poller that waits for transaction success and then acts accordingly
+
+        if (response.result.isInBlock || response.result.isFinalized) {
             if (response.result.status.isRetracted) {
                 throw (response.status.asRetracted)
             }

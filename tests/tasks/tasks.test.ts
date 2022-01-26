@@ -199,6 +199,11 @@ describe('CONTRACT TASKS', () => {
         expect(commitmentId).to.equal(initialCommitmentId)
     })
 
+    it('BuildTreeAndGetCommitment throws if commitment does not exist', async () => {
+        const { tasks, captchaSolutions } = await setup()
+        expect(async function () { await tasks.buildTreeAndGetCommitment(captchaSolutions) }).to.throw()
+    })
+
     it('Validates the Dapp User Solution Request is Pending', async () => {
         const { tasks, mockEnv, captchaSolutions } = await setup()
         const pendingRequestSalt = randomAsHex()
