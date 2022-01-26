@@ -209,7 +209,7 @@ describe('CONTRACT TASKS', () => {
         return expect(valid).to.be.true
     })
 
-    it.only('Get random captchas and request hash', async () => {
+    it('Get random captchas and request hash', async () => {
         const { tasks, mockEnv } = await setup()
         const {
             captchas,
