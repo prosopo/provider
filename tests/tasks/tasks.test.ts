@@ -99,7 +99,7 @@ describe("PROVIDER TASKS", () => {
         provider.payee,
         provider.address
       );
-      expect(result).to.deep.equal([]);
+      expect(result).to.be.an("array");
     } catch (error) {
       console.log(error);
       throw new Error("Error in regestering provider");
@@ -225,6 +225,18 @@ describe("PROVIDER TASKS", () => {
     } catch (error) {
       console.log(error);
       throw new Error("Error in provider details");
+    }
+  });
+
+  it("Provider accounts", async () => {
+    await mockEnv.changeSigner(provider.mnemonic);
+    const providerTasks = new Tasks(mockEnv);
+    try {
+      const result: any = await providerTasks.providerAccounts();
+      expect(result).to.be.an("array");
+    } catch (error) {
+      console.log(error);
+      throw new Error("Error in provider accounts");
     }
   });
 
