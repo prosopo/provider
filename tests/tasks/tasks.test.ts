@@ -39,7 +39,6 @@ describe('CONTRACT TASKS', () => {
         // Register the dapp
         const mockEnv = new MockEnvironment()
         await mockEnv.isReady()
-        // await setupDapp(mockEnv, DAPP)
 
         // Register a NEW provider otherwise commitments already exist in contract when Dapp User tries to use
         const [providerMnemonic, providerAddress] = mockEnv.createAccountAndAddToKeyring()
@@ -177,5 +176,25 @@ describe('CONTRACT TASKS', () => {
         await mockEnv.changeSigner(provider.mnemonic as string)
         const result = await tasks.dappUserSolution(DAPP_USER.address, dapp.contractAccount as string, requestHash, JSON.parse(JSON.stringify(captchaSolutionsSalted)) as JSON)
         expect(result.length).to.be.eq(0)
+    })
+
+    it('Builds the tree and gets the commitment', async () => {
+        const { tasks, captchaSolutions } = await setup()
+        const initialTree = new CaptchaMerkleTree()
+        const captchasHashed = captchaSolutions.map(captcha => computeCaptchaSolutionHash(captcha))
+        initialTree.build(captchasHashed)
+        const initialCommitmentId = initialTree.root!.hash
+        await tasks.dappUserCommit(dapp.contractAccount as string, datasetId as string, initialCommitmentId, provider.address as string)
+        const { tree, commitment, commitmentId } = await tasks.buildTreeAndGetCommitment(captchaSolutions)
+        expect(tree).to.deep.equal(initialTree)
+        expect(commitment).to.deep.equal(commitment)
+        expect(commitmentId).to.equal(initialCommitmentId)
+    })
+
+    it.only('Validates the Dapp User Solution Request is Pending', async () => {
+        const { tasks, mockEnv, requestHash, captchaSolutions } = await setup()
+        const captchasHashed = captchaSolutions.map(captcha => computeCaptchaSolutionHash(captcha))
+        const valid = await tasks.validateDappUserSolutionRequestIsPending(requestHash, mockEnv.signer!.address, captchasHashed)
+        return expect(valid).to.be.true
     })
 })
