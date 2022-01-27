@@ -23,8 +23,7 @@ yarn
 ## Setup contract node
 ```bash
 cd substrate &&
-cargo build && 
-./target/debug/substrate --dev --tmp --version
+cargo run --release -- --dev --tmp -lerror,runtime::contracts=debug
 ```
 
 ## Deploy contract node
