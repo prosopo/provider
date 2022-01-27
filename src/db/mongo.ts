@@ -1,15 +1,28 @@
+// Copyright (C) 2021-2022 Prosopo (UK) Ltd.
+// This file is part of provider <https://github.com/prosopo-io/provider>.
+//
+// provider is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// provider is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import {
-    Collection,
     Db,
-    MongoClient, ObjectId,
-} from "mongodb";
-import {Database} from '../types'
-import {ERRORS} from '../errors'
-import {Captcha, Dataset} from "../types/captcha";
-import {Hash} from "@polkadot/types/interfaces";
+    MongoClient
+} from 'mongodb'
+import { Hash } from '@polkadot/types/interfaces'
+import { Database, DatasetRecord, PendingCaptchaRequestRecord, Tables, Captcha, CaptchaSolution, Dataset } from '../types'
+import { ERRORS } from '../errors'
 
-//mongodb://username:password@127.0.0.1:27017
-const DEFAULT_ENDPOINT = "mongodb://127.0.0.1:27017"
+// mongodb://username:password@127.0.0.1:27017
+const DEFAULT_ENDPOINT = 'mongodb://127.0.0.1:27017'
 
 /**
  * Returns the Database object through which Providers can put and get captchas
@@ -19,76 +32,92 @@ const DEFAULT_ENDPOINT = "mongodb://127.0.0.1:27017"
  */
 export class ProsopoDatabase implements Database {
     readonly url: string;
-    tables: { captchas?: Collection, dataset?: Collection }
+
+    tables: Tables
+
     dbname: string
 
-
-    constructor(url, dbname) {
-        this.url = url || DEFAULT_ENDPOINT;
-        this.tables = {};
-        this.dbname = dbname;
+    constructor (url, dbname) {
+        this.url = url || DEFAULT_ENDPOINT
+        this.tables = {}
+        this.dbname = dbname
     }
 
     /**
      * @description Connect to the database and set the dataset and captcha tables
      */
-    async connect() {
-        const client: MongoClient = new MongoClient(this.url);
-        await client.connect();
-        const db: Db = client.db(this.dbname);
-        this.tables.dataset = db.collection("dataset");
-        this.tables.captchas = db.collection("captchas");
+    async connect () {
+        const client: MongoClient = new MongoClient(this.url)
+        await client.connect()
+        const db: Db = client.db(this.dbname)
+        this.tables.dataset = db.collection('dataset')
+        this.tables.captchas = db.collection('captchas')
+        this.tables.solutions = db.collection('solutions')
+        this.tables.responses = db.collection('responses')
     }
 
     /**
      * @description Load a dataset to the database
      * @param {Dataset}  dataset
      */
-    async loadDataset(dataset: Dataset): Promise<void> {
+    async storeDataset (dataset: Dataset): Promise<void> {
         if (dataset.datasetId) {
             const datasetDoc = {
                 datasetId: dataset.datasetId,
                 format: dataset.format,
                 tree: dataset.tree
             }
-            //const datasetId = new ObjectId(dataset.datasetId)
-            // @ts-ignore
-            this.tables.dataset?.updateOne({_id: dataset.datasetId}, {$set: datasetDoc}, {upsert: true})
+            // const datasetId = new ObjectId(dataset.datasetId)
+            await this.tables.dataset?.updateOne({ _id: dataset.datasetId }, { $set: datasetDoc }, { upsert: true })
             // put the dataset id on each of the captcha docs
             const captchaDocs = dataset.captchas.map((captcha, index) => ({
                 ...captcha,
                 datasetId: dataset.datasetId,
-                index: index
-            }));
-
+                index
+            }))
 
             // create a bulk upsert operation and execute
-            // @ts-ignore
-            await this.tables.captchas?.bulkWrite(captchaDocs.map(captchaDoc =>
-                ({updateOne: {filter: {_id: captchaDoc.captchaId}, update: {$set: captchaDoc}, upsert: true}})
-            ))
+            await this.tables.captchas?.bulkWrite(captchaDocs.map((captchaDoc) => ({ updateOne: { filter: { _id: captchaDoc.captchaId }, update: { $set: captchaDoc }, upsert: true } })))
         }
     }
 
     /**
-     * @description Get a captcha that is solved or not solved
+     * @description Get random captchas that are solved or not solved
      * @param {boolean}  solved    `true` when captcha is solved
      * @param {string}   datasetId  the id of the data set
      * @param {number}   size       the number of records to be returned
      */
-    async getCaptcha(solved: boolean, datasetId: Hash | string | Uint8Array, size?: number): Promise<Captcha[] | undefined> {
-        const sampleSize = size ? Math.abs(Math.trunc(size)) : 1;
+    async getRandomCaptcha (solved: boolean, datasetId: Hash | string | Uint8Array, size?: number): Promise<Captcha[] | undefined> {
+        const sampleSize = size ? Math.abs(Math.trunc(size)) : 1
         const cursor = this.tables.captchas?.aggregate([
-            {$match: {datasetId: datasetId, solution: {$exists: solved}}},
-            {$sample: {size: sampleSize}}
+            { $match: { datasetId, solution: { $exists: solved } } },
+            { $sample: { size: sampleSize } },
+            {
+                $project: {
+                    datasetId: 1, captchaId: 1, items: 1, target: 1
+                }
+            }
         ])
-        const docs = await cursor?.toArray();
+        const docs = await cursor?.toArray()
         if (docs) {
-            // drop the _id field
-            return docs.map(({_id, ...keepAttrs}) => keepAttrs) as Captcha[];
-        } else {
-            throw(ERRORS.DATABASE.CAPTCHA_GET_FAILED.message)
+        // drop the _id field
+            return docs.map(({ _id, ...keepAttrs }) => keepAttrs) as Captcha[]
         }
+        throw (ERRORS.DATABASE.CAPTCHA_GET_FAILED.message)
+    }
+
+    /**
+     * @description Get captchas by id
+     * @param {string[]} captchaId
+     */
+    async getCaptchaById (captchaId: string[]): Promise<Captcha[] | undefined> {
+        const cursor = this.tables.captchas?.find({ _id: { $in: captchaId } })
+        const docs = await cursor?.toArray()
+        if (docs) {
+        // drop the _id field
+            return docs.map(({ _id, ...keepAttrs }) => keepAttrs) as Captcha[]
+        }
+        throw (ERRORS.DATABASE.CAPTCHA_GET_FAILED.message)
     }
 
     /**
@@ -96,28 +125,76 @@ export class ProsopoDatabase implements Database {
      * @param {Captcha}  captcha
      * @param {string}   datasetId  the id of the data set
      */
-    async updateCaptcha(captcha: Captcha, datasetId: Hash | string | Uint8Array): Promise<void> {
+    async updateCaptcha (captcha: Captcha, datasetId: Hash | string | Uint8Array): Promise<void> {
         await this.tables.captchas?.updateOne(
-            {datasetId: datasetId},
-            {$set: captcha},
-            {upsert: false}
+            { datasetId },
+            { $set: captcha },
+            { upsert: false }
         )
-
     }
-
 
     /**
      * @description Get a captcha that is solved or not solved
      */
-    async getDatasetDetails(datasetId: Hash) {
-        const doc = await this.tables.dataset?.findOne({datasetId: datasetId});
+    async getDatasetDetails (datasetId: Hash | string | Uint8Array): Promise<DatasetRecord> {
+        const doc = await this.tables.dataset?.findOne({ datasetId })
         if (doc) {
-            return doc
-        } else {
-            throw(ERRORS.DATABASE.DATASET_GET_FAILED.message)
+            return doc as DatasetRecord
         }
+        throw (ERRORS.DATABASE.DATASET_GET_FAILED.message)
     }
 
+    /**
+     * @description Store a Dapp User's captcha solution
+     */
+    async storeDappUserSolution (captchas: CaptchaSolution[], treeRoot: string) {
+        // create a bulk upsert operation and execute
+        await this.tables.solutions?.bulkWrite(captchas.map((captchaDoc) => ({
+            updateOne: {
+                filter: { _id: captchaDoc.captchaId },
+                update: {
+                    $set:
+                            {
+                                solution: captchaDoc.solution,
+                                salt: captchaDoc.salt,
+                                treeRoot
+                            }
+                },
+                upsert: true
+            }
+        })))
+    }
+
+    /**
+     * @description Store a Dapp User's pending record
+     */
+    async storeDappUserPending (userAccount: string, requestHash: string, salt: string): Promise<void> {
+        await this.tables.pending?.updateOne(
+            { _id: requestHash },
+            { $set: { accountId: userAccount, pending: true, salt } },
+            { upsert: true }
+        )
+    }
+
+    /**
+     * @description Get a Dapp user's pending record
+     */
+    async getDappUserPending (requestHash: string): Promise<PendingCaptchaRequestRecord> {
+        const doc = await this.tables.pending?.findOne({ _id: requestHash })
+        if (doc) {
+            return doc as PendingCaptchaRequestRecord
+        }
+        throw (ERRORS.DATABASE.PENDING_RECORD_NOT_FOUND.message)
+    }
+
+    /**
+     * @description Update a Dapp User's pending record
+     */
+    async updateDappUserPendingStatus (userAccount: string, requestHash: string, approve: boolean): Promise<void> {
+        await this.tables.pending?.updateOne(
+            { _id: requestHash },
+            { $set: { accountId: userAccount, pending: false, approved: approve } },
+            { upsert: true }
+        )
+    }
 }
-
-
