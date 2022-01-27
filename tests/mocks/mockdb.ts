@@ -267,13 +267,11 @@ export class ProsopoDatabase implements mockDatabase {
     }
 
     getRandomCaptcha (solved: boolean, datasetId: Hash | string | Uint8Array, size?: number): Promise<Captcha[] | undefined> {
-        let cloned
-        if (solved) {
-            cloned = { ...this.unsolved[0] }
-        } else {
-            cloned = { ...this.solved[0] }
+        const collection = solved ? this.solved : this.unsolved
+        if (size && size > collection.length) {
+            throw (new Error('Not Implmented'))
         }
-        return Promise.resolve([cloned])
+        return Promise.resolve([{ ...collection[0] }])
     }
 
     getCaptchaById (captchaId: string[]): Promise<Captcha[] | undefined> {

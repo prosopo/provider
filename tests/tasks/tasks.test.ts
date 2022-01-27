@@ -201,7 +201,10 @@ describe('CONTRACT TASKS', () => {
 
     it('BuildTreeAndGetCommitment throws if commitment does not exist', async () => {
         const { tasks, captchaSolutions } = await setup()
-        expect(async function () { await tasks.buildTreeAndGetCommitment(captchaSolutions) }).to.throw()
+        const salt = randomAsHex()
+        const captchaSolutionsSalted = captchaSolutions.map(captcha => ({ ...captcha, salt: salt }))
+        const commitmentPromise = tasks.buildTreeAndGetCommitment(captchaSolutionsSalted)
+        commitmentPromise.catch(e => e.message.should.match(`/${ERRORS.CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST.message}/`))
     })
 
     it('Validates the Dapp User Solution Request is Pending', async () => {
