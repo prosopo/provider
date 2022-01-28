@@ -278,7 +278,7 @@ export class Tasks {
         // TODO Config the number, style, and state of captchas sent back. For now return one solved and one unsolved
         const dataset = await this.db.getDatasetDetails(datasetId)
         if (!dataset) {
-            throw (new Error(ERRORS.DATABASE.DATASET_GET_FAILED))
+            throw (new Error(ERRORS.DATABASE.DATASET_GET_FAILED.message))
         }
         const solved = await this.getCaptchaWithProof(datasetId, true, 1)
         const unsolved = await this.getCaptchaWithProof(datasetId, false, 1)

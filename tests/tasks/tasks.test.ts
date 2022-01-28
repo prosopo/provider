@@ -26,13 +26,14 @@ import {
 } from '../mocks/accounts'
 import { ERRORS } from '../../src/errors'
 import { SOLVED_CAPTCHAS, DATASET } from '../mocks/mockdb'
-import { CaptchaSolution } from '../../src/types'
+import { CaptchaSolution, Payee, Provider } from '../../src/types'
 import {
     computeCaptchaSolutionHash,
     computePendingRequestHash
 } from '../../src/captcha'
 import { sendFunds, setupDapp, setupProvider } from '../mocks/setup'
 import { randomAsHex } from '@polkadot/util-crypto'
+import { AnyJson } from '@polkadot/types/types/codec'
 
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
@@ -102,14 +103,14 @@ describe('CONTRACT TASKS', () => {
     }
 
     it('Provider registration', async () => {
-        await mockEnv.changeSigner(provider.mnemonic)
+        await mockEnv.changeSigner(provider.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
         try {
             const result: any = await providerTasks.providerRegister(
-                provider.serviceOrigin,
-                provider.fee,
-                provider.payee,
-                provider.address
+                provider.serviceOrigin as string,
+                provider.fee as number,
+                provider.payee as Payee,
+                provider.address as string
             )
             expect(result).to.be.an('array')
         } catch (error) {
@@ -119,16 +120,16 @@ describe('CONTRACT TASKS', () => {
     })
 
     it('Provider updation', async () => {
-        await mockEnv.changeSigner(provider.mnemonic)
+        await mockEnv.changeSigner(provider.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
         const value = 1
 
         try {
             const result: any = await providerTasks.providerUpdate(
-                provider.serviceOrigin,
-                provider.fee,
-                provider.payee,
-                provider.address,
+                provider.serviceOrigin as string,
+                provider.fee as number,
+                provider.payee as Payee,
+                provider.address as string,
                 value
             )
             expect(result[0].args[0]).to.equal(provider.address)
@@ -139,17 +140,17 @@ describe('CONTRACT TASKS', () => {
     })
 
     it('Provider add dataset', async () => {
-        await mockEnv.changeSigner(provider.mnemonic)
+        await mockEnv.changeSigner(provider.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
         try {
             const captchaFilePath = path.resolve(
                 __dirname,
                 '../mocks/data/captchas.json'
             )
-            const result: any = await providerTasks.providerAddDataset(
+            const result: AnyJson = await providerTasks.providerAddDataset(
                 captchaFilePath
             )
-            expect(result[0].args[0]).to.equal(provider.address)
+            return expect(result[0].args[0]).to.equal(provider.address)
         } catch (error) {
             console.log(error)
             throw new Error('Error in adding dataset')
@@ -175,12 +176,12 @@ describe('CONTRACT TASKS', () => {
 
         await tasks.dappUserCommit(
             DAPP.contractAccount,
-            datasetId,
+            datasetId as string,
             commitmentId,
-            provider.address
+            provider.address as string
         )
 
-        await mockEnv.changeSigner(provider.mnemonic)
+        await mockEnv.changeSigner(provider.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
         try {
             const result: any = await providerTasks.providerApprove(commitmentId)
@@ -210,12 +211,12 @@ describe('CONTRACT TASKS', () => {
 
         await tasks.dappUserCommit(
             DAPP.contractAccount,
-            datasetId,
+            datasetId as string,
             commitmentId,
-            provider.address
+            provider.address as string
         )
 
-        await mockEnv.changeSigner(provider.mnemonic)
+        await mockEnv.changeSigner(provider.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
         try {
             const result: any = await providerTasks.providerDisapprove(commitmentId)
@@ -227,11 +228,11 @@ describe('CONTRACT TASKS', () => {
     })
 
     it('Provider details', async () => {
-        await mockEnv.changeSigner(provider.mnemonic)
+        await mockEnv.changeSigner(provider.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
         try {
-            const result: any = await providerTasks.getProviderDetails(
-                provider.address
+            const result: Provider = await providerTasks.getProviderDetails(
+                provider.address as string
             )
             expect(result).to.have.a.property('status')
         } catch (error) {
@@ -241,10 +242,10 @@ describe('CONTRACT TASKS', () => {
     })
 
     it('Provider accounts', async () => {
-        await mockEnv.changeSigner(provider.mnemonic)
+        await mockEnv.changeSigner(provider.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
         try {
-            const result: any = await providerTasks.providerAccounts()
+            const result: AnyJson = await providerTasks.getProviderAccounts()
             expect(result).to.be.an('array')
         } catch (error) {
             console.log(error)
@@ -253,13 +254,13 @@ describe('CONTRACT TASKS', () => {
     })
 
     it('Dapp registration', async () => {
-        await mockEnv.changeSigner(dapp.mnemonic)
+        await mockEnv.changeSigner(dapp.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
         try {
-            const result: any = await providerTasks.dappRegister(
-                dapp.serviceOrigin,
-                dapp.contractAccount,
-                dapp.optionalOwner
+            const result: AnyJson = await providerTasks.dappRegister(
+                dapp.serviceOrigin as string,
+                dapp.contractAccount as string,
+                dapp.optionalOwner as string
             )
             expect(result).to.be.an('array')
         } catch (error) {
@@ -269,11 +270,11 @@ describe('CONTRACT TASKS', () => {
     })
 
     it('Dapp is active', async () => {
-        await mockEnv.changeSigner(dapp.mnemonic)
+        await mockEnv.changeSigner(dapp.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
         try {
             const result: any = await providerTasks.dappIsActive(
-                dapp.contractAccount
+                dapp.contractAccount as string
             )
             expect(result).to.equal(true)
         } catch (error) {
@@ -283,11 +284,11 @@ describe('CONTRACT TASKS', () => {
     })
 
     it('Dapp details', async () => {
-        await mockEnv.changeSigner(dapp.mnemonic)
+        await mockEnv.changeSigner(dapp.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
         try {
             const result: any = await providerTasks.getDappDetails(
-                dapp.contractAccount
+                dapp.contractAccount as string
             )
             expect(result).to.have.a.property('status')
         } catch (error) {
@@ -297,12 +298,12 @@ describe('CONTRACT TASKS', () => {
     })
 
     it('Dapp fund', async () => {
-        await mockEnv.changeSigner(dapp.mnemonic)
+        await mockEnv.changeSigner(dapp.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
         const value = 10
         try {
             const result: any = await providerTasks.dappFund(
-                dapp.contractAccount,
+                dapp.contractAccount as string,
                 value
             )
             expect(result[0].args[0]).to.equal(dapp.contractAccount)
@@ -333,13 +334,12 @@ describe('CONTRACT TASKS', () => {
 
             const commitmentId = tree.root!.hash
 
-            const result: any = await tasks.dappUserCommit(
-                dapp.contractAccount,
-                datasetId,
+            const result: AnyJson = await tasks.dappUserCommit(
+                dapp.contractAccount as string,
+                datasetId as string,
                 commitmentId,
-                provider.address
+                provider.address as string
             )
-
             expect(result[0].args[2]).to.equal(dapp.contractAccount)
         } catch (error) {
             console.log(error)
@@ -348,10 +348,10 @@ describe('CONTRACT TASKS', () => {
     })
 
     it('Dapp accounts', async () => {
-        await mockEnv.changeSigner(dapp.mnemonic)
+        await mockEnv.changeSigner(dapp.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
         try {
-            const result: any = await providerTasks.dappAccounts()
+            const result: AnyJson = await providerTasks.getDappAccounts()
             expect(result).to.be.an('array')
         } catch (error) {
             console.log(error)
@@ -624,7 +624,7 @@ describe('CONTRACT TASKS', () => {
     })
 
     it('Provider unstake', async () => {
-        await mockEnv.changeSigner(provider.mnemonic)
+        await mockEnv.changeSigner(provider.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
         const value = 1
         try {
@@ -637,11 +637,11 @@ describe('CONTRACT TASKS', () => {
     })
 
     it('Provider deregister', async () => {
-        await mockEnv.changeSigner(provider.mnemonic)
+        await mockEnv.changeSigner(provider.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
         try {
             const result: any = await providerTasks.providerDeregister(
-                provider.address
+                provider.address as string
             )
             expect(result[0].args[0]).to.equal(provider.address)
         } catch (error) {
