@@ -153,20 +153,25 @@ export function prosopoMiddleware (env): Router {
     })
 
     /**
-     * Returns a random provider
+     * Returns a random provider using the account that is currently the env signer
      *
      * @return {Provider} - A Provider
      */
-    router.get('/v1/prosopo/random_provider/', async (req, res) => {
-        await env.isReady()
-        const provider = await tasks.getRandomProvider()
-        const lastHeader = await env.network.api.rpc.chain.getHeader()
-        return res.json({
-            blockNumber: lastHeader.number,
-            blockHash: lastHeader.hash,
-            provider: provider,
-            callingAccount: env.signer.address
-        })
+    router.get('/v1/prosopo/random_provider/', async (req, res, next) => {
+        try {
+            await env.isReady()
+            const provider = await tasks.getRandomProvider()
+            const lastHeader = await env.network.api.rpc.chain.getHeader()
+            return res.json({
+                blockNumber: lastHeader.number,
+                blockHash: lastHeader.hash,
+                provider: provider,
+                callingAccount: env.signer.address
+            })
+        } catch (err: unknown) {
+            const msg = `${ERRORS.CONTRACT.QUERY_ERROR.message}: ${err}`
+            return next(new BadRequest(msg))
+        }
     })
 
     /**
@@ -174,14 +179,19 @@ export function prosopoMiddleware (env): Router {
      *
      * @return {Hash} - The Providers
      */
-    router.get('/v1/prosopo/providers/', async (req, res) => {
-        await env.isReady()
-        const providers: AnyJson = await tasks.getProviderAccounts()
-        return res.json(
+    router.get('/v1/prosopo/providers/', async (req, res, next) => {
+        try {
+            await env.isReady()
+            const providers: AnyJson = await tasks.getProviderAccounts()
+            return res.json(
             {
                 accounts: providers
             } as AccountsResponse
-        )
+            )
+        } catch (err: unknown) {
+            const msg = `${ERRORS.CONTRACT.QUERY_ERROR.message}: ${err}`
+            return next(new BadRequest(msg))
+        }
     })
 
     /**
@@ -189,14 +199,19 @@ export function prosopoMiddleware (env): Router {
      *
      * @return {Hash} - The Dapps
      */
-    router.get('/v1/prosopo/dapps/', async (req, res) => {
-        await env.isReady()
-        const dapps: AnyJson = await tasks.getDappAccounts()
-        return res.json(
+    router.get('/v1/prosopo/dapps/', async (req, res, next) => {
+        try {
+            await env.isReady()
+            const dapps: AnyJson = await tasks.getDappAccounts()
+            return res.json(
             {
                 accounts: dapps
             } as AccountsResponse
-        )
+            )
+        } catch (err: unknown) {
+            const msg = `${ERRORS.CONTRACT.QUERY_ERROR.message}: ${err}`
+            return next(new BadRequest(msg))
+        }
     })
 
     /**
@@ -260,7 +275,7 @@ export function prosopoMiddleware (env): Router {
             const result = await tasks.dappUserSolution(userAccount as string, dappAccount as string, requestHash as string, captchas as JSON)
             return res.json({ status: ERRORS.API.CAPTCHA_PASSED.message, captchas: result })
         } catch (err: unknown) {
-            const msg = ERRORS.API.BAD_REQUEST.message
+            const msg = `${ERRORS.API.BAD_REQUEST.message}: ${err}`
             return next(new BadRequest(msg))
         }
     })
