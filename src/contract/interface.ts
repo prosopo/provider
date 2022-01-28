@@ -103,8 +103,12 @@ export class ProsopoContractApi implements ContractApiInterface {
     async contractQuery <T> (signedContract: Contract, contractMethodName: string, encodedArgs: T[]): Promise<AnyJson> {
         const response = await signedContract.query[contractMethodName](...encodedArgs)
         handleContractCallOutcomeErrors(response)
-        if (response.result.isOk && response.output) {
-            return unwrap(response.output.toHuman())
+        if (response.result.isOk) {
+            if (response.output) {
+                return unwrap(response.output.toHuman())
+            } else {
+                return
+            }
         }
         throw (new Error(response.result.asErr.asModule.message.unwrap().toString()))
     }

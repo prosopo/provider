@@ -53,7 +53,6 @@ export async function setupProvider (env, provider: TestProvider): Promise<Hash>
     console.log(' - providerRegister')
     await tasks.providerRegister(hexHash(provider.serviceOrigin), provider.fee, provider.payee, provider.address)
     console.log(' - providerStake')
-    console.log(env.signer.address)
     await tasks.providerUpdate(hexHash(provider.serviceOrigin), provider.fee, provider.payee, provider.address, provider.stake)
     console.log(' - providerAddDataset')
     const datasetResult = await tasks.providerAddDataset(provider.datasetFile)
