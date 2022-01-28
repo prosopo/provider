@@ -249,6 +249,7 @@ export function prosopoMiddleware (env): Router {
         }
         try {
             validateAddress(userAccount as string)
+            // validateProviderWasRandomlyChosen(userAccount, providerAccount, blockNo)
             return res.json(await tasks.getRandomCaptchasAndRequestHash(datasetId as string, userAccount as string))
         } catch (err: unknown) {
             const msg = `${ERRORS.CONTRACT.TX_ERROR.message}: ${err}`
