@@ -150,6 +150,9 @@ describe('CONTRACT TASKS', () => {
             const result: AnyJson = await providerTasks.providerAddDataset(
                 captchaFilePath
             )
+            if (!result) {
+                throw new Error('Result is null')
+            }
             return expect(result[0].args[0]).to.equal(provider.address)
         } catch (error) {
             console.log(error)
@@ -340,6 +343,9 @@ describe('CONTRACT TASKS', () => {
                 commitmentId,
                 provider.address as string
             )
+            if (!result) {
+                throw new Error('Result is null')
+            }
             expect(result[0].args[2]).to.equal(dapp.contractAccount)
         } catch (error) {
             console.log(error)
