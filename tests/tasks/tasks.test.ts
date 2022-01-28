@@ -47,7 +47,7 @@ describe('CONTRACT TASKS', () => {
         provider = { ...PROVIDER } as TestProvider
         provider.mnemonic = providerMnemonic
         provider.address = providerAddress
-        datasetId = await setupProvider(mockEnv, providerAddress, provider as TestProvider)
+        datasetId = await setupProvider(mockEnv, provider as TestProvider)
         const [dappMnemonic, dappAddress] = mockEnv.createAccountAndAddToKeyring()
         dapp = { ...DAPP } as TestDapp
         await sendFunds(mockEnv, dappAddress, 'Dapp', '1000000000000000000')
