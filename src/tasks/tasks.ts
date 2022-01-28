@@ -102,7 +102,6 @@ export class Tasks {
     }
 
     async dappUserCommit (contractAccount: string, captchaDatasetId: Hash | string, userMerkleTreeRoot: string, providerAddress: string) {
-        console.log('Pending Dapp user commit', this.db.tables.pending)
         return await this.contractApi.contractCall('dappUserCommit', [contractAccount, captchaDatasetId, userMerkleTreeRoot, providerAddress])
     }
 
@@ -135,7 +134,7 @@ export class Tasks {
     }
 
     async getProviderAccounts (): Promise<AnyJson> {
-        return await this.contractApi.contractCall('get_all_provider_ids', [])
+        return await this.contractApi.contractCall('getAllProviderIds', [])
     }
 
     async getDappAccounts (): Promise<AnyJson> {
@@ -189,9 +188,6 @@ export class Tasks {
         const { storedCaptchas, receivedCaptchas, captchaIds } = await this.validateCaptchasLength(captchas)
         const { tree, commitment, commitmentId } = await this.buildTreeAndGetCommitment(receivedCaptchas)
         const pendingRequest = await this.validateDappUserSolutionRequestIsPending(requestHash, userAccount, captchaIds)
-
-        console.log(pendingRequest)
-        console.log(commitment)
 
         // Only do stuff if the commitment is Pending on chain and in local DB (avoid using Approved commitments twice)
         if (pendingRequest && commitment.status === CaptchaStatus.Pending) {
@@ -264,9 +260,7 @@ export class Tasks {
      * @param {string[]} captchaIds
      */
     async validateDappUserSolutionRequestIsPending (requestHash: string, userAccount: string, captchaIds: string[]): Promise<boolean> {
-        console.log(requestHash)
         const pendingRecord = await this.db.getDappUserPending(requestHash)
-        console.log(pendingRecord)
         if (pendingRecord) {
             const pendingHashComputed = computePendingRequestHash(captchaIds, userAccount, pendingRecord.salt)
             return requestHash === pendingHashComputed

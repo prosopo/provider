@@ -98,7 +98,6 @@ describe('CONTRACT TASKS', () => {
             requestHash,
             salt
         )
-        console.log(mockEnv.db!.tables?.pending)
         return { captchaSolutions, requestHash }
     }
 
@@ -114,8 +113,7 @@ describe('CONTRACT TASKS', () => {
             )
             expect(result).to.be.an('array')
         } catch (error) {
-            console.log(error)
-            throw new Error('Error in regestering provider')
+            throw new Error(`Error in regestering provider: ${error}`)
         }
     })
 
@@ -132,10 +130,9 @@ describe('CONTRACT TASKS', () => {
                 provider.address as string,
                 value
             )
-            expect(result[0].args[0]).to.equal(provider.address)
+            expect(result ? result[0].args[0] : undefined).to.equal(provider.address)
         } catch (error) {
-            console.log(error)
-            throw new Error('Error in updating provider')
+            throw new Error(`Error in updating provider: ${error}`)
         }
     })
 
@@ -150,10 +147,7 @@ describe('CONTRACT TASKS', () => {
             const result: AnyJson = await providerTasks.providerAddDataset(
                 captchaFilePath
             )
-            if (!result) {
-                throw new Error('Result is null')
-            }
-            return expect(result[0].args[0]).to.equal(provider.address)
+            return expect(result ? result[0].args[0] : undefined).to.equal(provider.address)
         } catch (error) {
             throw new Error(`Error in adding dataset: ${error}`)
         }
@@ -223,7 +217,7 @@ describe('CONTRACT TASKS', () => {
         const providerTasks = new Tasks(mockEnv)
         try {
             const result: AnyJson = await providerTasks.providerDisapprove(commitmentId)
-            expect(result[0].args[0]).to.equal(commitmentId)
+            expect(result ? result[0].args[0] : undefined).to.equal(commitmentId)
         } catch (error) {
             throw new Error(`Error in provider disapprove: ${error}`)
         }
@@ -636,10 +630,9 @@ describe('CONTRACT TASKS', () => {
         const value = 1
         try {
             const result: AnyJson = await providerTasks.providerUnstake(value)
-            expect(result[0].args[0]).to.equal(provider.address)
+            expect(result ? result[0].args[0] : undefined).to.equal(provider.address)
         } catch (error) {
-            console.log(error)
-            throw new Error('Error in unstake provider')
+            throw new Error(`Error in unstake provider: ${error}`)
         }
     })
 
@@ -650,10 +643,9 @@ describe('CONTRACT TASKS', () => {
             const result: AnyJson = await providerTasks.providerDeregister(
                 provider.address as string
             )
-            expect(result[0].args[0]).to.equal(provider.address)
+            expect(result ? result[0].args[0] : undefined).to.equal(provider.address)
         } catch (error) {
-            console.log(error)
-            throw new Error('Error in deregestering provider')
+            throw new Error(`Error in deregestering provider: ${error}`)
         }
     })
 })

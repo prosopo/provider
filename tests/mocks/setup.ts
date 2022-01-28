@@ -48,7 +48,6 @@ export async function sendFunds (env, address, who, amount): Promise<void> {
 export async function setupProvider (env, provider: TestProvider): Promise<Hash> {
     console.log('\n---------------\nSetup Provider\n---------------')
     await env.changeSigner(provider.mnemonic)
-    console.log('Provider address', provider.address)
     const tasks = new Tasks(env)
     console.log(' - providerRegister')
     await tasks.providerRegister(hexHash(provider.serviceOrigin), provider.fee, provider.payee, provider.address)
