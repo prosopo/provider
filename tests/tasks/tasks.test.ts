@@ -103,7 +103,7 @@ describe("CONTRACT TASKS", () => {
     return { mockEnv, tasks, captchaSolutions, requestHash };
   }
 
-  it("Provider registeration", async () => {
+  it("Provider registration", async () => {
     await mockEnv.changeSigner(provider.mnemonic);
     const providerTasks = new Tasks(mockEnv);
     try {
@@ -254,7 +254,7 @@ describe("CONTRACT TASKS", () => {
     }
   });
 
-  it("Dapp registeration", async () => {
+  it("Dapp registration", async () => {
     await mockEnv.changeSigner(dapp.mnemonic);
     const providerTasks = new Tasks(mockEnv);
     try {
