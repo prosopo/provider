@@ -20,7 +20,7 @@ import { ContractApiInterface, ContractTxResponse } from '../types'
 import { ERRORS } from '../errors'
 import { Environment } from '../env'
 import { AbiMetadata } from 'redspot/types'
-import { unwrap, encodeStringArgs, getEventNameFromMethodName } from './helpers'
+import { unwrap, encodeStringArgs, getEventNameFromMethodName, handleContractCallOutcomeErrors } from './helpers'
 import { AnyJson } from '@polkadot/types/types/codec'
 
 export class ProsopoContractApi implements ContractApiInterface {
@@ -50,18 +50,12 @@ export class ProsopoContractApi implements ContractApiInterface {
         const encodedArgs = encodeStringArgs(methodObj, args)
 
         // Always query first as errors are passed back from a dry run but not from a transaction
-        let result = await this.contractQuery(signedContract, contractMethodName, encodedArgs) as any
-
-        // TODO throw some kind of error if the contract passed one back
-        if (result && typeof (result) === 'object' && Object.prototype.hasOwnProperty.call(result, 'Err')) {
-            console.log('Query failed because of : ', result.Err!)
-            // throw new Error(result.Err! as string)
-        }
+        let result = await this.contractQuery(signedContract, contractMethodName, encodedArgs)
 
         if (methodObj.isMutating) {
             result = await this.contractTx(signedContract, contractMethodName, encodedArgs, value)
         }
-        return result as AnyJson
+        return result
     }
 
     /**
@@ -108,6 +102,7 @@ export class ProsopoContractApi implements ContractApiInterface {
      */
     async contractQuery <T> (signedContract: Contract, contractMethodName: string, encodedArgs: T[]): Promise<AnyJson> {
         const response = await signedContract.query[contractMethodName](...encodedArgs)
+        handleContractCallOutcomeErrors(response)
         if (response.result.isOk && response.output) {
             return unwrap(response.output.toHuman())
         }
