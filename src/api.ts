@@ -46,7 +46,7 @@ export function prosopoMiddleware (env): Router {
             const result = await tasks.providerRegister(serviceOrigin as string, fee as number, payee as Payee, address as string)
             return res.json(result)
         } catch (err: unknown) {
-            const msg = `${ERRORS.CONTRACT.TX_ERROR.message}:${err}`
+            const msg = `${ERRORS.CONTRACT.TX_ERROR.message}: ${err}`
             return next(new BadRequest(msg))
         }
     })
@@ -68,7 +68,7 @@ export function prosopoMiddleware (env): Router {
             const result = await tasks.providerUpdate(serviceOrigin as string, fee as number, payee as Payee, address as string, value as number)
             return res.json(result)
         } catch (err: unknown) {
-            const msg = `${ERRORS.CONTRACT.TX_ERROR.message}:${err}`
+            const msg = `${ERRORS.CONTRACT.TX_ERROR.message}: ${err}`
             return next(new BadRequest(msg))
         }
     })
@@ -88,7 +88,7 @@ export function prosopoMiddleware (env): Router {
             const result = await tasks.providerDeregister(address as string)
             return res.json(result)
         } catch (err: unknown) {
-            const msg = `${ERRORS.CONTRACT.TX_ERROR.message}:${err}`
+            const msg = `${ERRORS.CONTRACT.TX_ERROR.message}: ${err}`
             return next(new BadRequest(msg))
         }
     })
@@ -107,7 +107,7 @@ export function prosopoMiddleware (env): Router {
             const result = await tasks.providerUnstake(value as number)
             return res.json(result)
         } catch (err: unknown) {
-            const msg = `${ERRORS.CONTRACT.TX_ERROR.message}:${err}`
+            const msg = `${ERRORS.CONTRACT.TX_ERROR.message}: ${err}`
             return next(new BadRequest(msg))
         }
     })
@@ -126,7 +126,7 @@ export function prosopoMiddleware (env): Router {
             const result = await tasks.providerAddDataset(file as string)
             return res.json(result)
         } catch (err: unknown) {
-            const msg = `${ERRORS.CONTRACT.TX_ERROR.message}:${err}`
+            const msg = `${ERRORS.CONTRACT.TX_ERROR.message}: ${err}`
             return next(new BadRequest(msg))
         }
     })
@@ -147,7 +147,7 @@ export function prosopoMiddleware (env): Router {
             const result = await tasks.dappRegister(dappServiceOrigin as string, dappContractAddress as string, dappOwner as string)
             return res.json(result)
         } catch (err: unknown) {
-            const msg = `${ERRORS.CONTRACT.TX_ERROR.message}:${err}`
+            const msg = `${ERRORS.CONTRACT.TX_ERROR.message}: ${err}`
             return next(new BadRequest(msg))
         }
     })
@@ -161,7 +161,7 @@ export function prosopoMiddleware (env): Router {
         await env.isReady()
         const provider = await tasks.getRandomProvider()
         const lastHeader = await env.network.api.rpc.chain.getHeader()
-        res.json({
+        return res.json({
             blockNumber: lastHeader.number,
             blockHash: lastHeader.hash,
             provider: provider,
@@ -177,7 +177,7 @@ export function prosopoMiddleware (env): Router {
     router.get('/v1/prosopo/providers/', async (req, res) => {
         await env.isReady()
         const providers: AnyJson = await tasks.getProviderAccounts()
-        res.json(
+        return res.json(
             {
                 accounts: providers
             } as AccountsResponse
@@ -192,7 +192,7 @@ export function prosopoMiddleware (env): Router {
     router.get('/v1/prosopo/dapps/', async (req, res) => {
         await env.isReady()
         const dapps: AnyJson = await tasks.getDappAccounts()
-        res.json(
+        return res.json(
             {
                 accounts: dapps
             } as AccountsResponse
@@ -216,8 +216,8 @@ export function prosopoMiddleware (env): Router {
             const result = await env.contract.query.getProviderDetails(providerAccount)
             return res.json(result.output)
         } catch (err: unknown) {
-            const msg = `${ERRORS.CONTRACT.TX_ERROR.message}:${err}`
-            next(new BadRequest(msg))
+            const msg = `${ERRORS.CONTRACT.TX_ERROR.message}: ${err}`
+            return next(new BadRequest(msg))
         }
     })
 
@@ -229,15 +229,15 @@ export function prosopoMiddleware (env): Router {
      */
     router.get('/v1/prosopo/provider/captcha/:datasetId/:userAccount', async (req, res, next) => {
         const { datasetId, userAccount } = req.params
-        if (!datasetId || userAccount) {
-            next(new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message))
+        if (!datasetId || !userAccount) {
+            return next(new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message))
         }
         try {
             validateAddress(userAccount as string)
-            res.json(await tasks.getRandomCaptchasAndRequestHash(datasetId as string, userAccount as string))
+            return res.json(await tasks.getRandomCaptchasAndRequestHash(datasetId as string, userAccount as string))
         } catch (err: unknown) {
-            const msg = `${ERRORS.CONTRACT.TX_ERROR.message}:${err}`
-            next(new BadRequest(msg))
+            const msg = `${ERRORS.CONTRACT.TX_ERROR.message}: ${err}`
+            return next(new BadRequest(msg))
         }
     })
 
@@ -253,16 +253,15 @@ export function prosopoMiddleware (env): Router {
         try {
             CaptchaSolutionBody.parse(req.body)
         } catch (err) {
-            next(new BadRequest(err))
+            return next(new BadRequest(err))
         }
         const { userAccount, dappAccount, captchas, requestHash } = req.body
         try {
             const result = await tasks.dappUserSolution(userAccount as string, dappAccount as string, requestHash as string, captchas as JSON)
             return res.json({ status: ERRORS.API.CAPTCHA_PASSED.message, captchas: result })
         } catch (err: unknown) {
-            console.log(err)
             const msg = ERRORS.API.BAD_REQUEST.message
-            next(new BadRequest(msg))
+            return next(new BadRequest(msg))
         }
     })
 
