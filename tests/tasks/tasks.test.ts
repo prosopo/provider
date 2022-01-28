@@ -13,6 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
+import path from "path";
 import { Tasks } from "../../src/tasks/tasks";
 import { MockEnvironment } from "../mocks/mockenv";
 import { CaptchaMerkleTree } from "../../src/merkle";
@@ -43,6 +44,7 @@ describe("CONTRACT TASKS", () => {
   let datasetId;
   let provider;
   let dapp;
+  const mockEnv = new MockEnvironment();
 
   before(async () => {
     // Register the dapp
@@ -100,6 +102,264 @@ describe("CONTRACT TASKS", () => {
     const tasks = new Tasks(mockEnv);
     return { mockEnv, tasks, captchaSolutions, requestHash };
   }
+
+  it("Provider registeration", async () => {
+    await mockEnv.changeSigner(provider.mnemonic);
+    const providerTasks = new Tasks(mockEnv);
+    try {
+      const result: any = await providerTasks.providerRegister(
+        provider.serviceOrigin,
+        provider.fee,
+        provider.payee,
+        provider.address
+      );
+      expect(result).to.be.an("array");
+    } catch (error) {
+      console.log(error);
+      throw new Error("Error in regestering provider");
+    }
+  });
+
+  it("Provider updation", async () => {
+    await mockEnv.changeSigner(provider.mnemonic);
+    const providerTasks = new Tasks(mockEnv);
+    const value = 1;
+
+    try {
+      const result: any = await providerTasks.providerUpdate(
+        provider.serviceOrigin,
+        provider.fee,
+        provider.payee,
+        provider.address,
+        value
+      );
+      expect(result[0].args[0]).to.equal(provider.address);
+    } catch (error) {
+      console.log(error);
+      throw new Error("Error in updating provider");
+    }
+  });
+
+  it("Provider add dataset", async () => {
+    await mockEnv.changeSigner(provider.mnemonic);
+    const providerTasks = new Tasks(mockEnv);
+    try {
+      const captchaFilePath = path.resolve(
+        __dirname,
+        "../mocks/data/captchas.json"
+      );
+      const result: any = await providerTasks.providerAddDataset(
+        captchaFilePath
+      );
+      expect(result[0].args[0]).to.equal(provider.address);
+    } catch (error) {
+      console.log(error);
+      throw new Error("Error in adding dataset");
+    }
+  });
+
+  it("Provider approve", async () => {
+    const { mockEnv, tasks, captchaSolutions } = await setup();
+
+    const salt = randomAsHex();
+
+    const tree = new CaptchaMerkleTree();
+
+    const captchaSolutionsSalted = captchaSolutions.map((captcha) => ({
+      ...captcha,
+      salt: salt
+    }));
+    const captchasHashed = captchaSolutionsSalted.map((captcha) =>
+      computeCaptchaSolutionHash(captcha)
+    );
+    tree.build(captchasHashed);
+    const commitmentId = tree.root!.hash;
+
+    await tasks.dappUserCommit(
+      DAPP.contractAccount,
+      datasetId,
+      commitmentId,
+      provider.address
+    );
+
+    await mockEnv.changeSigner(provider.mnemonic);
+    const providerTasks = new Tasks(mockEnv);
+    try {
+      const result: any = await providerTasks.providerApprove(commitmentId);
+      expect(result[0].args[0]).to.equal(commitmentId);
+    } catch (error) {
+      console.log(error);
+      throw new Error("Error in provider approve");
+    }
+  });
+
+  it("Provider disapprove", async () => {
+    const { mockEnv, tasks, captchaSolutions } = await setup();
+
+    const salt = randomAsHex();
+
+    const tree = new CaptchaMerkleTree();
+
+    const captchaSolutionsSalted = captchaSolutions.map((captcha) => ({
+      ...captcha,
+      salt: salt
+    }));
+    const captchasHashed = captchaSolutionsSalted.map((captcha) =>
+      computeCaptchaSolutionHash(captcha)
+    );
+    tree.build(captchasHashed);
+    const commitmentId = tree.root!.hash;
+
+    await tasks.dappUserCommit(
+      DAPP.contractAccount,
+      datasetId,
+      commitmentId,
+      provider.address
+    );
+
+    await mockEnv.changeSigner(provider.mnemonic);
+    const providerTasks = new Tasks(mockEnv);
+    try {
+      const result: any = await providerTasks.providerDisapprove(commitmentId);
+      expect(result[0].args[0]).to.equal(commitmentId);
+    } catch (error) {
+      console.log(error);
+      throw new Error("Error in provider disapprove");
+    }
+  });
+
+  it("Provider details", async () => {
+    await mockEnv.changeSigner(provider.mnemonic);
+    const providerTasks = new Tasks(mockEnv);
+    try {
+      const result: any = await providerTasks.getProviderDetails(
+        provider.address
+      );
+      expect(result).to.have.a.property("status");
+    } catch (error) {
+      console.log(error);
+      throw new Error("Error in provider details");
+    }
+  });
+
+  it("Provider accounts", async () => {
+    await mockEnv.changeSigner(provider.mnemonic);
+    const providerTasks = new Tasks(mockEnv);
+    try {
+      const result: any = await providerTasks.providerAccounts();
+      expect(result).to.be.an("array");
+    } catch (error) {
+      console.log(error);
+      throw new Error("Error in provider accounts");
+    }
+  });
+
+  it("Dapp registeration", async () => {
+    await mockEnv.changeSigner(dapp.mnemonic);
+    const providerTasks = new Tasks(mockEnv);
+    try {
+      const result: any = await providerTasks.dappRegister(
+        dapp.serviceOrigin,
+        dapp.contractAccount,
+        dapp.optionalOwner
+      );
+      expect(result).to.be.an("array");
+    } catch (error) {
+      console.log(error);
+      throw new Error("Error in regestering dapp");
+    }
+  });
+
+  it("Dapp is active", async () => {
+    await mockEnv.changeSigner(dapp.mnemonic);
+    const providerTasks = new Tasks(mockEnv);
+    try {
+      const result: any = await providerTasks.dappIsActive(
+        dapp.contractAccount
+      );
+      expect(result).to.equal(true);
+    } catch (error) {
+      console.log(error);
+      throw new Error("Error in is active dapp");
+    }
+  });
+
+  it("Dapp details", async () => {
+    await mockEnv.changeSigner(dapp.mnemonic);
+    const providerTasks = new Tasks(mockEnv);
+    try {
+      const result: any = await providerTasks.getDappDetails(
+        dapp.contractAccount
+      );
+      expect(result).to.have.a.property("status");
+    } catch (error) {
+      console.log(error);
+      throw new Error("Error in dapp details");
+    }
+  });
+
+  it("Dapp fund", async () => {
+    await mockEnv.changeSigner(dapp.mnemonic);
+    const providerTasks = new Tasks(mockEnv);
+    const value = 10;
+    try {
+      const result: any = await providerTasks.dappFund(
+        dapp.contractAccount,
+        value
+      );
+      expect(result[0].args[0]).to.equal(dapp.contractAccount);
+    } catch (error) {
+      console.log(error);
+      throw new Error("Error in dapp fund");
+    }
+  });
+
+  it("Dapp user commit", async () => {
+    try {
+      const { tasks, captchaSolutions } = await setup();
+
+      const salt = randomAsHex();
+
+      const tree = new CaptchaMerkleTree();
+
+      const captchaSolutionsSalted = captchaSolutions.map((captcha) => ({
+        ...captcha,
+        salt: salt
+      }));
+
+      const captchasHashed = captchaSolutionsSalted.map((captcha) =>
+        computeCaptchaSolutionHash(captcha)
+      );
+
+      tree.build(captchasHashed);
+
+      const commitmentId = tree.root!.hash;
+
+      const result: any = await tasks.dappUserCommit(
+        dapp.contractAccount,
+        datasetId,
+        commitmentId,
+        provider.address
+      );
+
+      expect(result[0].args[2]).to.equal(dapp.contractAccount);
+    } catch (error) {
+      console.log(error);
+      throw new Error("Error in dapp user commit");
+    }
+  });
+
+  it("Dapp accounts", async () => {
+    await mockEnv.changeSigner(dapp.mnemonic);
+    const providerTasks = new Tasks(mockEnv);
+    try {
+      const result: any = await providerTasks.dappAccounts();
+      expect(result).to.be.an("array");
+    } catch (error) {
+      console.log(error);
+      throw new Error("Error in dapp accounts");
+    }
+  });
 
   it("Captchas are correctly formatted before being passed to the API layer", async () => {
     const { tasks } = await setup();
@@ -363,5 +623,32 @@ describe("CONTRACT TASKS", () => {
     expect(captchas.length).to.equal(2);
     const pendingRequest = mockEnv.db?.getDappUserPending(requestHash);
     return expect(pendingRequest).to.not.be.null;
+  });
+
+  it("Provider unstake", async () => {
+    await mockEnv.changeSigner(provider.mnemonic);
+    const providerTasks = new Tasks(mockEnv);
+    const value = 1;
+    try {
+      const result: any = await providerTasks.providerUnstake(value);
+      expect(result[0].args[0]).to.equal(provider.address);
+    } catch (error) {
+      console.log(error);
+      throw new Error("Error in unstake provider");
+    }
+  });
+
+  it("Provider deregister", async () => {
+    await mockEnv.changeSigner(provider.mnemonic);
+    const providerTasks = new Tasks(mockEnv);
+    try {
+      const result: any = await providerTasks.providerDeregister(
+        provider.address
+      );
+      expect(result[0].args[0]).to.equal(provider.address);
+    } catch (error) {
+      console.log(error);
+      throw new Error("Error in deregestering provider");
+    }
   });
 });
