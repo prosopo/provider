@@ -120,10 +120,8 @@ export function processArgs (args, env) {
         )
         .command(
             'provider_accounts',
-            'List provider accounts',
-            (yargs) => yargs
-                .option('providerId', { type: 'string', demand: false })
-                .option('status', { type: 'string', demand: false }),
+            'List all provider accounts',
+            (yargs) => yargs,
             async () => {
                 try {
                     const result = await tasks.getProviderAccounts()
