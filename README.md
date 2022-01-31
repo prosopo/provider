@@ -129,3 +129,88 @@ Using [Polkadot apps](https://polkadot.js.org/apps/?rpc=ws%3A%2F%2F127.0.0.1%3A9
 1. Click Add an existing contract
 2. Enter the contract address and click to select the `prosopo.json` file in the artifacts folder as the `contract ABI`
 3. Expand the contract to see the current value of `getProviders`. It should be `["YOUR PROVIDER ADDRESS"]`.
+
+
+## Command Line Interface
+
+The `PROVIDER_MNEMONIC` env variable must be set for any commands that interact with the Prosopo contract.
+
+### Register a provider
+
+```bash
+yarn start provider_register --fee=10 --serviceOrigin=https://localhost:8282 --payee=Provider --address ADDRESS
+```
+
+| Param | Description |
+| --------------- | --------------- |
+| Fee | The amount the Provider charges or pays per captcha approval / disapproval |
+| serviceOrigin | The location of the Provider's service |
+| Payee | Who is paid on successful captcha completion (`Provider` or `Dapp`) |
+| Address | Address of the Provider |
+
+### Update a provider
+
+```bash
+yarn start provider_update --fee=10 --serviceOrigin=https://localhost:8282 --payee=Provider --address ADDRESS
+```
+
+Params are the same as `provider_register`
+
+### Add a dataset for a Provider
+
+```bash
+yarn start provider_add_data_set --file /usr/src/data/captchas.json
+```
+
+| Param | Description |
+| --------------- | --------------- |
+| File | JSON file containing captchas |
+
+File format can be viewed [here](https://github.com/prosopo-io/provider/blob/master/tests/mocks/data/captchas.json).
+
+### De-register a Provider
+
+```bash
+yarn start provider_deregister --address ADDRESS
+```
+
+| Param | Description |
+| --------------- | --------------- |
+| Address | Address of the Provider |
+
+### Unstake funds
+
+```bash
+yarn start provider_unstake --value VALUE
+```
+
+| Param | Description |
+| --------------- | --------------- |
+| Value | The amount of funds to unstake from the contract |
+
+### List Provider accounts in contract
+
+```bash
+yarn start provider_accounts
+```
+
+
+
+## API
+
+Run the API server
+
+```bash
+yarn start --api
+```
+
+The API contains functions that will be required for the frontend captcha interface.
+
+| API Resource | Function |
+| --------------- | --------------- |
+|`/v1/prosopo/random_provider/`| Get a random provider based on AccountId |
+| `/v1/prosopo/providers/` | Get list of all provider IDs |
+| `/v1/prosopo/dapps/` | Get list of all dapp IDs |
+| `/v1/prosopo/provider/:providerAccount` | Get details of a specific Provider account |
+| `/v1/prosopo/provider/captcha/:datasetId/:userAccount` | Get captchas to solve |
+| `/v1/prosopo/provider/solution` | Submit captcha solutions |
