@@ -284,8 +284,8 @@ export class Tasks {
             throw (new Error(ERRORS.CONFIG.INVALID_CAPTCHA_NUMBER.message))
         }
 
-        let solvedCaptchas:number
-        let unsolvedCaptchas:number
+        let solvedCaptchas: number
+        let unsolvedCaptchas: number
 
         switch (this.captchaConfig.state) {
         case CaptchaStates.Solved:
@@ -305,7 +305,10 @@ export class Tasks {
         }
 
         const solved = await this.getCaptchaWithProof(datasetId, true, solvedCaptchas)
-        const unsolved = await this.getCaptchaWithProof(datasetId, false, unsolvedCaptchas)
+        let unsolved: CaptchaWithProof[] = []
+        if (CaptchaStates.SolvedAndUnsolved) {
+            unsolved = await this.getCaptchaWithProof(datasetId, false, unsolvedCaptchas)
+        }
         const captchas: CaptchaWithProof[] = shuffleArray([...solved, ...unsolved])
         const salt = randomAsHex()
 
