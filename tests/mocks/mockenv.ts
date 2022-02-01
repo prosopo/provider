@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { Database, ProsopoConfig, ProsopoEnvironment } from '../../src/types'
+import { CaptchaStates, Database, ProsopoConfig, ProsopoEnvironment } from '../../src/types'
 import { Network, Signer } from 'redspot/types'
 import Contract from '@redspot/patract/contract'
 import { ERRORS } from '../../src/errors'
@@ -52,12 +52,8 @@ export class MockEnvironment implements ProsopoEnvironment {
                 }
             },
             captchas: {
-                solved: {
-                    count: 0
-                },
-                solvedAndUnsolved: {
-                    count: 1
-                }
+                state: CaptchaStates.SolvedAndUnsolved,
+                numberOfCaptchas: 1
             },
             database: {
                 development: { type: 'mockdb', endpoint: '', dbname: '' }
