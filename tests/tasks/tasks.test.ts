@@ -648,7 +648,7 @@ describe('CONTRACT TASKS', () => {
         return expect(valid).to.be.true
     })
 
-    it('Get random captchas and request hash', async () => {
+    it.only('Get random captchas and request hash', async () => {
         await mockEnv.changeSigner(dappUser.mnemonic)
         const dappTasks = new Tasks(mockEnv)
         const { captchas, requestHash } =

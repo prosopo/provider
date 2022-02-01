@@ -28,6 +28,14 @@ export default {
             }
         }
     },
+    captchas: {
+        solved: {
+            count: 1
+        },
+        solvedAndUnsolved: {
+            count: 1
+        }
+    },
     database: {
         development: {
             type: 'mongo',
@@ -35,5 +43,4 @@ export default {
             dbname: 'prosopo'
         }
     }
-
 } as ProsopoConfig

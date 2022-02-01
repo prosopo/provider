@@ -28,7 +28,7 @@ import {
     parseCaptchaSolutions
 } from '../captcha'
 import {
-    Captcha, CaptchaData,
+    Captcha, CaptchaConfig, CaptchaData,
     CaptchaSolution,
     CaptchaSolutionCommitment,
     CaptchaSolutionResponse,
@@ -38,6 +38,7 @@ import {
     Dapp,
     Database, DatasetRecord,
     GovernanceStatus, Payee,
+    ProsopoEnvironment,
     Provider
 } from '../types'
 import { ProsopoContractApi } from '../contract/interface'
@@ -53,9 +54,12 @@ export class Tasks {
 
     db: Database
 
-    constructor (env) {
+    captchaConfig: CaptchaConfig
+
+    constructor (env: ProsopoEnvironment) {
         this.contractApi = new ProsopoContractApi(env)
-        this.db = env.db
+        this.db = env.db as Database
+        this.captchaConfig = env.config.captchas
     }
 
     // Contract tasks
@@ -272,9 +276,29 @@ export class Tasks {
         if (!dataset) {
             throw (new Error(ERRORS.DATABASE.DATASET_GET_FAILED.message))
         }
-        const solved = await this.getCaptchaWithProof(datasetId, true, 1)
-        const unsolved = await this.getCaptchaWithProof(datasetId, false, 1)
-        const captchas: CaptchaWithProof[] = shuffleArray([solved[0], unsolved[0]])
+
+        const solvedAndUnsolvedCount = this.captchaConfig.solvedAndUnsolved.count
+        const solvedCount = this.captchaConfig.solved.count
+
+        let solvedCaptchas = 1
+        let unsolvedCaptchas = 1
+
+        if (solvedAndUnsolvedCount > 0) {
+            if (solvedAndUnsolvedCount % 2 === 0) {
+                solvedCaptchas = solvedAndUnsolvedCount / 2
+                unsolvedCaptchas = solvedAndUnsolvedCount / 2
+            } else {
+                solvedCaptchas = (solvedAndUnsolvedCount - 1) / 2 + 1
+                unsolvedCaptchas = (solvedAndUnsolvedCount - 1) / 2
+            }
+        } else if (solvedCount > 0) {
+            solvedCaptchas = solvedCount
+            unsolvedCaptchas = 0
+        }
+
+        const solved = await this.getCaptchaWithProof(datasetId, true, solvedCaptchas)
+        const unsolved = await this.getCaptchaWithProof(datasetId, false, unsolvedCaptchas)
+        const captchas: CaptchaWithProof[] = shuffleArray([...solved, ...unsolved])
         const salt = randomAsHex()
 
         const requestHash = computePendingRequestHash(captchas.map((c) => c.captcha.captchaId), userAccount, salt)

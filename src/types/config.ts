@@ -24,6 +24,14 @@ export interface ProsopoConfig {
             }
         }
     },
+    captchas: {
+        solved: {
+            count: number
+        },
+        solvedAndUnsolved: {
+            count: number
+        }
+    }
     database: {
         development: {
             type: string,
