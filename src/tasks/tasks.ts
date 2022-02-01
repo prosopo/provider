@@ -278,8 +278,8 @@ export class Tasks {
             throw (new Error(ERRORS.DATABASE.DATASET_GET_FAILED.message))
         }
 
-        const unsolvedCount: number = this.captchaConfig.unsolved.count
-        const solvedCount: number = this.captchaConfig.solved.count
+        const unsolvedCount: number = Math.abs(Math.trunc(this.captchaConfig.unsolved.count))
+        const solvedCount: number = Math.abs(Math.trunc(this.captchaConfig.solved.count))
 
         if (!solvedCount) {
             throw (new Error(ERRORS.CONFIG.INVALID_CAPTCHA_NUMBER.message))
