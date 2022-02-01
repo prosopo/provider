@@ -67,7 +67,7 @@ export type CaptchaConfig = {
     solved: {
         count: number
     },
-    solvedAndUnsolved: {
+    unsolved: {
         count: number
     }
 }

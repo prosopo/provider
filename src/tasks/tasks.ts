@@ -277,27 +277,18 @@ export class Tasks {
             throw (new Error(ERRORS.DATABASE.DATASET_GET_FAILED.message))
         }
 
-        const solvedAndUnsolvedCount = this.captchaConfig.solvedAndUnsolved.count
-        const solvedCount = this.captchaConfig.solved.count
+        const unsolvedCount: number = this.captchaConfig.unsolved.count
+        const solvedCount: number = this.captchaConfig.solved.count
 
-        let solvedCaptchas = 1
-        let unsolvedCaptchas = 1
-
-        if (solvedAndUnsolvedCount > 0) {
-            if (solvedAndUnsolvedCount % 2 === 0) {
-                solvedCaptchas = solvedAndUnsolvedCount / 2
-                unsolvedCaptchas = solvedAndUnsolvedCount / 2
-            } else {
-                solvedCaptchas = (solvedAndUnsolvedCount - 1) / 2 + 1
-                unsolvedCaptchas = (solvedAndUnsolvedCount - 1) / 2
-            }
-        } else if (solvedCount > 0) {
-            solvedCaptchas = solvedCount
-            unsolvedCaptchas = 0
+        if (!solvedCount) {
+            throw (new Error(ERRORS.CONFIG.INVALID_CAPTCHA_NUMBER.message))
         }
 
-        const solved = await this.getCaptchaWithProof(datasetId, true, solvedCaptchas)
-        const unsolved = await this.getCaptchaWithProof(datasetId, false, unsolvedCaptchas)
+        const solved = await this.getCaptchaWithProof(datasetId, true, solvedCount)
+        let unsolved:CaptchaWithProof[] = []
+        if (unsolvedCount) {
+            unsolved = await this.getCaptchaWithProof(datasetId, false, unsolvedCount)
+        }
         const captchas: CaptchaWithProof[] = shuffleArray([...solved, ...unsolved])
         const salt = randomAsHex()
 

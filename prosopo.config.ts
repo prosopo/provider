@@ -32,7 +32,7 @@ export default {
         solved: {
             count: 1
         },
-        solvedAndUnsolved: {
+        unsolved: {
             count: 1
         }
     },

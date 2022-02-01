@@ -55,7 +55,7 @@ export class MockEnvironment implements ProsopoEnvironment {
                 solved: {
                     count: 0
                 },
-                solvedAndUnsolved: {
+                unsolved: {
                     count: 1
                 }
             },

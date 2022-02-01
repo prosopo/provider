@@ -28,7 +28,7 @@ export interface ProsopoConfig {
         solved: {
             count: number
         },
-        solvedAndUnsolved: {
+        unsolved: {
             count: number
         }
     }
