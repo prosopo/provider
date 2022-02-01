@@ -209,7 +209,7 @@ The API contains functions that will be required for the frontend captcha interf
 
 | API Resource | Function |
 | --------------- | --------------- |
-|`/v1/prosopo/random_provider/`| Get a random provider based on AccountId |
+| `/v1/prosopo/random_provider/`| Get a random provider based on AccountId |
 | `/v1/prosopo/providers/` | Get list of all provider IDs |
 | `/v1/prosopo/dapps/` | Get list of all dapp IDs |
 | `/v1/prosopo/provider/:providerAccount` | Get details of a specific Provider account |
@@ -231,3 +231,5 @@ yarn c8 yarn test
 ```
 
 The tests use a mocked database engine however they connect to the **real** contract. You will need to have the contract deployed and the address available in an env variable called `CONTRACT_ADDRESS`. The easiest way to deploy the Prosopo contract and run the tests is via the [integration repository](https://github.com/prosopo-io/integration/).
+
+Current test coverage is sitting at 90.9% of functions.
