@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { CaptchaStates, Database, ProsopoConfig, ProsopoEnvironment } from '../../src/types'
+import { Database, ProsopoConfig, ProsopoEnvironment } from '../../src/types'
 import { Network, Signer } from 'redspot/types'
 import Contract from '@redspot/patract/contract'
 import { ERRORS } from '../../src/errors'

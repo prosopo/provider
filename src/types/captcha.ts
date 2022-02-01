@@ -15,7 +15,6 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { z } from 'zod'
 import { AccountId, Hash } from '@polkadot/types/interfaces'
-import { CaptchaStates } from './config'
 
 export enum CaptchaTypes { SelectAll = 'SelectAll'}
 

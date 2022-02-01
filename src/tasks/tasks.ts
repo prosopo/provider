@@ -32,7 +32,6 @@ import {
     CaptchaSolution,
     CaptchaSolutionCommitment,
     CaptchaSolutionResponse,
-    CaptchaStates,
     CaptchaStatus,
     CaptchaWithProof,
     ContractApiInterface,
