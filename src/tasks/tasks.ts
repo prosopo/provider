@@ -32,6 +32,7 @@ import {
     CaptchaSolution,
     CaptchaSolutionCommitment,
     CaptchaSolutionResponse,
+    CaptchaStates,
     CaptchaStatus,
     CaptchaWithProof,
     ContractApiInterface,
@@ -277,23 +278,30 @@ export class Tasks {
             throw (new Error(ERRORS.DATABASE.DATASET_GET_FAILED.message))
         }
 
-        const solvedAndUnsolvedCount = this.captchaConfig.solvedAndUnsolved.count
-        const solvedCount = this.captchaConfig.solved.count
+        const numberOfCaptchas = this.captchaConfig.numberOfCaptchas
 
-        let solvedCaptchas = 1
-        let unsolvedCaptchas = 1
+        if (!numberOfCaptchas) {
+            throw (new Error(ERRORS.CONFIG.INVALID_CAPTCHA_NUMBER.message))
+        }
 
-        if (solvedAndUnsolvedCount > 0) {
-            if (solvedAndUnsolvedCount % 2 === 0) {
-                solvedCaptchas = solvedAndUnsolvedCount / 2
-                unsolvedCaptchas = solvedAndUnsolvedCount / 2
-            } else {
-                solvedCaptchas = (solvedAndUnsolvedCount - 1) / 2 + 1
-                unsolvedCaptchas = (solvedAndUnsolvedCount - 1) / 2
-            }
-        } else if (solvedCount > 0) {
-            solvedCaptchas = solvedCount
+        let solvedCaptchas:number
+        let unsolvedCaptchas:number
+
+        switch (this.captchaConfig.state) {
+        case CaptchaStates.Solved:
+            solvedCaptchas = numberOfCaptchas
             unsolvedCaptchas = 0
+            break
+
+        case CaptchaStates.SolvedAndUnsolved:
+            if (numberOfCaptchas % 2 === 0) {
+                solvedCaptchas = numberOfCaptchas / 2
+                unsolvedCaptchas = numberOfCaptchas / 2
+            } else {
+                solvedCaptchas = (numberOfCaptchas - 1) / 2 + 1
+                unsolvedCaptchas = (numberOfCaptchas - 1) / 2
+            }
+            break
         }
 
         const solved = await this.getCaptchaWithProof(datasetId, true, solvedCaptchas)

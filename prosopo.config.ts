@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { ProsopoConfig } from './src/types'
+import { CaptchaStates, ProsopoConfig } from './src/types'
 
 export default {
     defaultEnvironment: 'development',
@@ -29,12 +29,8 @@ export default {
         }
     },
     captchas: {
-        solved: {
-            count: 1
-        },
-        solvedAndUnsolved: {
-            count: 1
-        }
+        state: CaptchaStates.SolvedAndUnsolved,
+        numberOfCaptchas: 1
     },
     database: {
         development: {
