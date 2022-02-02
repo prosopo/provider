@@ -57,13 +57,17 @@ export class ProsopoDatabase implements Database {
      * @description Connect to the database and set the dataset and captcha tables
      */
     async connect () {
-        const client: MongoClient = new MongoClient(this.url)
-        await client.connect()
-        const db: Db = client.db(this.dbname)
-        this.tables.dataset = db.collection('dataset')
-        this.tables.captchas = db.collection('captchas')
-        this.tables.solutions = db.collection('solutions')
-        this.tables.responses = db.collection('responses')
+        try {
+            const client: MongoClient = new MongoClient(this.url)
+            await client.connect()
+            const db: Db = client.db(this.dbname)
+            this.tables.dataset = db.collection('dataset')
+            this.tables.captchas = db.collection('captchas')
+            this.tables.solutions = db.collection('solutions')
+            this.tables.responses = db.collection('responses')
+        } catch (err) {
+            throw new Error(ERRORS.DATABASE.CONNECT_ERROR.message)
+        }
     }
 
     /**

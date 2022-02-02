@@ -31,6 +31,9 @@ export const ERRORS = {
         }
     },
     DATABASE: {
+        CONNECT_ERROR: {
+            message: 'Failed to connect'
+        },
         DATABASE_IMPORT_FAILED: {
             message: 'Failed to import database engine'
         },
