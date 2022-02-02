@@ -223,7 +223,7 @@ The API contains functions that will be required for the frontend captcha interf
 
 ## Tests
 
-The tests are located in the [tests](https://github.com/prosopo-io/provider/tree/master/tests) and the structure mimics that of the main `src`. You can run the tests using the following command:
+The tests are located in the [tests folder](https://github.com/prosopo-io/provider/tree/master/tests) and the structure mimics that of the main `src`. You can run the tests using the following command:
 
 ```bash
 yarn test
@@ -235,6 +235,6 @@ To run the tests with coverage stats use:
 yarn c8 yarn test
 ```
 
-The tests use a mocked database engine however they connect to the **real** contract. You will need to have the contract deployed and the address available in an env variable called `CONTRACT_ADDRESS`. The easiest way to deploy the Prosopo contract and run the tests is via the [integration repository](https://github.com/prosopo-io/integration/).
+The tests use a mocked database engine however they connect to the **real** contract. You will need to deploy the contract and make the address available in an env variable called `CONTRACT_ADDRESS`. The easiest way to deploy the Prosopo contract and run the tests is via the [integration repository](https://github.com/prosopo-io/integration/).
 
-Current test coverage is sitting at 90.9% of functions.
+Current test coverage is 90.9% of functions.
