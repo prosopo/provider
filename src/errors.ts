@@ -54,6 +54,9 @@ export const ERRORS = {
         },
         PENDING_RECORD_NOT_FOUND: {
             message: 'No pending record found'
+        },
+        INVALID_HASH: {
+            message: 'Invalid hash'
         }
     },
     API: {

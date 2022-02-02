@@ -18,8 +18,18 @@ import {
     MongoClient
 } from 'mongodb'
 import { Hash } from '@polkadot/types/interfaces'
-import { Database, DatasetRecord, PendingCaptchaRequestRecord, Tables, Captcha, CaptchaSolution, Dataset } from '../types'
+import {
+    Database,
+    DatasetRecord,
+    PendingCaptchaRequestRecord,
+    Tables,
+    Captcha,
+    CaptchaSolution,
+    Dataset,
+    DatasetWithIds, DatasetWithIdsAndTreeSchema, DatasetWithIdsAndTree
+} from '../types'
 import { ERRORS } from '../errors'
+import { isHex } from '@polkadot/util'
 
 // mongodb://username:password@127.0.0.1:27017
 const DEFAULT_ENDPOINT = 'mongodb://127.0.0.1:27017'
@@ -60,7 +70,8 @@ export class ProsopoDatabase implements Database {
      * @description Load a dataset to the database
      * @param {Dataset}  dataset
      */
-    async storeDataset (dataset: Dataset): Promise<void> {
+    async storeDataset (dataset: DatasetWithIdsAndTree): Promise<void> {
+        DatasetWithIdsAndTreeSchema.parse(dataset)
         if (dataset.datasetId) {
             const datasetDoc = {
                 datasetId: dataset.datasetId,
@@ -88,6 +99,9 @@ export class ProsopoDatabase implements Database {
      * @param {number}   size       the number of records to be returned
      */
     async getRandomCaptcha (solved: boolean, datasetId: Hash | string | Uint8Array, size?: number): Promise<Captcha[] | undefined> {
+        if (!isHex(datasetId)) {
+            throw new Error(`${ERRORS.DATABASE.INVALID_HASH.message}: datasetId`)
+        }
         const sampleSize = size ? Math.abs(Math.trunc(size)) : 1
         const cursor = this.tables.captchas?.aggregate([
             { $match: { datasetId, solution: { $exists: solved } } },
@@ -126,6 +140,9 @@ export class ProsopoDatabase implements Database {
      * @param {string}   datasetId  the id of the data set
      */
     async updateCaptcha (captcha: Captcha, datasetId: Hash | string | Uint8Array): Promise<void> {
+        if (!isHex(datasetId)) {
+            throw new Error(`${ERRORS.DATABASE.INVALID_HASH.message}: datasetId`)
+        }
         await this.tables.captchas?.updateOne(
             { datasetId },
             { $set: captcha },
@@ -136,7 +153,10 @@ export class ProsopoDatabase implements Database {
     /**
      * @description Get a captcha that is solved or not solved
      */
-    async getDatasetDetails (datasetId: Hash | string | Uint8Array): Promise<DatasetRecord> {
+    async getDatasetDetails (datasetId: Hash | string): Promise<DatasetRecord> {
+        if (!isHex(datasetId)) {
+            throw new Error(`${ERRORS.DATABASE.INVALID_HASH.message}: datasetId`)
+        }
         const doc = await this.tables.dataset?.findOne({ datasetId })
         if (doc) {
             return doc as DatasetRecord
@@ -148,6 +168,9 @@ export class ProsopoDatabase implements Database {
      * @description Store a Dapp User's captcha solution
      */
     async storeDappUserSolution (captchas: CaptchaSolution[], treeRoot: string) {
+        if (!isHex(treeRoot)) {
+            throw new Error(`${ERRORS.DATABASE.INVALID_HASH.message}: treeRoot`)
+        }
         // create a bulk upsert operation and execute
         await this.tables.solutions?.bulkWrite(captchas.map((captchaDoc) => ({
             updateOne: {
@@ -169,6 +192,12 @@ export class ProsopoDatabase implements Database {
      * @description Store a Dapp User's pending record
      */
     async storeDappUserPending (userAccount: string, requestHash: string, salt: string): Promise<void> {
+        if (!isHex(requestHash)) {
+            throw new Error(`${ERRORS.DATABASE.INVALID_HASH.message}: requestHash`)
+        }
+        if (!isHex(userAccount)) {
+            throw new Error(`${ERRORS.DATABASE.INVALID_HASH.message}: userAccount`)
+        }
         await this.tables.pending?.updateOne(
             { _id: requestHash },
             { $set: { accountId: userAccount, pending: true, salt } },
@@ -180,6 +209,9 @@ export class ProsopoDatabase implements Database {
      * @description Get a Dapp user's pending record
      */
     async getDappUserPending (requestHash: string): Promise<PendingCaptchaRequestRecord> {
+        if (!isHex(requestHash)) {
+            throw new Error(`${ERRORS.DATABASE.INVALID_HASH.message}: requestHash`)
+        }
         const doc = await this.tables.pending?.findOne({ _id: requestHash })
         if (doc) {
             return doc as PendingCaptchaRequestRecord
@@ -191,6 +223,12 @@ export class ProsopoDatabase implements Database {
      * @description Update a Dapp User's pending record
      */
     async updateDappUserPendingStatus (userAccount: string, requestHash: string, approve: boolean): Promise<void> {
+        if (!isHex(requestHash)) {
+            throw new Error(`${ERRORS.DATABASE.INVALID_HASH.message}: requestHash`)
+        }
+        if (!isHex(userAccount)) {
+            throw new Error(`${ERRORS.DATABASE.INVALID_HASH.message}: userAccount`)
+        }
         await this.tables.pending?.updateOne(
             { _id: requestHash },
             { $set: { accountId: userAccount, pending: false, approved: approve } },
