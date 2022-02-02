@@ -1,6 +1,6 @@
 # Prosopo Provider
 
-> NOTE: The easiest way to deploy the Prosopo contract and run the tests is via the [integration repository](https://github.com/prosopo-io/integration/). The following instructions explain how to set up the repositories manually.
+> NOTE: The easiest way to deploy the Prosopo contract and run the Provider node is via the [integration repository](https://github.com/prosopo-io/integration/). The following instructions explain how to set up the repositories manually.
 
 ## Prerequisites
 
