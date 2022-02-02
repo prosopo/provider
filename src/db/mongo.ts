@@ -25,8 +25,8 @@ import {
     Tables,
     Captcha,
     CaptchaSolution,
-    Dataset,
-    DatasetWithIds, DatasetWithIdsAndTreeSchema, DatasetWithIdsAndTree
+    DatasetWithIdsAndTreeSchema,
+    DatasetWithIdsAndTree
 } from '../types'
 import { ERRORS } from '../errors'
 import { isHex } from '@polkadot/util'
@@ -71,24 +71,31 @@ export class ProsopoDatabase implements Database {
      * @param {Dataset}  dataset
      */
     async storeDataset (dataset: DatasetWithIdsAndTree): Promise<void> {
-        DatasetWithIdsAndTreeSchema.parse(dataset)
-        if (dataset.datasetId) {
+        try {
+            const parsedDataset = DatasetWithIdsAndTreeSchema.parse(dataset)
             const datasetDoc = {
-                datasetId: dataset.datasetId,
-                format: dataset.format,
-                tree: dataset.tree
+                datasetId: parsedDataset.datasetId,
+                format: parsedDataset.format,
+                tree: parsedDataset.tree
             }
-            // const datasetId = new ObjectId(dataset.datasetId)
-            await this.tables.dataset?.updateOne({ _id: dataset.datasetId }, { $set: datasetDoc }, { upsert: true })
+            await this.tables.dataset?.updateOne({ _id: parsedDataset.datasetId }, { $set: datasetDoc }, { upsert: true })
             // put the dataset id on each of the captcha docs
-            const captchaDocs = dataset.captchas.map((captcha, index) => ({
+            const captchaDocs = parsedDataset.captchas.map((captcha, index) => ({
                 ...captcha,
-                datasetId: dataset.datasetId,
+                datasetId: parsedDataset.datasetId,
                 index
             }))
 
             // create a bulk upsert operation and execute
-            await this.tables.captchas?.bulkWrite(captchaDocs.map((captchaDoc) => ({ updateOne: { filter: { _id: captchaDoc.captchaId }, update: { $set: captchaDoc }, upsert: true } })))
+            await this.tables.captchas?.bulkWrite(captchaDocs.map((captchaDoc) => ({
+                updateOne: {
+                    filter: { _id: captchaDoc.captchaId },
+                    update: { $set: captchaDoc },
+                    upsert: true
+                }
+            })))
+        } catch (err) {
+            throw new Error(`${ERRORS.DATABASE.DATASET_LOAD_FAILED.message}:\n${err}`)
         }
     }
 
@@ -114,7 +121,7 @@ export class ProsopoDatabase implements Database {
         ])
         const docs = await cursor?.toArray()
         if (docs) {
-        // drop the _id field
+            // drop the _id field
             return docs.map(({ _id, ...keepAttrs }) => keepAttrs) as Captcha[]
         }
         throw (ERRORS.DATABASE.CAPTCHA_GET_FAILED.message)
@@ -128,7 +135,7 @@ export class ProsopoDatabase implements Database {
         const cursor = this.tables.captchas?.find({ _id: { $in: captchaId } })
         const docs = await cursor?.toArray()
         if (docs) {
-        // drop the _id field
+            // drop the _id field
             return docs.map(({ _id, ...keepAttrs }) => keepAttrs) as Captcha[]
         }
         throw (ERRORS.DATABASE.CAPTCHA_GET_FAILED.message)
@@ -177,11 +184,11 @@ export class ProsopoDatabase implements Database {
                 filter: { _id: captchaDoc.captchaId },
                 update: {
                     $set:
-                            {
-                                solution: captchaDoc.solution,
-                                salt: captchaDoc.salt,
-                                treeRoot
-                            }
+                        {
+                            solution: captchaDoc.solution,
+                            salt: captchaDoc.salt,
+                            treeRoot
+                        }
                 },
                 upsert: true
             }
