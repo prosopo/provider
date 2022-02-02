@@ -200,7 +200,13 @@ yarn start provider_unstake --value VALUE
 yarn start provider_accounts
 ```
 
+### Other commands ###
 
+A full list of CLI commands can be viewed by running
+
+```bash
+yarn start --help
+```
 
 ## API
 
