@@ -58,7 +58,7 @@ export class Tasks {
         this.db = env.db
     }
 
-    // Contract tasks
+    // Contract transactions potentially involving database writes
 
     async providerRegister (serviceOrigin: string, fee: number, payee: Payee, address: string): Promise<AnyJson> {
         return await this.contractApi.contractCall('providerRegister', [serviceOrigin, fee, payee, address])
@@ -111,6 +111,8 @@ export class Tasks {
     async providerDisapprove (captchaSolutionCommitmentId): Promise<AnyJson> {
         return await this.contractApi.contractCall('providerDisapprove', [captchaSolutionCommitmentId])
     }
+
+    // Contract queries
 
     async getRandomProvider (): Promise<Provider> {
         return await this.contractApi.contractCall('getRandomActiveProvider', []) as unknown as Provider
