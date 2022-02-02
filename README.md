@@ -144,18 +144,23 @@ yarn start provider_register --fee=10 --serviceOrigin=https://localhost:8282 --p
 
 | Param | Description |
 | --------------- | --------------- |
-| Fee | The amount the Provider charges or pays per captcha approval / disapproval |
+| fee | The amount the Provider charges or pays per captcha approval / disapproval |
 | serviceOrigin | The location of the Provider's service |
-| Payee | Who is paid on successful captcha completion (`Provider` or `Dapp`) |
-| Address | Address of the Provider |
+| payee | Who is paid on successful captcha completion (`Provider` or `Dapp`) |
+| address | Address of the Provider |
 
-### Update a provider
+### Update a provider and optionally stake
 
 ```bash
-yarn start provider_update --fee=10 --serviceOrigin=https://localhost:8282 --payee=Provider --address ADDRESS
+yarn start provider_update --fee=10 --serviceOrigin=https://localhost:8282 --payee=Provider --address ADDRESS --value STAKE_VALUE
 ```
 
-Params are the same as `provider_register`
+Params are the same as `provider_register` with the addition of `value`
+
+| Param | Description |
+| --------------- | --------------- |
+| value | The amount of funds to stake in the contract |
+
 
 ### Add a dataset for a Provider
 
@@ -165,7 +170,7 @@ yarn start provider_add_data_set --file /usr/src/data/captchas.json
 
 | Param | Description |
 | --------------- | --------------- |
-| File | JSON file containing captchas |
+| file | JSON file containing captchas |
 
 File format can be viewed [here](https://github.com/prosopo-io/provider/blob/master/tests/mocks/data/captchas.json).
 
@@ -177,7 +182,7 @@ yarn start provider_deregister --address ADDRESS
 
 | Param | Description |
 | --------------- | --------------- |
-| Address | Address of the Provider |
+| address | Address of the Provider |
 
 ### Unstake funds
 
@@ -187,7 +192,7 @@ yarn start provider_unstake --value VALUE
 
 | Param | Description |
 | --------------- | --------------- |
-| Value | The amount of funds to unstake from the contract |
+| value | The amount of funds to unstake from the contract |
 
 ### List Provider accounts in contract
 
