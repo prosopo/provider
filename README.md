@@ -29,6 +29,8 @@ cargo run --release -- --dev --tmp -lerror,runtime::contracts=debug
 
 ## Deploy contract node
 
+> NOTE: The easiest way to deploy the Prosopo contract and run the tests is via the [integration repository](https://github.com/prosopo-io/integration/). The following instructions explain how to setup the repositories manually.
+
 Go to the [protocol](https://github.com/prosopo-io/protocol) repository and run the `deploy` script after you have set the deployer in an `env` file
 
 Generate a mnemonic and address:
