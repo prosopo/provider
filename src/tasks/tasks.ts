@@ -38,7 +38,8 @@ import {
     Dapp,
     Database, DatasetRecord,
     GovernanceStatus, Payee,
-    Provider
+    Provider,
+    RandomProvider
 } from '../types'
 import { ProsopoContractApi } from '../contract/interface'
 import { ERRORS } from '../errors'
@@ -112,8 +113,8 @@ export class Tasks {
         return await this.contractApi.contractCall('providerDisapprove', [captchaSolutionCommitmentId])
     }
 
-    async getRandomProvider (): Promise<Provider> {
-        return await this.contractApi.contractCall('getRandomActiveProvider', []) as unknown as Provider
+    async getRandomProvider (userAccount: string, at?: string | Uint8Array): Promise<RandomProvider> {
+        return await this.contractApi.contractCall('getRandomActiveProvider', [userAccount], undefined, at) as unknown as RandomProvider
     }
 
     async getProviderDetails (accountId: string): Promise<Provider> {
