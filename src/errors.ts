@@ -28,9 +28,18 @@ export const ERRORS = {
     CONFIG: {
         UNKNOWN_ENVIRONMENT: {
             message: 'Unknown environment requested'
+        },
+        INVALID_CAPTCHA_NUMBER: {
+            message: 'Please configure captchas configurations correctly'
+        },
+        CONFIGURATIONS_LOAD_FAILED: {
+            message: 'Prosopo configurations load failed'
         }
     },
     DATABASE: {
+        CONNECT_ERROR: {
+            message: 'Failed to connect'
+        },
         DATABASE_IMPORT_FAILED: {
             message: 'Failed to import database engine'
         },
@@ -54,6 +63,9 @@ export const ERRORS = {
         },
         PENDING_RECORD_NOT_FOUND: {
             message: 'No pending record found'
+        },
+        INVALID_HASH: {
+            message: 'Invalid hash'
         }
     },
     API: {
@@ -150,4 +162,18 @@ export class BadRequest extends GeneralError {
 }
 
 export class NotFound extends GeneralError {
+}
+
+export const handleErrors = (err, req, res, next) => {
+    if (err instanceof GeneralError) {
+        return res.status(err.getCode()).json({
+            status: 'error',
+            message: err.message
+        })
+    }
+
+    return res.status(500).json({
+        status: 'error',
+        message: err.message
+    })
 }

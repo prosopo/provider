@@ -28,7 +28,7 @@ import {
     parseCaptchaSolutions
 } from '../captcha'
 import {
-    Captcha, CaptchaData,
+    Captcha, CaptchaConfig, CaptchaData,
     CaptchaSolution,
     CaptchaSolutionCommitment,
     CaptchaSolutionResponse,
@@ -39,7 +39,8 @@ import {
     Database, DatasetRecord,
     GovernanceStatus, Payee,
     Provider,
-    RandomProvider
+    RandomProvider,
+    ProsopoEnvironment
 } from '../types'
 import { ProsopoContractApi } from '../contract/interface'
 import { ERRORS } from '../errors'
@@ -54,12 +55,15 @@ export class Tasks {
 
     db: Database
 
-    constructor (env) {
+    captchaConfig: CaptchaConfig
+
+    constructor (env: ProsopoEnvironment) {
         this.contractApi = new ProsopoContractApi(env)
-        this.db = env.db
+        this.db = env.db as Database
+        this.captchaConfig = env.config.captchas
     }
 
-    // Contract tasks
+    // Contract transactions potentially involving database writes
 
     async providerRegister (serviceOrigin: string, fee: number, payee: Payee, address: string): Promise<AnyJson> {
         return await this.contractApi.contractCall('providerRegister', [serviceOrigin, fee, payee, address])
@@ -93,11 +97,11 @@ export class Tasks {
         return await this.contractApi.contractCall('dappRegister', [dappServiceOrigin, dappContractAddress, dappOwner])
     }
 
-    async dappFund (contractAccount: string, value: number) {
+    async dappFund (contractAccount: string, value: number): Promise<AnyJson> {
         return await this.contractApi.contractCall('dappFund', [contractAccount], value)
     }
 
-    async dappCancel (contractAccount: string) {
+    async dappCancel (contractAccount: string): Promise<AnyJson> {
         return await this.contractApi.contractCall('dappCancel', [contractAccount])
     }
 
@@ -105,11 +109,11 @@ export class Tasks {
         return await this.contractApi.contractCall('dappUserCommit', [contractAccount, captchaDatasetId, userMerkleTreeRoot, providerAddress])
     }
 
-    async providerApprove (captchaSolutionCommitmentId) {
+    async providerApprove (captchaSolutionCommitmentId): Promise<AnyJson> {
         return await this.contractApi.contractCall('providerApprove', [captchaSolutionCommitmentId])
     }
 
-    async providerDisapprove (captchaSolutionCommitmentId) {
+    async providerDisapprove (captchaSolutionCommitmentId): Promise<AnyJson> {
         return await this.contractApi.contractCall('providerDisapprove', [captchaSolutionCommitmentId])
     }
 
@@ -149,7 +153,7 @@ export class Tasks {
      * @param {boolean}  solved    `true` when captcha is solved
      * @param {number}   size       the number of records to be returned
      */
-    async getCaptchaWithProof (datasetId: Hash | string | Uint8Array, solved: boolean, size: number): Promise<CaptchaWithProof[]> {
+    async getCaptchaWithProof (datasetId: Hash | string, solved: boolean, size: number): Promise<CaptchaWithProof[]> {
         const captchaDocs = await this.db.getRandomCaptcha(solved, datasetId, size)
         if (captchaDocs) {
             const captchas: CaptchaWithProof[] = []
@@ -273,9 +277,20 @@ export class Tasks {
         if (!dataset) {
             throw (new Error(ERRORS.DATABASE.DATASET_GET_FAILED.message))
         }
-        const solved = await this.getCaptchaWithProof(datasetId, true, 1)
-        const unsolved = await this.getCaptchaWithProof(datasetId, false, 1)
-        const captchas: CaptchaWithProof[] = shuffleArray([solved[0], unsolved[0]])
+
+        const unsolvedCount: number = Math.abs(Math.trunc(this.captchaConfig.unsolved.count))
+        const solvedCount: number = Math.abs(Math.trunc(this.captchaConfig.solved.count))
+
+        if (!solvedCount) {
+            throw (new Error(ERRORS.CONFIG.INVALID_CAPTCHA_NUMBER.message))
+        }
+
+        const solved = await this.getCaptchaWithProof(datasetId, true, solvedCount)
+        let unsolved:CaptchaWithProof[] = []
+        if (unsolvedCount) {
+            unsolved = await this.getCaptchaWithProof(datasetId, false, unsolvedCount)
+        }
+        const captchas: CaptchaWithProof[] = shuffleArray([...solved, ...unsolved])
         const salt = randomAsHex()
 
         const requestHash = computePendingRequestHash(captchas.map((c) => c.captcha.captchaId), userAccount, salt)
