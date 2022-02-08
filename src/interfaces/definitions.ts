@@ -1,0 +1,1 @@
+export {default as prosopo} from "./prosopo/definitions";
