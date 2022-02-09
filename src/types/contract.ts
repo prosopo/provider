@@ -21,6 +21,7 @@ import { Environment } from '../env'
 import { AbiMessage } from '@polkadot/api-contract/types'
 import { TypeDef } from '@polkadot/types-create/types'
 import { AnyJson } from '@polkadot/types/types/codec'
+import { z } from 'zod'
 
 export enum GovernanceStatus {
     Active = 'Active',
@@ -28,11 +29,9 @@ export enum GovernanceStatus {
     Deactivated = 'Deactivated'
 }
 
-export enum Payee {
-    Provider,
-    Dapp,
-    None
-}
+export const PayeeSchema = z.enum(['Provider', 'Dapp', 'None'])
+export const Payee = PayeeSchema.Values
+export type Payee = z.infer<typeof PayeeSchema>;
 
 export interface Provider {
     status: GovernanceStatus,
@@ -86,7 +85,7 @@ export interface ContractTxResponse {
 export interface ContractApiInterface {
     env: Environment
 
-    contractCall<T>(contractFunction: string, args: T[], value?: number, atBlock?: string | Uint8Array): Promise<AnyJson>
+    contractCall<T>(contractFunction: string, args: T[], value?: number | string, atBlock?: string | Uint8Array): Promise<AnyJson>
 
     contractTx<T> (signedContract: Contract, contractMethodName: string, encodedArgs: T[], value: number | undefined): Promise<AnyJson>
 
