@@ -19,7 +19,6 @@ import BN from 'bn.js'
 import { approveOrDisapproveCommitment, sendFunds, setupDapp, setupDappUser, setupProvider } from '../tests/mocks/setup'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { TestAccount, TestDapp, TestProvider } from '../tests/mocks/accounts'
-import { Registry } from 'redspot/types'
 import { Payee } from '../src/types/contract/contract'
 
 require('dotenv').config()
@@ -28,7 +27,7 @@ const ENVVARS = ['PROVIDER_MNEMONIC', 'PROVIDER_ADDRESS', 'DAPP_CONTRACT_ADDRESS
 
 // Some default accounts that are setup in the contract for development purposes
 
-export const GET_PROVIDER = (registry: Registry): TestProvider => ({
+export const PROVIDER: TestProvider = {
     serviceOrigin: 'http://localhost:8282',
     fee: 10,
     payee: Payee.Provider,
@@ -37,7 +36,7 @@ export const GET_PROVIDER = (registry: Registry): TestProvider => ({
     mnemonic: process.env.PROVIDER_MNEMONIC || '',
     address: process.env.PROVIDER_ADDRESS || '',
     captchaDatasetId: ''
-})
+}
 
 export const DAPP: TestDapp = {
     serviceOrigin: 'http://localhost:9393',
@@ -69,8 +68,6 @@ async function run () {
 }
 
 function processArgs (env) {
-    console.log(env.network.registry)
-    const PROVIDER = GET_PROVIDER(env.network.registry as Registry)
     return yargs
         .usage('Usage: $0 [global options] <command> [options]')
         .command('provider', 'Setup a Provider', (yargs) => {

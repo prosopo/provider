@@ -30,7 +30,7 @@ export interface TestProvider extends TestAccount {
     captchaDatasetId: string,
 }
 
-export const GET_PROVIDER = (registry: Registry): TestProvider => ({
+export const PROVIDER: TestProvider = {
     serviceOrigin: 'http://localhost:8282',
     fee: 10,
     payee: Payee.Provider,
@@ -39,7 +39,7 @@ export const GET_PROVIDER = (registry: Registry): TestProvider => ({
     captchaDatasetId: '',
     mnemonic: '',
     address: ''
-})
+}
 
 export interface TestDapp {
     serviceOrigin: string,

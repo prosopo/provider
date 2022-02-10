@@ -18,11 +18,11 @@ import { Tasks } from '../../src/tasks/tasks'
 import { MockEnvironment } from '../mocks/mockenv'
 import { CaptchaMerkleTree } from '../../src/merkle'
 import {
-    GET_PROVIDER,
     DAPP_USER,
     DAPP,
     TestProvider,
-    TestDapp
+    TestDapp,
+    PROVIDER
 } from '../mocks/accounts'
 import { ERRORS } from '../../src/errors'
 import { SOLVED_CAPTCHAS, DATASET } from '../mocks/mockdb'
@@ -54,8 +54,6 @@ describe('CONTRACT TASKS', () => {
         try {
             // Register the dapp
             await mockEnv.isReady()
-
-            const PROVIDER = GET_PROVIDER(mockEnv.network.registry)
 
             // Register a NEW provider otherwise commitments already exist in contract when Dapp User tries to use
             const [providerMnemonic, providerAddress] = mockEnv.createAccountAndAddToKeyring()
@@ -174,7 +172,6 @@ describe('CONTRACT TASKS', () => {
             'Provider',
             '10000000000000000000'
         )
-        const PROVIDER = GET_PROVIDER(mockEnv.network.registry)
         const inactiveProvider = { ...PROVIDER } as TestProvider
         inactiveProvider.mnemonic = providerMnemonic
         inactiveProvider.address = providerAddress
@@ -685,7 +682,6 @@ describe('CONTRACT TASKS', () => {
                         'Provider',
                         '10000000000000000000'
                     )
-                    const PROVIDER = GET_PROVIDER(mockEnv.network.registry)
                     const provider = { ...PROVIDER } as TestProvider
                     provider.mnemonic = providerMnemonic
                     provider.address = providerAddress
@@ -739,7 +735,6 @@ describe('CONTRACT TASKS', () => {
             'Provider',
             '10000000000000000000'
         )
-        const PROVIDER = GET_PROVIDER(mockEnv.network.registry)
         const provider = { ...PROVIDER } as TestProvider
         provider.mnemonic = providerMnemonic
         provider.address = providerAddress
