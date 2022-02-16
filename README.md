@@ -92,26 +92,7 @@ It's easiest to use a development mnemonic as they already have funds. So choose
 
 You can now register a provider either via the API or on the command line.
 
-### Option 1. Register using the API
-
-Start the server in dev mode with the API enabled
-`yarn dev --api`
-
-Try using the API. Create a `POST` to register a `Provider`:
-
-Paste this into a [Postman](https://www.postman.com/downloads/) request or use curl on the command line.
-```bash
-curl --location --request POST '127.0.0.1:3000/v1/prosopo/provider_update/' \
---header 'Content-Type: application/json' \
---data-raw '{
-"fee": 1,
-"serviceOrigin": "http://localhost:8282",
-"payee": "Provider",
-"address": "YOUR PROVIDER ADDRESS"
-}'
-```
-
-### Option 2. Register using the Command Line
+### Register using the Command Line
 
 Try registering a provider on the command line.
 
@@ -137,7 +118,7 @@ Verify that your provider was registered by calling the `providers` endpoint or 
 ### Curl 
 ```
 curl --location --request GET '127.0.0.1:3000/v1/prosopo/providers/'
-["YOUR PROVIDER ADDRESS"]
+{"accounts":["YOUR PROVIDER ADDRESS"]}
 ```
 
 ### Polkadot Apps
