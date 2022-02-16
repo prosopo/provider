@@ -87,7 +87,7 @@ This will make your contract artefacts available to the provider project.
 It's easiest to use a development mnemonic as they already have funds. So choose one of //Alice, //Bob, //Ferdie, etc. and then set it using
 
 ```bash
-    export PROVIDER_MNEMONIC=\\Ferdie
+    export PROVIDER_MNEMONIC=//Ferdie
 ```
 
 You can now register a provider either via the API or on the command line.
