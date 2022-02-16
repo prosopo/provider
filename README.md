@@ -35,7 +35,7 @@ Once your substrate node is running, go to the [protocol](https://github.com/pro
 yarn deploy
 ```
 
-## Provider
+## Running the Provider Node
 
 The following instructions apply to the `provider` repo.
 
