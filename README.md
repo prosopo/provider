@@ -18,65 +18,79 @@ A reasonable folder structure would be something like the following:
 - provider
 ```
 
-## Install packages
+### Setup contract node
 
-```bash
-yarn
-```
-## Setup contract node
+These instructions will depend on the substrate node you choose. The following command is for https://github.com/paritytech/substrate
+
 ```bash
 cd substrate &&
 cargo run --release -- --dev --tmp -lerror,runtime::contracts=debug
 ```
 
-## Deploy contract node
+### Deploy the contract
 
-Go to the [protocol](https://github.com/prosopo-io/protocol) repository and run the `deploy` script after you have set the deployer in an `env` file
-
-Generate a mnemonic and address:
-
-`yarn mnemonic`
-
-*NOTE - you can use the development mnemonics instead of generating a new mnemonic*
-- `bottom drive obey lake curtain smoke basket hold race lonely fit walk//Alice`
-- `bottom drive obey lake curtain smoke basket hold race lonely fit walk//Bob`
-- `bottom drive obey lake curtain smoke basket hold race lonely fit walk//Charlie`
-- `bottom drive obey lake curtain smoke basket hold race lonely fit walk//Dave`
-- `bottom drive obey lake curtain smoke basket hold race lonely fit walk//Ferdie`
-- `bottom drive obey lake curtain smoke basket hold race lonely fit walk//Eve`
-
-Put the deployer mnemonic in the `env` file.
+Once your substrate node is running, go to the [protocol](https://github.com/prosopo-io/protocol) repository and run the `deploy` script. The contract will be deployed by the `Alice` test account. Make sure to note the contract address.
 
 ```bash
-DEPLOYER_MNEMONIC=... <-------here
-PROVIDER_MNEMONIC=...
-PROVIDER_ADDRESS=...
-CONTRACT_ADDRESS=...
+yarn deploy
 ```
 
-Deploy the contract.
+## Provider
 
-`yarn deploy`
+The following instructions apply to the `provider` repo.
 
-Copy the contract address to your `env` file.
+### Install packages
 
 ```bash
-DEPLOYER_MNEMONIC=some very long set of words that equate to a mnemonic
-PROVIDER_MNEMONIC=...
-PROVIDER_ADDRESS=...
-CONTRACT_ADDRESS=... <-------here
+yarn
 ```
 
-## Symlink your Protcol artifacts
+### Populate the contract address and the deployer address
 
-Inside your `provider` folder run the following command.
+Put the contract address, and the deployer address in the `prosopo.config.ts` file in the root of the `provider` repo, either directly or as environment variables.
+
+#### Env variables
+```javascript
+            contract: {
+                address: process.env.CONTRACT_ADDRESS,
+                deployer: {
+                    address: process.env.DEPLOYER_ADDRESS
+                }
+            }
+```
+
+#### Directly in the config
+```javascript
+            contract: {
+                address: 'the contract address',
+                deployer: {
+                    address: '//Alice'
+                }
+            }
+```
+
+### Symlink your Protcol artifacts
+
+Assuming the `protocol` folder is next to the `provider` folder, inside your `provider` folder run the following command. Otherwise, adjust the command as necessary.
 ```bash
 ln -s ../protocol/artifacts artifacts
 ```
 
+This will make your contract artefacts available to the provider project.
+
 ## Run the Provider server
 
-Populate the `env` file with `PROVIDER_MNEMONIC` and `PROVIDER_ADDRESS`. You can the register a provider either via the API or on the command line.
+### Set a provider mnemonic in redspot.config.ts
+
+> Please note your `PROVIDER_MNEMONIC` environment variable must be set. You can check this with `echo $PROVIDER_MNEMONIC`
+
+It's easiest to use a development mnemonic as they already have funds. So choose one of //Alice, //Bob, //Ferdie, etc. and then set it using
+
+```bash
+    export PROVIDER_MNEMONIC=\\Ferdie
+```
+
+You can now register a provider either via the API or on the command line.
 
 ### Option 1. Register using the API
 
@@ -136,7 +150,7 @@ Using [Polkadot apps](https://polkadot.js.org/apps/?rpc=ws%3A%2F%2F127.0.0.1%3A9
 
 ## Command Line Interface
 
-The `PROVIDER_MNEMONIC` env variable must be set for any commands that interact with the Prosopo contract.
+> Please note your `PROVIDER_MNEMONIC` environment variable must be set. You can check this with `echo $PROVIDER_MNEMONIC`
 
 ### Register a provider
 
