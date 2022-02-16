@@ -246,6 +246,7 @@ The API contains functions that will be required for the frontend captcha interf
 ## Tests
 
 > Please note your `PROVIDER_MNEMONIC` environment variable must be set for the tests to run. You can check this with `echo $PROVIDER_MNEMONIC`
+> Please note that running the tests causes many redspot warnings like  `WARN  Unable to find handler for subscription=state_storage::QaxXtKvT2LYdhf3D`. These can be ignored.
 
 The tests are located in the [tests folder](https://github.com/prosopo-io/provider/tree/master/tests) and the structure mimics that of the main `src`. You can run the tests using the following command:
 
