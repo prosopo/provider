@@ -20,6 +20,7 @@ import { CaptchaMerkleTree } from '../../src/merkle'
 import { computeCaptchaSolutionHash, convertCaptchaToCaptchaSolution } from '../../src/captcha'
 import { Hash } from '@polkadot/types/interfaces'
 import { TestAccount, TestDapp, TestProvider } from './accounts'
+import { MockEnvironment } from './mockenv'
 
 export async function displayBalance (env, address, who) {
     const balance = await env.network.api.query.system.account(address)
@@ -46,7 +47,7 @@ export async function sendFunds (env, address, who, amount): Promise<void> {
     }
 }
 
-export async function setupProvider (env, provider: TestProvider): Promise<Hash> {
+export async function setupProvider (env: MockEnvironment, provider: TestProvider): Promise<Hash> {
     await env.changeSigner(provider.mnemonic)
     const tasks = new Tasks(env)
     console.log('   - providerRegister')
