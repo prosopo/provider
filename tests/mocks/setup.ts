@@ -20,7 +20,9 @@ import { CaptchaMerkleTree } from '../../src/merkle'
 import { computeCaptchaSolutionHash, convertCaptchaToCaptchaSolution } from '../../src/captcha'
 import { Hash } from '@polkadot/types/interfaces'
 import { TestAccount, TestDapp, TestProvider } from './accounts'
+import { getEventsFromMethodName } from '../../src/contract/helpers'
 import { MockEnvironment } from './mockenv'
+import { AnyJson } from '@polkadot/types/types/codec'
 
 export async function displayBalance (env, address, who) {
     const balance = await env.network.api.query.system.account(address)
@@ -47,7 +49,7 @@ export async function sendFunds (env, address, who, amount): Promise<void> {
     }
 }
 
-export async function setupProvider (env: MockEnvironment, provider: TestProvider): Promise<Hash> {
+export async function setupProvider (env, provider: TestProvider): Promise<AnyJson> {
     await env.changeSigner(provider.mnemonic)
     const tasks = new Tasks(env)
     console.log('   - providerRegister')
@@ -56,8 +58,12 @@ export async function setupProvider (env: MockEnvironment, provider: TestProvide
     await tasks.providerUpdate(hexHash(provider.serviceOrigin), provider.fee, provider.payee, provider.address, provider.stake)
     console.log('   - providerAddDataset')
     const datasetResult = await tasks.providerAddDataset(provider.datasetFile)
-    // @ts-ignore
-    return datasetResult[0].args[1] as Hash
+    if(datasetResult) {
+        const events = getEventsFromMethodName(datasetResult, 'providerAddDataset')
+        return events![0]["args"][1]
+    } else {
+        throw new Error(`Dataset result undefined: ${datasetResult}`)
+    }
 }
 
 export async function setupDapp (env, dapp: TestDapp): Promise<void> {
@@ -124,7 +130,7 @@ export async function approveOrDisapproveCommitment (env, solutionHash: string, 
     await env.changeSigner(provider.mnemonic)
     if (approve) {
         console.log('   -   Approving commitment')
-        await tasks.providerApprove(solutionHash)
+        await tasks.providerApprove(solutionHash, 100)
     } else {
         console.log('   -   Disapproving commitment')
         await tasks.providerDisapprove(solutionHash)

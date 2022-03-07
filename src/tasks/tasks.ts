@@ -15,9 +15,10 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { hexToU8a } from '@polkadot/util'
 import { AnyJson } from '@polkadot/types/types/codec'
+import type { RuntimeDispatchInfo } from '@polkadot/types/interfaces/payment'
 import { Hash } from '@polkadot/types/interfaces'
 import { randomAsHex } from '@polkadot/util-crypto'
-import { loadJSONFile, shuffleArray } from '../util'
+import { loadJSONFile, shuffleArray, writeJSONFile } from '../util'
 import {
     addHashesToDataset,
     compareCaptchaSolutions,
@@ -40,7 +41,11 @@ import {
     GovernanceStatus, Payee,
     Provider,
     RandomProvider,
-    ProsopoEnvironment
+    ProsopoEnvironment,
+    CaptchaSolutionToUpdate,
+    CaptchaStates,
+    CaptchaWithoutId,
+    CaptchaSolutionConfig
 } from '../types'
 import { ProsopoContractApi } from '../contract/interface'
 import { ERRORS } from '../errors'
@@ -57,10 +62,13 @@ export class Tasks {
 
     captchaConfig: CaptchaConfig
 
+    captchaSolutionConfig: CaptchaSolutionConfig
+
     constructor (env: ProsopoEnvironment) {
         this.contractApi = new ProsopoContractApi(env)
         this.db = env.db as Database
         this.captchaConfig = env.config.captchas
+        this.captchaSolutionConfig = env.config.captchaSolutions
     }
 
     // Contract transactions potentially involving database writes
@@ -83,6 +91,7 @@ export class Tasks {
 
     async providerAddDataset (file: string): Promise<AnyJson> {
         const dataset = parseCaptchaDataset(loadJSONFile(file) as JSON)
+        const datasetWithoutIds = { ...dataset }
         const tree = new CaptchaMerkleTree()
         const captchaHashes = await Promise.all(dataset.captchas.map(computeCaptchaHash))
         tree.build(captchaHashes)
@@ -90,6 +99,9 @@ export class Tasks {
         datasetHashes.datasetId = tree.root?.hash
         datasetHashes.tree = tree.layers
         await this.db?.storeDataset(datasetHashes)
+        writeJSONFile(file, { ...datasetWithoutIds, datasetId: datasetHashes.datasetId }).catch((err) => {
+            console.error(`${ERRORS.GENERAL.CREATE_JSON_FILE_FAILED.message}:${err}`)
+        })
         return await this.contractApi.contractCall('providerAddDataset', [hexToU8a(tree.root?.hash)])
     }
 
@@ -109,8 +121,8 @@ export class Tasks {
         return await this.contractApi.contractCall('dappUserCommit', [contractAccount, captchaDatasetId, userMerkleTreeRoot, providerAddress])
     }
 
-    async providerApprove (captchaSolutionCommitmentId): Promise<AnyJson> {
-        return await this.contractApi.contractCall('providerApprove', [captchaSolutionCommitmentId])
+    async providerApprove (captchaSolutionCommitmentId, refundFee): Promise<AnyJson> {
+        return await this.contractApi.contractCall('providerApprove', [captchaSolutionCommitmentId, refundFee])
     }
 
     async providerDisapprove (captchaSolutionCommitmentId): Promise<AnyJson> {
@@ -179,11 +191,19 @@ export class Tasks {
      * @param {JSON} captchas
      * @return {Promise<CaptchaSolutionResponse[]>} result containing the contract event
      */
-    async dappUserSolution (userAccount: string, dappAccount: string, requestHash: string, captchas: JSON): Promise<CaptchaSolutionResponse[]> {
+    async dappUserSolution (userAccount: string, dappAccount: string, requestHash: string, captchas: JSON, blockHash: string, txHash: string): Promise<CaptchaSolutionResponse[]> {
         if (!await this.dappIsActive(dappAccount)) {
             throw new Error(ERRORS.CONTRACT.DAPP_NOT_ACTIVE.message)
         }
+        if (blockHash === '' || txHash === '') {
+            throw new Error(ERRORS.API.BAD_REQUEST.message)
+        }
 
+        const paymentInfo = await this.getPaymentInfo(userAccount, blockHash, txHash)
+        if (!paymentInfo) {
+            throw new Error(ERRORS.API.PAYMENT_INFO_NOT_FOUND.message)
+        }
+        const partialFee = paymentInfo?.partialFee
         let response: CaptchaSolutionResponse[] = []
         const { storedCaptchas, receivedCaptchas, captchaIds } = await this.validateCaptchasLength(captchas)
         const { tree, commitment, commitmentId } = await this.buildTreeAndGetCommitment(receivedCaptchas)
@@ -193,7 +213,7 @@ export class Tasks {
         if (pendingRequest && commitment.status === CaptchaStatus.Pending) {
             await this.db.storeDappUserSolution(receivedCaptchas, commitmentId)
             if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
-                await this.providerApprove(commitmentId)
+                await this.providerApprove(commitmentId, partialFee)
                 response = captchaIds.map((id) => ({ captchaId: id, proof: tree.proof(id) }))
             } else {
                 await this.providerDisapprove(commitmentId)
@@ -300,11 +320,89 @@ export class Tasks {
 
     /**
      * Apply new captcha solutions to captcha dataset and recalculate merkle tree
-     * @param {string} datasetId
      */
-    async calculateCaptchaSolutions (datasetId: string) {
-        // TODO run this on a predefined schedule as updating the dataset requires committing an updated
-        // captcha_dataset_id to the blockchain
+    async calculateCaptchaSolutions () {
+        try {
+            const captchaFilePath = this.captchaSolutionConfig.captchaFilePath
+            const currentDataset = parseCaptchaDataset(loadJSONFile(captchaFilePath) as JSON)
+            if (!currentDataset.datasetId) {
+                return 0
+            }
+            const unsolvedCaptchas = await this.db.getAllCaptchasByDatasetId(currentDataset.datasetId as string, CaptchaStates.Unsolved)
+
+            const totalNumberOfSolutions = this.captchaSolutionConfig.requiredNumberOfSolutions
+            const winningPercentage = this.captchaSolutionConfig.solutionWinningPercentage
+            const winningNumberOfSolutions = Math.round(totalNumberOfSolutions * (winningPercentage / 100))
+            let solutionsToUpdate: CaptchaSolutionToUpdate[] = []
+
+            if (unsolvedCaptchas && unsolvedCaptchas.length > 0) {
+                for (let unsolvedCaptchaCount = 0; unsolvedCaptchaCount < unsolvedCaptchas.length; unsolvedCaptchaCount++) {
+                    const solutions = await this.db.getAllSolutions(unsolvedCaptchas[unsolvedCaptchaCount].captchaId)
+                    if (solutions && solutions.length >= totalNumberOfSolutions) {
+                        const solutionsWithCount = {}
+                        for (let solutionsIndex = 0; solutionsIndex < solutions.length; solutionsIndex++) {
+                            const previousCount = solutionsWithCount[JSON.stringify(solutions[solutionsIndex].solution)]?.solutionCount || 0
+                            solutionsWithCount[JSON.stringify(solutions[solutionsIndex].solution)] = {
+                                captchaId: solutions[solutionsIndex].captchaId,
+                                solution: solutions[solutionsIndex].solution,
+                                salt: solutions[solutionsIndex].salt,
+                                solutionCount: previousCount + 1
+                            }
+                        }
+                        solutionsToUpdate = solutionsToUpdate.concat(
+                            Object.values(solutionsWithCount)
+                                .filter(({ solutionCount }: any) => solutionCount >= winningNumberOfSolutions)
+                                .map(({ solutionCount, ...otherAttributes }: any) => otherAttributes))
+                    }
+                }
+                if (solutionsToUpdate.length > 0) {
+                    await this.updateCaptchasJSON(captchaFilePath, solutionsToUpdate)
+                    await this.providerAddDataset(captchaFilePath)
+                    return solutionsToUpdate.length
+                } else {
+                    return 0
+                }
+            } else {
+                return 0
+            }
+        } catch (error) {
+            throw new Error(`${ERRORS.GENERAL.CALCULATE_CAPTCHA_SOLUTION.message}:${error}`)
+        }
+    }
+
+    /**
+     * Update captchas json file with new solutions
+     */
+    async updateCaptchasJSON (filePath: string, solutionsToUpdate: CaptchaSolutionToUpdate[]) {
+        try {
+            const solutionObj = {}
+
+            for (let i = 0; i < solutionsToUpdate.length; i++) {
+                solutionObj[solutionsToUpdate[i].salt] = solutionsToUpdate[i]
+            }
+
+            const prevDataset = parseCaptchaDataset(loadJSONFile(filePath) as JSON)
+
+            const jsonData = {
+                ...prevDataset,
+                captchas: prevDataset.captchas.map((item) => {
+                    const captcha: CaptchaWithoutId = {
+                        salt: item.salt,
+                        target: item.target,
+                        items: item.items
+                    }
+                    if (item.salt in solutionObj && 'solution' in solutionObj[item.salt]) {
+                        captcha.solution = solutionObj[item.salt].solution
+                    }
+                    return captcha
+                })
+            }
+
+            await writeJSONFile(filePath, jsonData)
+            return true
+        } catch (error) {
+            throw new Error(`${ERRORS.GENERAL.GENERATE_CPATCHAS_JSON_FAILED.message}:${error}`)
+        }
     }
 
     /**
@@ -325,5 +423,30 @@ export class Tasks {
         if (datasetId.localeCompare(randomProviderAndBlockNo.provider.captcha_dataset_id)) {
             throw new Error(ERRORS.DATASET.INVALID_DATASET_ID.message)
         }
+    }
+
+    /**
+     * Get payment info for a transaction
+     * @param {string} userAccount
+     * @param {string} blockHash
+     * @param {string} txHash
+     * @returns {Promise<RuntimeDispatchInfo|null>}
+     */
+    private async getPaymentInfo (userAccount: string, blockHash: string, txHash: string): Promise<RuntimeDispatchInfo|null> {
+        // Validate block and transaction, checking that the signer matches the userAccount
+        const signedBlock = await this.contractApi.env.network.api.rpc.chain.getBlock(blockHash)
+        if (!signedBlock) {
+            return null
+        }
+        const extrinsic = signedBlock.block.extrinsics.find(extrinsic => extrinsic.hash.toString() === txHash)
+        if (!extrinsic || extrinsic.signer.toString() !== userAccount) {
+            return null
+        }
+        // Retrieve tx fee for extrinsic
+        const paymentInfo = await this.contractApi.env.network.api.rpc.payment.queryInfo(extrinsic.toHex(), blockHash)
+        if (!paymentInfo) {
+            return null
+        }
+        return paymentInfo
     }
 }
