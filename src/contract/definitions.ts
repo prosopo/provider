@@ -98,5 +98,9 @@ export const contractDefinitions = {
         provider: 'AccountId',
         merkle_tree_root: 'Hash',
         captcha_type: 'u16'
+    },
+    ProsopoLastCorrectCaptcha: {
+        before_ms: 'u32',
+        dapp_id: 'AccountId',
     }
 }

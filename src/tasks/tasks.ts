@@ -45,7 +45,8 @@ import {
     CaptchaSolutionToUpdate,
     CaptchaStates,
     CaptchaWithoutId,
-    CaptchaSolutionConfig
+    CaptchaSolutionConfig,
+    LastCorrectCaptcha
 } from '../types'
 import { ProsopoContractApi } from '../contract/interface'
 import { ERRORS } from '../errors'
@@ -155,6 +156,10 @@ export class Tasks {
 
     async getDappAccounts (): Promise<AnyJson> {
         return await this.contractApi.getStorage('dapp_accounts', buildDecodeVector('DappAccounts'))
+    }
+
+    async getDappOperatorLastCorrectCaptcha (accountId: string): Promise<LastCorrectCaptcha> {
+        return await this.contractApi.contractCall('dappOperatorLastCorrectCaptcha', [accountId]) as unknown as LastCorrectCaptcha
     }
 
     // Other tasks

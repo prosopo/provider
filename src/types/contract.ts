@@ -82,6 +82,11 @@ export interface ContractTxResponse {
     name: string
 }
 
+export interface LastCorrectCaptcha {
+    before_ms: string,
+    dapp_id: AccountId,
+}
+
 export interface ContractApiInterface {
     env: Environment
 
