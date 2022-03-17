@@ -158,7 +158,7 @@ export async function computeCaptchaHashes (captchas: CaptchaWithoutId[]): Promi
  * @return {CaptchaSolution}
  */
 export function convertCaptchaToCaptchaSolution (captcha: Captcha): CaptchaSolution {
-    return { captchaId: captcha.captchaId, salt: captcha.salt, solution: captcha.solution }
+    return { captchaId: captcha.captchaId, salt: captcha.salt, solution: captcha.solution, completed_at: Date.now() }
 }
 
 /**

@@ -91,7 +91,8 @@ export const contractDefinitions = {
         captcha_dataset_id: 'Hash',
         status: 'CaptchaStatus',
         contract: 'AccountId',
-        provider: 'AccountId'
+        provider: 'AccountId',
+        completed_at: 'u64'
     },
     CaptchaData: {
         provider: 'AccountId',

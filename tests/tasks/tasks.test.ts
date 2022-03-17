@@ -93,7 +93,8 @@ describe('CONTRACT TASKS', () => {
             (captcha) => ({
                 captchaId: captcha.captchaId,
                 solution: captcha.solution,
-                salt: 'usersalt'
+                salt: 'usersalt',
+                completed_at: Date.now()
             })
         )
         const salt = randomAsHex()

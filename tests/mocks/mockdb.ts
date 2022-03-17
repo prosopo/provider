@@ -31,6 +31,7 @@ const DEFAULT_ENDPOINT = 'test'
 export const SOLVED_CAPTCHAS = [
     {
         // "_id" : "0x73f15c36e0600922aed7d0ea1f4580c188c087e5d8be5470a4ca8382c792e6b9",
+        timeLimit: 30,
         captchaId: '0x73f15c36e0600922aed7d0ea1f4580c188c087e5d8be5470a4ca8382c792e6b9',
         datasetId: '0x4e5b2ae257650340b493e94b4b4a4ac0e0dded8b1ecdad8252fe92bbd5b26605',
         index: 0,
