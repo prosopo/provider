@@ -264,6 +264,52 @@ describe('CONTRACT TASKS', () => {
         }
     })
 
+    it.only('Timestamps check', async () => {
+        // This is also used as an example on how time limit can be checked
+        const captchaProvidedAt = Date.now() - 31000;
+        const { captchaSolutions } = await createMockCaptchaSolutionsAndRequestHash();
+        const completedInTime = captchaSolutions.map(solution => (solution.completed_at! - captchaProvidedAt) / 1000 <= (SOLVED_CAPTCHAS.find(({ captchaId }) => captchaId === solution.captchaId)?.timeLimit || 0));
+
+        expect(completedInTime).to.include(false)
+
+        // create dapp user and approve
+        await mockEnv.changeSigner(dappUser.mnemonic)
+        const dappUserTasks = new Tasks(mockEnv)
+        const salt = randomAsHex()
+
+        const tree = new CaptchaMerkleTree()
+
+        const captchaSolutionsSalted = captchaSolutions.map((captcha) => ({
+            ...captcha,
+            salt: salt
+        }))
+        const captchasHashed = captchaSolutionsSalted.map((captcha) =>
+            computeCaptchaSolutionHash(captcha)
+        )
+        tree.build(captchasHashed)
+        const commitmentId = tree.root!.hash
+        await dappUserTasks.dappUserCommit(
+            DAPP.contractAccount,
+            datasetId as string,
+            commitmentId,
+            provider.address as string
+        )
+
+        await mockEnv.changeSigner(provider.mnemonic as string)
+        const providerTasks = new Tasks(mockEnv)
+        try {
+            const result = await providerTasks.providerApprove(commitmentId, 0)
+            const events = getEventsFromMethodName(result, 'providerApprove')
+            expect(events![0].args[0]).to.equal(commitmentId)
+        } catch (error) {
+            throw new Error(`Error in provider approve: ${error}`)
+        }
+
+        // check how much time passed after successful completion
+        const lastCorrectCaptcha = await providerTasks.getDappOperatorLastCorrectCaptcha(dappUser.address);
+        expect(Number.parseInt(lastCorrectCaptcha.before_ms)).to.be.above(0);
+    })
+
     it('Provider details', async () => {
         await mockEnv.changeSigner(provider.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
