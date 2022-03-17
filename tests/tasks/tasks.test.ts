@@ -264,7 +264,7 @@ describe('CONTRACT TASKS', () => {
         }
     })
 
-    it.only('Timestamps check', async () => {
+    it('Timestamps check', async () => {
         // This is also used as an example on how time limit can be checked
         const captchaProvidedAt = Date.now() - 31000;
         const { captchaSolutions } = await createMockCaptchaSolutionsAndRequestHash();
