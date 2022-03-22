@@ -71,9 +71,6 @@ export interface CaptchaSolutionCommitment {
     completed_at: u64,
 }
 
-/**
- * `completed_at` is requred! set to optional because of `zod`
- */
 export type CaptchaSolution = {
     captchaId: string
     salt: string,
@@ -145,7 +142,7 @@ export const CaptchaSolution = z.object({
     captchaId: z.string(),
     solution: z.number().array(),
     salt: z.string(),
-    completed_at: z.any().transform((arg) => arg.toNumber()),
+    completed_at: z.any().transform((arg) => arg?.toNumber()),
 })
 
 export const CaptchaSolutionSchema = z.array(CaptchaSolution)
