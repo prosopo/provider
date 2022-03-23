@@ -170,7 +170,7 @@ export class Tasks {
     }
 
     async getDappOperatorLastCorrectCaptcha (accountId: string): Promise<LastCorrectCaptcha> {
-        return await this.contractApi.contractCall('dappOperatorLastCorrectCaptcha', [accountId]) as unknown as LastCorrectCaptcha
+        return await this.contractApi.contractQuery('dappOperatorLastCorrectCaptcha', [accountId]) as unknown as LastCorrectCaptcha
     }
 
     // Other tasks

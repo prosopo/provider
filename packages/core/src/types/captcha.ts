@@ -75,7 +75,6 @@ export type CaptchaSolution = {
     captchaId: string
     salt: string,
     solution: number[]
-    completed_at?: number,
 }
 
 export type CaptchaConfig = {
@@ -142,7 +141,6 @@ export const CaptchaSolution = z.object({
     captchaId: z.string(),
     solution: z.number().array(),
     salt: z.string(),
-    completed_at: z.any().transform((arg) => arg?.toNumber()),
 })
 
 export const CaptchaSolutionSchema = z.array(CaptchaSolution)
