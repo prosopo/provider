@@ -40,5 +40,8 @@
     "dev-provider-stake": "yarn build && yarn start provider_stake --value 10 --address=$(printenv | grep '^PROVIDER_ADDRESS' | cut -d '=' -f2)",
     "dev-provider-dataset": "yarn build && yarn start provider_add_data_set --file /usr/src/data/captchas.json"
   },
-  "packageManager": "yarn@3.2.0"
+  "packageManager": "yarn@3.2.0",
+  "dependencies": {
+    "cors": "^2.8.5"
+  }
 }
