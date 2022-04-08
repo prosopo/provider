@@ -17,7 +17,7 @@
 
 import '@redspot/patract';
 import '@redspot/chai';
-// import '@redspot/watcher';
+import '@redspot/watcher';
 import '@redspot/explorer';
 import '@redspot/decimals';
 import {Registry} from 'redspot/types/provider'
