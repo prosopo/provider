@@ -45,6 +45,7 @@ describe('CONTRACT TASKS', () => {
   let dapp;
   const dappUser = DAPP_USER;
   const mockEnv = new MockEnvironment();
+  const registeredProviders: string[] = [];
 
   before(async () => {
     try {
@@ -132,10 +133,13 @@ describe('CONTRACT TASKS', () => {
         providerAddress
       );
 
+      registeredProviders.push(providerAddress);
+
       expect(result.txHash!).to.not.be.empty;
     } catch (error) {
       throw new Error(`Error in registering provider: ${error}`);
     }
+
   });
 
   it('Provider update', async () => {
@@ -204,6 +208,9 @@ describe('CONTRACT TASKS', () => {
       inactiveProvider.payee,
       inactiveProvider.address
     );
+
+    registeredProviders.push(providerAddress);
+
     const captchaFilePath = path.resolve(__dirname, '../mocks/data/captchas.json');
     const datasetPromise = providerTasks.providerAddDataset(captchaFilePath);
 
@@ -814,8 +821,7 @@ describe('CONTRACT TASKS', () => {
 
           provider.mnemonic = providerMnemonic;
           provider.address = providerAddress;
-          provider.serviceOrigin =
-                        provider.serviceOrigin + randomAsHex().slice(0, 8);
+          provider.serviceOrigin = provider.serviceOrigin + randomAsHex().slice(0, 8);
           await mockEnv.contractInterface!.changeSigner(providerMnemonic);
           await tasks.providerRegister(
             provider.serviceOrigin,
@@ -823,6 +829,9 @@ describe('CONTRACT TASKS', () => {
             provider.payee,
             provider.address
           );
+
+          registeredProviders.push(providerAddress);
+
           await tasks.providerUpdate(
             provider.serviceOrigin,
             provider.fee,
@@ -867,8 +876,7 @@ describe('CONTRACT TASKS', () => {
     const provider = { ...PROVIDER } as TestProvider;
 
     provider.mnemonic = providerMnemonic;
-    provider.serviceOrigin =
-            provider.serviceOrigin + randomAsHex().slice(0, 8);
+    provider.serviceOrigin = provider.serviceOrigin + randomAsHex().slice(0, 8);
     await mockEnv.contractInterface!.changeSigner(providerMnemonic);
     await tasks.providerRegister(
       provider.serviceOrigin,
@@ -876,6 +884,9 @@ describe('CONTRACT TASKS', () => {
       provider.payee,
       providerAddress
     );
+
+    registeredProviders.push(providerAddress);
+
     await tasks.providerUpdate(
       provider.serviceOrigin,
       provider.fee,
@@ -948,4 +959,20 @@ describe('CONTRACT TASKS', () => {
       throw new Error(`Error in calculate captcha solution: ${error}`);
     }
   });
+
+  after(async () => {
+    const providerTasks = new Tasks(mockEnv);
+
+    for (const providerAddress of registeredProviders) {
+      try {
+        const result: TransactionResponse = await providerTasks.providerDeregister(
+          providerAddress
+        );
+        const events = getEventsFromMethodName(result, 'providerDeregister');
+      } catch (error) {
+        throw new Error(`Error in cleaning provider: ${error}`);
+      }
+    }
+  });
+
 });
