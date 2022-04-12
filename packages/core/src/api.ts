@@ -38,10 +38,10 @@ export function prosopoMiddleware (env: Environment): Router {
   const contractApi = new ProsopoContractApi(env.deployerAddress, env.contractAddress, env.mnemonic, env.contractName);
 
   /**
-     * Returns a random provider using the account that is currently the env signer
-     * @return {Provider} - A Provider
+     * Get the contract address
+     * @return {contractAddress: string} - The contract address from environment
      */
-  router.get('/v1/prosopo/contract_address', async (req, res, next) => {
+   router.get('/v1/prosopo/contract_address', async (req, res, next) => {
     const { contractAddress } = env;
     return res.json({ contractAddress });
   });
