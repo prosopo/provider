@@ -36,7 +36,6 @@ export function getEventNameFromMethodName(contractMethodName: string): string {
  */
 export function getEventsFromMethodName(response: TransactionResponse, contractMethodName: string): AnyJson | DecodedEvent[] {
     const eventName = getEventNameFromMethodName(contractMethodName)
-    console.log(JSON.stringify(response));
     if (response && response['events'] ) {
         return response && response['events'] && response["events"].filter((x) => x.name === eventName)
     } else {
