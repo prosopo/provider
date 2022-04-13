@@ -19,7 +19,7 @@ import {ERRORS} from '../../src/errors'
 import {network, patract} from 'redspot'
 import {ContractAbi, ContractApiInterface, ProsopoContractApi} from '@prosopo/contract'
 import {loadJSONFile} from "../../src/util";
-import consola from 'consola'
+import consola, {LogLevel} from 'consola'
 
 export class MockEnvironment implements ProsopoEnvironment {
     config: ProsopoConfig
@@ -86,6 +86,7 @@ export class MockEnvironment implements ProsopoEnvironment {
             this.contractAddress = this.config.networks[this.defaultEnvironment].contract.address
             this.contractName = this.config.networks[this.defaultEnvironment].contract.name
             this.abi = MockEnvironment.getContractAbi(this.config.contract.abi)
+            this.logger = consola.create({level: this.config.logLevel as unknown as LogLevel});
         } else {
             throw new Error(`${ERRORS.CONFIG.UNKNOWN_ENVIRONMENT.message}:${this.config.defaultEnvironment}`)
         }
