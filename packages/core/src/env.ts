@@ -20,6 +20,8 @@ import {Database, ProsopoConfig, ProsopoConfigSchema, ProsopoEnvironment} from '
 import {ContractAbi, ContractApiInterface, ProsopoContractApi} from '@prosopo/contract'
 import {loadJSONFile} from "./util";
 import {Network, createNetwork} from "@prosopo/contract";
+import consola from "consola";
+import {LogLevel} from 'consola'
 
 require('dotenv').config()
 
@@ -47,6 +49,8 @@ export class Environment implements ProsopoEnvironment {
 
     network!: Network
 
+    logger: typeof consola
+
     constructor(mnemonic) {
         this.config = Environment.getConfig()
         this.mnemonic = mnemonic
@@ -56,7 +60,7 @@ export class Environment implements ProsopoEnvironment {
             this.contractAddress = this.config.networks![this.defaultEnvironment].contract.address
             this.contractName = this.config.networks![this.defaultEnvironment].contract.name
             this.abi = Environment.getContractAbi(this.config.contract.abi) as ContractAbi
-
+            this.logger = consola.create({level: this.config.logLevel as unknown as LogLevel});
         } else {
             throw new Error(`${ERRORS.CONFIG.UNKNOWN_ENVIRONMENT}:${this.config.defaultEnvironment}`)
         }

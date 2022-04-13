@@ -23,6 +23,7 @@ import {
     PopulatedTransaction,
     TransactionParams, TransactionResponse
 } from "../types";
+import {logger} from '../logger'
 
 async function populateTransaction(
     contract: Contract,
@@ -155,12 +156,12 @@ export function buildCall(
             ...callParams,
             origin
         };
-        console.log('');
+        logger.debug('');
 
         if (!isEstimateGas) {
-            console.log(chalk.magenta(`===== Read ${messageName} =====`));
+            logger.debug(chalk.magenta(`===== Read ${messageName} =====`));
         } else {
-            console.log(chalk.magenta(`===== Estimate gas ${messageName} =====`));
+            logger.debug(chalk.magenta(`===== Estimate gas ${messageName} =====`));
         }
 
         Object.keys(params).forEach((key) => {
@@ -169,12 +170,12 @@ export function buildCall(
                 if (isU8a(!(callParams) || callParams[key])) {
                     if (callParams) {
                         print = u8aToHex(callParams[key]);
-                        console.log(`${key}: `, print);
+                        logger.debug(`${key}: `, print);
                     }
                 } else {
                     if (callParams) {
                         print = callParams[key].toString();
-                        console.log(`${key}: `, print);
+                        logger.debug(`${key}: `, print);
                     }
                 }
             } catch {
@@ -227,12 +228,12 @@ export function buildCall(
 
         if (result.isOk) {
             if (!isEstimateGas) {
-                console.log(`Output: ${(outcome.output as any)?.toString()}`);
+                logger.debug(`Output: ${(outcome.output as any)?.toString()}`);
             } else {
-                console.log(`Output: ${outcome.gasConsumed.toString()}`);
+                logger.debug(`Output: ${outcome.gasConsumed.toString()}`);
             }
         } else {
-            console.log(
+            logger.error(
                 `output: ${(outcome.output as any)?.toString()}; debugMessage: ${outcome.debugMessage.toString()}`
             );
         }
@@ -265,20 +266,20 @@ function buildSend(
         );
         const messageName = stringCamelCase(fragment.identifier);
 
-        console.log('');
-        console.log(chalk.magenta(`===== Exec ${messageName} =====`));
+        logger.debug('');
+        logger.debug(chalk.magenta(`===== Exec ${messageName} =====`));
         Object.keys(callParams).forEach((key) => {
             try {
                 let print: string;
                 if (isU8a(!(callParams) || callParams[key])) {
                     if (callParams) {
                         print = u8aToHex(callParams[key]);
-                        console.log(`${key}: `, print)
+                        logger.debug(`${key}: `, print)
                     }
                 } else {
                     if (callParams) {
                         print = callParams[key].toString();
-                        console.log(`${key}: `, print)
+                        logger.debug(`${key}: `, print)
                     }
                 }
             } catch {
@@ -305,9 +306,9 @@ function buildSend(
         }
 
         if (response && !response.error) {
-            console.log(`Execute successfully`);
+            logger.debug(`Execute successfully`);
         } else {
-            console.log(`Execute failed. ${chalk.red(response.error?.message || '')}`);
+            logger.debug(`Execute failed. ${chalk.red(response.error?.message || '')}`);
         }
 
         return response;

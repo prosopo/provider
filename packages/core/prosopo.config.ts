@@ -16,6 +16,7 @@
 import {ProsopoConfig} from './src/types';
 
 export default {
+    logLevel: 'info',
     defaultEnvironment: 'development',
     contract: {
         abi: '/usr/src/packages/provider/packages/core/artifacts/prosopo.json'

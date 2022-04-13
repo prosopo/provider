@@ -59,9 +59,8 @@ export const DAPP_USER: TestAccount = {
  */
 async function run () {
   const env = new Environment('//Alice');
-  console.log('env init')
   await env.isReady();
-  console.log('env ready');
+  env.logger.info('env ready');
   ENVVARS.map((envvar) => {
     if (!envvar) {
       throw new Error(`Environment Variable ${envvar} is not set`);
@@ -75,6 +74,7 @@ async function run () {
 
 async function processArgs (env) {
   // https://github.com/yargs/yargs/issues/1069#issuecomment-709693413
+  const logger = env.logger;
   return new Promise((resolve, reject) => {
     try {
       yargs
@@ -87,11 +87,11 @@ async function processArgs (env) {
               return yargs;
             },
             handler: async () => {
-              console.log("trying to add keyring pair")
+              logger.info("trying to add keyring pair")
               const providerKeyringPair: KeyringPair = await env.contractInterface.network.keyring.addFromMnemonic(PROVIDER.mnemonic);
-              console.log('sending funds...');
+              logger.info('sending funds...');
               await sendFunds(env, providerKeyringPair.address, 'Provider', new BN('100000000000000000'));
-              console.log('setting up provider...');
+              logger.info('setting up provider...');
               PROVIDER.address = providerKeyringPair.address;
 
               return await setupProvider(env, PROVIDER);
@@ -126,7 +126,6 @@ async function processArgs (env) {
   });
 }
 
-run()
-// run().catch((err) => {
-//   throw new Error(`Setup dev error: ${err}`);
-// });
+run().catch((err) => {
+  throw new Error(`Setup dev error: ${err}`);
+});
