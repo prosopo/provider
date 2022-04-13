@@ -107,4 +107,9 @@ secrets.json
 # Ingnore build target
 contracts/target/
 
+<<<<<<< HEAD
 artifacts
+=======
+artifacts
+
+>>>>>>> a3a5cd359c68007ff6596b1e586850c94c82456c

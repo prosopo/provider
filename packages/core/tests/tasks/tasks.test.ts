@@ -59,7 +59,11 @@ describe('CONTRACT TASKS', () => {
       mockEnv,
       providerAddress,
       'Provider',
+<<<<<<< HEAD
       '20000000000000000000'
+=======
+      '10000000000000000000'
+>>>>>>> a3a5cd359c68007ff6596b1e586850c94c82456c
     );
     provider = { ...PROVIDER } as TestProvider;
     provider.mnemonic = providerMnemonic;
@@ -70,7 +74,11 @@ describe('CONTRACT TASKS', () => {
     const [dappMnemonic, dappAddress] = mockEnv.contractInterface!.createAccountAndAddToKeyring() || [];
 
     dapp = { ...DAPP } as TestDapp;
+<<<<<<< HEAD
     await sendFunds(mockEnv, dappAddress, 'Dapp', '2000000000000000000');
+=======
+    await sendFunds(mockEnv, dappAddress, 'Dapp', '1000000000000000000');
+>>>>>>> a3a5cd359c68007ff6596b1e586850c94c82456c
     dapp.mnemonic = dappMnemonic;
     dapp.address = dappAddress;
     await setupDapp(mockEnv, dapp as TestDapp);
@@ -144,8 +152,8 @@ describe('CONTRACT TASKS', () => {
     );
 
     registeredProviders.push([providerMnemonic, providerAddress]);
-
-    expect(result.txHash).to.not.be.empty;
+  
+    expect(result.txHash!).to.not.be.empty;
   });
 
   it('Provider update', async () => {
