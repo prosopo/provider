@@ -298,7 +298,7 @@ function buildSend(
             throw error.error || error;
         });
 
-        if ("events" in response) {
+        if ("result" in response && "events" in response.result) {
             response.events = decodeEvents(
                 callParams.dest,
                 response.result,
@@ -306,10 +306,9 @@ function buildSend(
             );
         }
 
-        if (response && response.error) {
+        if (response && !response.error) {
             console.log(`Execute successfully`);
         } else {
-
             console.log(`Execute failed. ${chalk.red(response.error?.message || '')}`);
         }
 
