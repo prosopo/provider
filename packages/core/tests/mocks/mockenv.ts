@@ -19,6 +19,7 @@ import {ERRORS} from '../../src/errors'
 import {network, patract} from 'redspot'
 import {ContractAbi, ContractApiInterface, ProsopoContractApi} from '@prosopo/contract'
 import {loadJSONFile} from "../../src/util";
+import consola from 'consola'
 
 export class MockEnvironment implements ProsopoEnvironment {
     config: ProsopoConfig
@@ -32,6 +33,7 @@ export class MockEnvironment implements ProsopoEnvironment {
     contractInterface: ContractApiInterface | undefined
     abi: ContractAbi
     network!: Network
+    logger: typeof consola
 
     constructor() {
         this.config = {
