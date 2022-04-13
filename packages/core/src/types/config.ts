@@ -15,14 +15,6 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 
 import {z} from 'zod'
-import LogLevel from 'consola'
-
-export function getAllStringUnionValues<TStringUnion extends string>(valuesAsKeys: { [K in TStringUnion]: 0 }): TStringUnion[] {
-    const result = Object.getOwnPropertyNames(valuesAsKeys);
-    return result as any;
-}
-
-const logType = Object.keys(LogLevel)
 
 export const ProsopoConfigSchema = z.object({
     logLevel: z.string(),
