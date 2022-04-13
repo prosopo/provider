@@ -285,8 +285,6 @@ function buildSend(
             }
         });
 
-        console.log(`Signer is ${contract.signer} in buildSend`)
-
         const response = await buildTx(
             contract.api.registry,
             extrinsic,

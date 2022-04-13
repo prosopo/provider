@@ -18,7 +18,7 @@ import {createNetwork, Network} from '@prosopo/contract'
 import {ERRORS} from '../../src/errors'
 import {network, patract} from 'redspot'
 import {ContractAbi, ContractApiInterface, ProsopoContractApi} from '@prosopo/contract'
-import {loadJSONFile} from "@prosopo/provider-core/util";
+import {loadJSONFile} from "../../src/util";
 
 export class MockEnvironment implements ProsopoEnvironment {
     config: ProsopoConfig

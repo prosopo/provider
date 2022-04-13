@@ -20,7 +20,6 @@ import {unwrap, encodeStringArgs, handleContractCallOutcomeErrors} from './helpe
 import {AnyJson} from '@polkadot/types/types/codec'
 import {contractDefinitions} from "./definitions";
 import {Signer} from '../signer/signer'
-import {Signer as AccountSigner} from "../signer/account-signer";
 import {Contract} from "./contract";
 import {Registry} from "@polkadot/types/types";
 import {TransactionResponse} from "../types";

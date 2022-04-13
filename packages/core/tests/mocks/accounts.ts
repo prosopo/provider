@@ -13,8 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-
-import {Payee} from "@prosopo/contract";
+import { Payee } from '@prosopo/contract'
 
 export interface TestAccount {
     mnemonic: string
@@ -34,7 +33,7 @@ export const PROVIDER: TestProvider = {
     serviceOrigin: 'http://localhost:8282',
     fee: 10,
     payee: Payee.Provider,
-    stake: '1000000000 UNIT',
+    stake: '1000000000000000',
     datasetFile: '/usr/src/data/captchas.json',
     captchaDatasetId: '',
     mnemonic: '',
