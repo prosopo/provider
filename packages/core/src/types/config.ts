@@ -14,9 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 
-import { z } from 'zod'
+import {z} from 'zod'
 
 export const ProsopoConfigSchema = z.object({
+    contract: z.object({abi: z.string()}),
     defaultEnvironment: z.string(),
     networks: z.object({
         development: z.object({
@@ -27,7 +28,8 @@ export const ProsopoConfigSchema = z.object({
                     address: z.string()
                 }),
                 name: z.string()
-            })
+            }),
+            accounts: z.array(z.string())
         })
     }),
     captchas: z.object({

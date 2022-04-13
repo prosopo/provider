@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { Payee } from '@prosopo/contract';
 import BN from 'bn.js';
 import yargs from 'yargs';
 
@@ -23,6 +22,7 @@ import { randomAsHex } from '@polkadot/util-crypto';
 import { Environment } from '../src/env';
 import { TestAccount, TestDapp, TestProvider } from '../tests/mocks/accounts';
 import { approveOrDisapproveCommitment, sendFunds, setupDapp, setupDappUser, setupProvider } from '../tests/mocks/setup';
+import {Payee} from "@prosopo/contract";
 
 require('dotenv').config();
 
@@ -34,7 +34,7 @@ export const PROVIDER: TestProvider = {
   serviceOrigin: 'http://localhost:8282' + randomAsHex().slice(0, 8), // make it "unique"
   fee: 10,
   payee: Payee.Provider,
-  stake: 10,
+  stake: '1000000000 UNIT',
   datasetFile: '/usr/src/data/captchas.json',
   mnemonic: process.env.PROVIDER_MNEMONIC || '',
   address: process.env.PROVIDER_ADDRESS || '',
@@ -59,7 +59,7 @@ export const DAPP_USER: TestAccount = {
  */
 async function run () {
   const env = new Environment('//Alice');
-
+  console.log('env init')
   await env.isReady();
   console.log('env ready');
   ENVVARS.map((envvar) => {
@@ -87,9 +87,8 @@ async function processArgs (env) {
               return yargs;
             },
             handler: async () => {
+              console.log("trying to add keyring pair")
               const providerKeyringPair: KeyringPair = await env.contractInterface.network.keyring.addFromMnemonic(PROVIDER.mnemonic);
-
-              await env.contractInterface.network.api.isReady;
               console.log('sending funds...');
               await sendFunds(env, providerKeyringPair.address, 'Provider', new BN('100000000000000000'));
               console.log('setting up provider...');
@@ -127,6 +126,7 @@ async function processArgs (env) {
   });
 }
 
-run().catch((err) => {
-  throw new Error(`Setup dev error: ${err}`);
-});
+run()
+// run().catch((err) => {
+//   throw new Error(`Setup dev error: ${err}`);
+// });

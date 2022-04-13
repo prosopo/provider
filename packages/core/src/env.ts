@@ -17,7 +17,9 @@ import findUp from 'find-up'
 import {ZodError} from 'zod'
 import {ERRORS} from './errors'
 import {Database, ProsopoConfig, ProsopoConfigSchema, ProsopoEnvironment} from './types'
-import {ContractApiInterface, ProsopoContractApi} from '@prosopo/contract'
+import {ContractAbi, ContractApiInterface, ProsopoContractApi} from '@prosopo/contract'
+import {loadJSONFile} from "./util";
+import {Network, createNetwork} from "@prosopo/contract";
 
 require('dotenv').config()
 
@@ -35,13 +37,15 @@ export class Environment implements ProsopoEnvironment {
 
     deployerAddress: string
 
-    patract: any;
-
     contractAddress: string
 
     defaultEnvironment: string
 
     contractName: string
+
+    abi: ContractAbi
+
+    network!: Network
 
     constructor(mnemonic) {
         this.config = Environment.getConfig()
@@ -51,13 +55,16 @@ export class Environment implements ProsopoEnvironment {
             this.deployerAddress = this.config.networks![this.defaultEnvironment].contract.deployer.address
             this.contractAddress = this.config.networks![this.defaultEnvironment].contract.address
             this.contractName = this.config.networks![this.defaultEnvironment].contract.name
-            this.contractInterface = new ProsopoContractApi(this.deployerAddress, this.contractAddress, this.mnemonic, this.contractName)
+            this.abi = Environment.getContractAbi(this.config.contract.abi) as ContractAbi
+
         } else {
             throw new Error(`${ERRORS.CONFIG.UNKNOWN_ENVIRONMENT}:${this.config.defaultEnvironment}`)
         }
     }
 
     async isReady() {
+        this.network = await createNetwork(this.mnemonic, this.config.networks![this.defaultEnvironment])
+        this.contractInterface = new ProsopoContractApi(this.deployerAddress, this.contractAddress, this.mnemonic, this.contractName, this.abi, this.network)
         await this.importDatabase()
         await this.db?.connect()
         await this.contractInterface?.isReady()
@@ -109,5 +116,9 @@ export class Environment implements ProsopoEnvironment {
     private static importCsjOrEsModule(filePath: string): any {
         const imported = require(filePath)
         return imported.default !== undefined ? imported.default : imported
+    }
+
+    private static getContractAbi(path): ContractAbi {
+        return loadJSONFile(path) as ContractAbi
     }
 }

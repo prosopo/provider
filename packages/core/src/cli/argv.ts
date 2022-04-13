@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 
-import { Payee, PayeeSchema } from '@prosopo/contract';
 import parser from 'cron-parser';
 import pm2 from 'pm2';
 import { cwd } from 'process';
@@ -26,6 +25,7 @@ import { ERRORS } from '../errors';
 import { Tasks } from '../tasks/tasks';
 import { ProsopoEnvironment } from '../types';
 import { encodeStringAddress } from '../util';
+import {PayeeSchema, Payee} from "@prosopo/contract";
 
 const validateAddress = (argv) => {
   const address = encodeStringAddress(argv.address as string);

@@ -13,7 +13,8 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { Payee } from '@prosopo/contract'
+
+import {Payee} from "@prosopo/contract";
 
 export interface TestAccount {
     mnemonic: string
@@ -24,7 +25,7 @@ export interface TestProvider extends TestAccount {
     serviceOrigin: string,
     fee: number,
     datasetFile: string,
-    stake: number,
+    stake: number | string,
     payee: Payee
     captchaDatasetId: string,
 }
@@ -33,7 +34,7 @@ export const PROVIDER: TestProvider = {
     serviceOrigin: 'http://localhost:8282',
     fee: 10,
     payee: Payee.Provider,
-    stake: 1000000000000000,
+    stake: '1000000000 UNIT',
     datasetFile: '/usr/src/data/captchas.json',
     captchaDatasetId: '',
     mnemonic: '',
