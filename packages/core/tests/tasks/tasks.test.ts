@@ -42,8 +42,10 @@ describe('CONTRACT TASKS', () => {
   let provider;
   let dapp;
   const dappUser = DAPP_USER;
-  const mockEnv = new MockEnvironment();
   const registeredProviders: [providerMnemonic: string, providerAddress: string][] = [];
+  let providerStakeDefault: bigint;
+
+  const mockEnv = new MockEnvironment();
 
   before(async () => {
     // Register the dapp
@@ -52,13 +54,20 @@ describe('CONTRACT TASKS', () => {
     // Register a NEW provider otherwise commitments already exist in contract when Dapp User tries to use
     const [providerMnemonic, providerAddress] = mockEnv.contractInterface!.createAccountAndAddToKeyring() || [];
 
+    const providerTasks = new Tasks(mockEnv);
+    providerStakeDefault = await providerTasks.getProviderStakeDefault();
+
     await mockEnv.contractInterface!.changeSigner('//Alice');
+
+    const funds = 10000000n * providerStakeDefault;
+    
     await sendFunds(
       mockEnv,
       providerAddress,
       'Provider',
-      '10000000000000000000'
+      funds
     );
+
     provider = { ...PROVIDER } as TestProvider;
     provider.mnemonic = providerMnemonic;
     provider.address = providerAddress;
@@ -68,7 +77,7 @@ describe('CONTRACT TASKS', () => {
     const [dappMnemonic, dappAddress] = mockEnv.contractInterface!.createAccountAndAddToKeyring() || [];
 
     dapp = { ...DAPP } as TestDapp;
-    await sendFunds(mockEnv, dappAddress, 'Dapp', '1000000000000000000');
+    await sendFunds(mockEnv, dappAddress, 'Dapp', funds);
     dapp.mnemonic = dappMnemonic;
     dapp.address = dappAddress;
     await setupDapp(mockEnv, dapp as TestDapp);
@@ -128,7 +137,7 @@ describe('CONTRACT TASKS', () => {
       mockEnv,
       providerAddress,
       'Provider',
-      '10000000000000000000'
+      10000000n * providerStakeDefault,
     );
 
     await mockEnv.contractInterface!.changeSigner(providerMnemonic);
@@ -190,7 +199,7 @@ describe('CONTRACT TASKS', () => {
             mockEnv,
             providerAddress,
             'Provider',
-            '10000000000000000000'
+            10000000n * providerStakeDefault,
         );
         const inactiveProvider = {...PROVIDER} as TestProvider;
 
@@ -781,7 +790,7 @@ describe('CONTRACT TASKS', () => {
                         mockEnv,
                         providerAddress,
                         'Provider',
-                        '10000000000000000000'
+                        10000000n * providerStakeDefault,
                     );
                     const provider = {...PROVIDER} as TestProvider;
 
@@ -796,14 +805,14 @@ describe('CONTRACT TASKS', () => {
                         provider.payee,
                         provider.address);
 
-          registeredProviders.push([providerMnemonic, providerAddress]);
+                    registeredProviders.push([providerMnemonic, providerAddress]);
 
                     await tasks.providerUpdate(
                         provider.serviceOrigin,
                         provider.fee,
                         provider.payee,
                         provider.address,
-                        2000000000000
+                        2n * providerStakeDefault,
                     );
                     const captchaFilePath = path.resolve(
                         __dirname,
@@ -839,34 +848,35 @@ describe('CONTRACT TASKS', () => {
             mockEnv,
             providerAddress,
             'Provider',
-            '10000000000000000000'
+            10000000n * providerStakeDefault,
         );
 
         const provider = {...PROVIDER} as TestProvider;
 
-    provider.mnemonic = providerMnemonic;
-    provider.serviceOrigin = provider.serviceOrigin + randomAsHex().slice(0, 8);
-    await mockEnv.contractInterface!.changeSigner(providerMnemonic);
-    await tasks.providerRegister(
-      provider.serviceOrigin,
-      provider.fee,
-      provider.payee,
-      providerAddress
-    );
+        provider.mnemonic = providerMnemonic;
+        provider.serviceOrigin = provider.serviceOrigin + randomAsHex().slice(0, 8);
+        await mockEnv.contractInterface!.changeSigner(providerMnemonic);
+        await tasks.providerRegister(
+            provider.serviceOrigin,
+            provider.fee,
+            provider.payee,
+            providerAddress
+        );
 
-    registeredProviders.push([providerMnemonic, providerAddress]);
+        registeredProviders.push([providerMnemonic, providerAddress]);
 
-    await tasks.providerUpdate(
-      provider.serviceOrigin,
-      provider.fee,
-      provider.payee,
-      providerAddress,
-      1000000000000
-    );
-    const captchaFilePath = path.resolve(
-      __dirname,
-      '../mocks/data/captchas.json'
-    );
+        await tasks.providerUpdate(
+            provider.serviceOrigin,
+            provider.fee,
+            provider.payee,
+            providerAddress,
+            providerStakeDefault,
+        );
+
+        const captchaFilePath = path.resolve(
+            __dirname,
+            '../mocks/data/captchas.json'
+        );
 
         await tasks.providerAddDataset(captchaFilePath);
 
