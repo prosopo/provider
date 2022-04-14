@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { Payee } from '@prosopo/contract'
+import { BigNumber } from '@prosopo/contract/types';
 
 export interface TestAccount {
     mnemonic: string
@@ -24,7 +25,7 @@ export interface TestProvider extends TestAccount {
     serviceOrigin: string,
     fee: number,
     datasetFile: string,
-    stake: bigint | number,
+    stake: BigNumber,
     payee: Payee
     captchaDatasetId: string,
 }
@@ -45,7 +46,7 @@ export interface TestDapp {
     mnemonic: string,
     contractAccount: string,
     optionalOwner: string,
-    fundAmount: bigint | number,
+    fundAmount: BigNumber,
 }
 
 export const DAPP: TestDapp = {
