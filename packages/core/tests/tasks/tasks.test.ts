@@ -836,7 +836,7 @@ describe('CONTRACT TASKS', () => {
          expect(valid).to.be.true;
     });
 
-    it('Validate provided captcha dataset - fail', async () => {
+    it.only('Validate provided captcha dataset - fail', async () => {
         const tasks = new Tasks(mockEnv);
 
         const [providerMnemonic, providerAddress] =
@@ -865,6 +865,23 @@ describe('CONTRACT TASKS', () => {
 
         registeredProviders.push([providerMnemonic, providerAddress]);
 
+        const captchaFilePath = path.resolve(
+            __dirname,
+            '../mocks/data/captchas.json'
+        );
+
+        await tasks.providerUpdate(
+            provider.serviceOrigin,
+            provider.fee,
+            provider.payee,
+            providerAddress,
+            providerStakeDefault / 2n,
+        );
+
+        const insuficientFundsTransaction = await tasks.providerAddDataset(captchaFilePath).then(() => false).catch(() => true);
+
+        expect(insuficientFundsTransaction).to.be.true;
+
         await tasks.providerUpdate(
             provider.serviceOrigin,
             provider.fee,
@@ -873,18 +890,15 @@ describe('CONTRACT TASKS', () => {
             providerStakeDefault,
         );
 
-        const captchaFilePath = path.resolve(
-            __dirname,
-            '../mocks/data/captchas.json'
-        );
-
         await tasks.providerAddDataset(captchaFilePath);
 
         const res = await tasks.getRandomProvider(dappUser.address);
         const blockNumberParsed = parseBlockNumber(res.block_number);
-        const valid = await tasks.validateProviderWasRandomlyChosen(dappUser.address, '0x1dc833d14a257f21967feddafb3b3876b75b3fc9b0a2d071f29da9bfebc84f5a', blockNumberParsed).then(() => true).catch(() => false);
+        const valid = await tasks.validateProviderWasRandomlyChosen(dappUser.address, '0x1dc833d14a257f21967feddafb3b3876b75b3fc9b0a2d071f29da9bfebc84f5a', blockNumberParsed)
+            .then(() => true)
+            .catch(() => false);
 
-         expect(valid).to.be.false;
+        expect(valid).to.be.false;
     });
 
     it('Provider unstake', async () => {
