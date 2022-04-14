@@ -26,7 +26,7 @@ export interface TestProvider extends TestAccount {
     fee: number,
     datasetFile: string,
     stake: BigNumber,
-    payee: Payee
+    payee: Payee,
     captchaDatasetId: string,
 }
 
@@ -38,7 +38,7 @@ export const PROVIDER: TestProvider = {
     datasetFile: '/usr/src/data/captchas.json',
     captchaDatasetId: '',
     mnemonic: '',
-    address: ''
+    address: '',
 }
 
 export interface TestDapp {
