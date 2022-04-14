@@ -165,13 +165,13 @@ export class Tasks {
         return await this.contractApi.contractQuery('dappOperatorLastCorrectCaptcha', [accountId]) as unknown as LastCorrectCaptcha
     }
 
-    async getProviderAccounts(): Promise<AnyJson> {
-        return await this.contractApi.contractQuery('getAllProviderIds', []);
-    }
-
     async getProviderStakeDefault(): Promise<bigint> {
         const providerStakeDefault = await this.contractApi.contractQuery('getProviderStakeDefault', []) as string;
         return BigInt(providerStakeDefault.replace(/,/g, ''));
+    }
+
+    async getProviderAccounts(): Promise<AnyJson> {
+        return await this.contractApi.contractQuery('getAllProviderIds', []);
     }
 
     async getDappAccounts(): Promise<AnyJson> {
