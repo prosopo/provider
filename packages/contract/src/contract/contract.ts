@@ -57,9 +57,9 @@ async function populateTransaction(
         dest: overrides.dest || contract.address,
         value: overrides.value || 0n,
         gasLimit:
-            BigInt(String(overrides.gasLimit ||
+            overrides.gasLimit ||
             contract.gasLimit ||
-            maximumBlockWeight.muln(2).divn(10))),
+            maximumBlockWeight.muln(2).divn(10),
         inputData: data
     };
 
