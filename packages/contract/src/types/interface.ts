@@ -47,7 +47,7 @@ export interface ContractApiInterface {
 
     beforeCall<T>(contractMethodName: string, args: T[]): Promise<{ encodedArgs: T[]; signedContract: Contract }>
 
-    contractTx<T>(contractMethodName: string, args: T[], value?: BigNumber): Promise<TransactionResponse>
+    contractTx<T>(contractMethodName: string, args: T[], value?: string | BigNumber): Promise<TransactionResponse>
 
     contractQuery<T>(contractMethodName: string, args: T[], atBlock?: string | Uint8Array): Promise<AnyJson>
 
