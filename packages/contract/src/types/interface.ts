@@ -24,7 +24,7 @@ import {Signer} from './signer'
 import {ContractAbi} from './artifacts'
 import {Network} from './network'
 
-export type BigNumber = bigint | number | BN;
+export type BigNumber = BN | bigint | number | string;
 
 export interface ContractApiInterface {
     contract?: Contract
@@ -47,7 +47,7 @@ export interface ContractApiInterface {
 
     beforeCall<T>(contractMethodName: string, args: T[]): Promise<{ encodedArgs: T[]; signedContract: Contract }>
 
-    contractTx<T>(contractMethodName: string, args: T[], value?: string | BigNumber): Promise<TransactionResponse>
+    contractTx<T>(contractMethodName: string, args: T[], value?: BigNumber): Promise<TransactionResponse>
 
     contractQuery<T>(contractMethodName: string, args: T[], atBlock?: string | Uint8Array): Promise<AnyJson>
 
