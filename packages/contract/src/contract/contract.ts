@@ -346,7 +346,7 @@ export class Contract {
     /**
      * Estimated gas
      */
-    public readonly estimateGas: { [name: string]: ContractFunction<BigNumber> };
+    public readonly estimateGas: { [name: string]: ContractFunction<BN> };
 
     public readonly populateTransaction: {
         [name: string]: ContractFunction<PopulatedTransaction>;
