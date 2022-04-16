@@ -56,7 +56,7 @@ async function populateTransaction(
 
     const callParams: CallParams = {
         dest: overrides.dest || contract.address,
-        value: overrides.value || 0n,
+        value: overrides.value || new BN('0'),
         gasLimit:
             overrides.gasLimit ||
             contract.gasLimit ||
