@@ -20,7 +20,7 @@
     "noFallthroughCasesInSwitch": true /* Report errors for fallthrough cases in switch statement. */,
     "importHelpers": true,
     "skipLibCheck": true,
-    
+
     "composite": true,
 
     "types": [
@@ -29,21 +29,6 @@
     "lib": [
       "esnext",
     ],
-
-    "paths": {
-      "@prosopo/contract": [
-        "../contract/src"
-      ],
-      "@prosopo/contract/*": [
-        "../contract/src/*"
-      ],
-      "@prosopo/provider": [
-        "./src"
-      ],
-      "@prosopo/provider/*": [
-        "./src/*"
-      ]
-    },
 
     "rootDirs": [
       "./src",
@@ -62,10 +47,5 @@
     "./redspot.config.ts",
     "./prosopo.config.ts"
   ],
-  "references": [
-    {
-      "path": "../contract",
-      "name": "@prosopo/contract"
-    }
-  ]
+
 }

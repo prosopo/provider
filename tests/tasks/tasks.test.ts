@@ -13,18 +13,28 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import {getEventsFromMethodName, Payee, Provider, TransactionResponse} from '@prosopo/contract';
-import {CaptchaSolution} from '@prosopo/provider/types';
-import path from 'path';
 
+import {
+    CaptchaSolution,
+    CaptchaMerkleTree,
+    loadJSONFile,
+    parseBlockNumber,
+    promiseQueue,
+    ERRORS,
+    Tasks,
+    computeCaptchaSolutionHash,
+    computePendingRequestHash,
+    parseCaptchaDataset
+} from '../../src';
+import {
+    getEventsFromMethodName,
+    Payee,
+    Provider,
+    TransactionResponse
+} from '@prosopo/contract';
+import path from 'path';
 import {AnyJson} from '@polkadot/types/types/codec';
 import {randomAsHex} from '@polkadot/util-crypto';
-
-import {computeCaptchaSolutionHash, computePendingRequestHash, parseCaptchaDataset} from '../../src/captcha';
-import {ERRORS} from '../../src/errors';
-import {CaptchaMerkleTree} from '../../src/merkle';
-import {Tasks} from '../../src/tasks/tasks';
-import {loadJSONFile, parseBlockNumber, promiseQueue} from '../../src/util';
 import {DAPP, DAPP_USER, PROVIDER, TestDapp, TestProvider} from '../mocks/accounts';
 import {DATASET, SOLVED_CAPTCHAS} from '../mocks/mockdb';
 import {MockEnvironment} from '../mocks/mockenv';
