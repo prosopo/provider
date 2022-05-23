@@ -18,7 +18,6 @@
 export * from './captcha'
 // export * from './env'
 // export * from './errors'
-export * from './merkle'
 // export * from './scheduler'
 // export * from './cli'
 // export * from './codec'

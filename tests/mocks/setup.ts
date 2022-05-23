@@ -13,14 +13,12 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import {Tasks} from '../../src/tasks/tasks'
-import {hexHash} from '../../src/util'
-import {blake2AsHex, decodeAddress} from '@polkadot/util-crypto'
-import {CaptchaMerkleTree} from '../../src/merkle'
+import {blake2AsHex, decodeAddress} from '@polkadot/util-crypto';
+import {Hash} from '@polkadot/types/interfaces';
+import {getEventsFromMethodName, buildTx, BigNumber, CaptchaMerkleTree, hexHash} from '@prosopo/contract';
 import {computeCaptchaSolutionHash, convertCaptchaToCaptchaSolution} from '../../src/captcha'
-import {Hash} from '@polkadot/types/interfaces'
-import {TestAccount, TestDapp, TestProvider} from './accounts'
-import {getEventsFromMethodName, buildTx, BigNumber} from '@prosopo/contract';
+import {Tasks} from '../../src/tasks/tasks';
+import {TestAccount, TestDapp, TestProvider} from './accounts';
 
 export async function displayBalance(env, address, who) {
     const logger = env.logger;

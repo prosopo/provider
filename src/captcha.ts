@@ -14,10 +14,12 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import {ERRORS} from './errors';
-import {CaptchaMerkleTree} from './merkle';
+import {CaptchaMerkleTree, hexHash} from '@prosopo/contract';
+// import {encodeAddress} from "@polkadot/util-crypto";
 import {
   AssetsResolver,
-  Captcha, CaptchaImage, CaptchaImageSchema,
+  Captcha,
+  CaptchaImage,
   CaptchaSolution,
   CaptchaSolutionSchema,
   CaptchasSchema,
@@ -26,8 +28,7 @@ import {
   DatasetSchema,
   DatasetWithIds
 } from './types';
-import {hexHash, imageHash} from './util';
-import {encodeAddress} from "@polkadot/util-crypto";
+import {imageHash} from './util';
 
 export function addHashesToDataset(dataset: Dataset, tree: CaptchaMerkleTree): DatasetWithIds {
   try {

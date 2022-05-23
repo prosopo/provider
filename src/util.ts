@@ -14,11 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { WriteStream, createWriteStream } from 'fs'
-import { ERRORS } from './errors'
 import { decodeAddress, encodeAddress } from '@polkadot/keyring';
 import { hexToU8a, isHex } from '@polkadot/util';
-import { blake2AsHex } from '@polkadot/util-crypto';
-const fs = require('fs'); // TODO rm fs NODE dependency.
+import { hexHash } from '@prosopo/contract';
+
+import { ERRORS } from './errors';
+
+const fs = require('fs');
 const node_url = require("url");
 
 
@@ -81,15 +83,16 @@ export function writeJSONFile (filePath: string, jsonData) {
     })
 }
 
-export async function readFile (filePath): Promise<Buffer> {
-    const parsedFilePath = handleFileProtocol(filePath, undefined)
-    return new Promise((resolve, reject) => {
-        fs.readFile(parsedFilePath, (err, data) => {
-            if (err) reject(err)
-            resolve(data as Buffer)
-        })
-    })
-}
+// export async function readFile (filePath): Promise<Buffer> {
+//     const parsedFilePath = handleFileProtocol(filePath, undefined)
+//     return new Promise((resolve, reject) => {
+//         // TODO: remove fs dependency.
+//         fs.readFile(parsedFilePath, (err, data) => {
+//             if (err) reject(err)
+//             resolve(data as Buffer)
+//         })
+//     })
+// }
 
 export function shuffleArray<T> (array: T[]): T[] {
     for (let arrayIndex = array.length - 1; arrayIndex > 0; arrayIndex--) {
@@ -99,14 +102,10 @@ export function shuffleArray<T> (array: T[]): T[] {
     return array
 }
 
-export function hexHash (data: string | Uint8Array): string {
-    return blake2AsHex(data)
-}
-
 export async function imageHash (path: string) {
     // data must remain in the same order so load images synchronously
-    const fileBuffer = await readFile(path)
-    return hexHash(fileBuffer)
+    // const fileBuffer = await readFile(path) TODO
+    return hexHash(path)
 }
 
 type PromiseQueueRes<T> = {
