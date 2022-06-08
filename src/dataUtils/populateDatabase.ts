@@ -48,7 +48,7 @@ async function populateStep(
 
   process.stdout.write(text);
 
-  const dummyArray = new Array(AMOUNT).fill(userCount)
+  const dummyArray = new Array(userCount).fill(userCount)
   const promise = await promiseQueue(
     dummyArray.map(() => () => databasePopulator[key]())
   );
@@ -66,6 +66,7 @@ export async function populateDatabase(userCount: UserCount): Promise<IDatabaseA
 
 
   console.log("Starting database populator...");
+  console.log(userCount)
   const databasePopulator = new DatabasePopulator();
 
   await databasePopulator.isReady();

@@ -13,17 +13,19 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
+// import { findUpSync } from 'find-up'
+import { abiJson, ContractAbi, ContractApiInterface, createNetwork, Network, ProsopoContractApi, AssetsResolver } from '@prosopo/contract';
+import consola, { LogLevel } from "consola";
+import dotenv from 'dotenv';
 import findupSync from "findup-sync";
-import {ZodError} from 'zod'
-import {ERRORS} from './errors'
-import {Database, ProsopoConfig, ProsopoConfigSchema, ProsopoEnvironment, AssetsResolver} from './types'
-import { LocalAssetsResolver } from './assets'
-import {ContractAbi, ContractApiInterface, ProsopoContractApi} from '@prosopo/contract'
-import {Network, createNetwork} from "@prosopo/contract";
-import consola from "consola";
-import {LogLevel} from 'consola'
-import { abiJson } from '@prosopo/contract';
+import { ZodError } from 'zod';
+import { LocalAssetsResolver } from './assets';
+import { ERRORS } from './errors';
+import { Database, ProsopoConfig, ProsopoConfigSchema, ProsopoEnvironment } from './types';
 import {loadEnvFile} from "./util";
+
+
+dotenv.config();
 
 const TS_CONFIG_FILENAME = 'prosopo.config.ts'
 const JS_CONFIG_FILENAME = 'prosopo.config.js'
@@ -52,8 +54,6 @@ export class Environment implements ProsopoEnvironment {
     assetsResolver: AssetsResolver | undefined
 
     constructor(mnemonic) {
-
-        console.log("Getting config...")
         loadEnvFile();
         this.config = Environment.getConfig()
         console.log("Substrate endpoint", this.config.networks.development.endpoint)
@@ -62,7 +62,7 @@ export class Environment implements ProsopoEnvironment {
             this.defaultEnvironment = this.config.defaultEnvironment
             this.contractAddress = this.config.networks![this.defaultEnvironment].contract.address
             this.contractName = this.config.networks![this.defaultEnvironment].contract.name
-            this.logger = consola.create({level: this.config.logLevel as unknown as LogLevel});
+            this.logger = consola.create({ level: this.config.logLevel as unknown as LogLevel });
             // this.abi = Environment.getContractAbi(this.config.contract.abi, this.logger) as ContractAbi
             this.abi = abiJson as ContractAbi;
 
@@ -79,7 +79,7 @@ export class Environment implements ProsopoEnvironment {
 
     async isReady() {
         this.network = await createNetwork(this.mnemonic, this.config.networks![this.defaultEnvironment])
-        this.contractInterface = new ProsopoContractApi( this.contractAddress, this.mnemonic, this.contractName, this.abi, this.network)
+        this.contractInterface = new ProsopoContractApi(this.contractAddress, this.mnemonic, this.contractName, this.abi, this.network)
         await this.importDatabase()
         await this.db?.connect()
         await this.contractInterface?.isReady()
@@ -88,7 +88,7 @@ export class Environment implements ProsopoEnvironment {
     async importDatabase(): Promise<void> {
         try {
             if (this.config.database) {
-                const {ProsopoDatabase} = await import(`./db/${this.config.database![this.defaultEnvironment!].type!}`)
+                const { ProsopoDatabase } = await import(`./db/${this.config.database![this.defaultEnvironment!].type!}`)
                 this.db = new ProsopoDatabase(
                     this.config.database![this.defaultEnvironment].endpoint,
                     this.config.database![this.defaultEnvironment].dbname
@@ -121,7 +121,7 @@ export class Environment implements ProsopoEnvironment {
             return ProsopoConfigSchema.parse(config)
         } catch (error) {
             if (error instanceof ZodError) {
-                const {path, message} = error.issues[0]
+                const { path, message } = error.issues[0]
                 throw new Error(`${path.join('.')} ${message}`)
             }
             throw new Error(ERRORS.CONFIG.CONFIGURATIONS_LOAD_FAILED.message)

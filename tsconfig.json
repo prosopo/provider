@@ -1,19 +1,6 @@
 {
   "extends": "../../tsconfig.build.json",
   "compilerOptions": {
-
-    "target": "esnext",
-    "module": "commonjs",
-
-    "paths": {
-      "@prosopo/provider": [
-        "./src"
-      ],
-      "@prosopo/provider/*": [
-        "./src/*"
-      ]
-    },
-
     "rootDirs": [
       "./",
       "./src",
@@ -21,11 +8,9 @@
       "./scripts"
     ],
     "outDir": "./build",
+    "module": "commonjs",
+    "target": "esnext",
     "types": ["mocha"]
-
-  },
-  "ts-node": {
-    "esm": true
   },
   "include": [
     "./*.ts",
@@ -37,5 +22,8 @@
     {
       "path": "../contract"
     }
-  ]
+  ],
+  "ts-node": {
+    "esm": true
+  }
 }

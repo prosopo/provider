@@ -13,32 +13,28 @@
 //
 // You should have received a copy of the GNU General Public License
 
+import {loadJSONFile, parseBlockNumber} from "../../src/util";
+import chai from "chai";
+import chaiAsPromised from "chai-as-promised";
+import path from "path";
+import {randomAsHex} from "@polkadot/util-crypto";
 import {
+  hexHash,
   ERRORS,
   getEventsFromMethodName,
   TransactionResponse,
-} from "@prosopo/contract";
-import {hexHash, loadJSONFile, parseBlockNumber} from "@prosopo/provider";
-import chai from "chai";
-import chaiAsPromised from "chai-as-promised";
-import {config} from "dotenv";
-import path from "path";
-
-import {randomAsHex} from "@polkadot/util-crypto";
-
-import {
   computeCaptchaSolutionHash,
   computePendingRequestHash,
   parseCaptchaDataset,
-} from "../../src/captcha";
+  CaptchaMerkleTree,
+  CaptchaSolution
+} from "@prosopo/contract";
 import {
   Account,
   accountAddress,
   accountMnemonic, IDatabaseAccounts,
 } from "../../src/dataUtils/DatabaseAccounts";
-import {CaptchaMerkleTree} from "../../src/merkle";
 import {Tasks} from "../../src/tasks";
-import {CaptchaSolution} from "../../src/types/captcha";
 import {DAPP, PROVIDER} from "../mocks/accounts";
 import {DATASET, SOLVED_CAPTCHAS} from "../mocks/mockdb";
 import {sendFunds} from "../mocks/setup";
@@ -52,16 +48,16 @@ const expect = chai.expect;
 
 const TEST_USER_COUNT: UserCount = {
   provider: {
-    count: 25,
-    staked: 12,
-    stakedWithDataset: 10
+    count: 20,
+    staked: 20,
+    stakedWithDataset: 20
   },
   dapp: {
-    count: 3,
-    staked: 2,
+    count: 10,
+    staked: 10,
   },
   dappUser: {
-    count: 2
+    count: 5
   }
 }
 
@@ -384,15 +380,17 @@ describe("CONTRACT TASKS", () => {
   });
 
   it("Provider details", async () => {
-    const account = databaseAccounts.providersWithStakeAndDataset.pop()!;
+    try{
+      const account = databaseAccounts.providersWithStakeAndDataset.pop()!;
+      const tasks = await changeSigner(account);
 
-    const tasks = await changeSigner(account);
-
-    const result = await tasks.getProviderDetails(
-      accountAddress(account)
-    );
-
-    expect(result).to.have.a.property("status");
+      const result = await tasks.getProviderDetails(
+        accountAddress(account)
+      );
+      expect(result).to.have.a.property("status");
+    } catch (err) {
+      throw new ProsopoEnvError(err, 'providerDetails');
+    }
   });
 
   it("Provider accounts", async () => {

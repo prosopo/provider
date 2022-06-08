@@ -13,13 +13,12 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import {createNetwork, Network, abiJson, ContractAbi, ContractApiInterface, ProsopoContractApi } from '@prosopo/contract'
-import {AssetsResolver, Database, ProsopoConfig, ProsopoEnvironment} from '../../src/types'
+import { abiJson, AssetsResolver, ContractAbi, ContractApiInterface, createNetwork, Network, ProsopoContractApi } from '@prosopo/contract';
 import {ERRORS} from '../../src/errors'
 import consola, {LogLevel} from 'consola'
 import {LocalAssetsResolver} from "../../src/assets";
 import {loadEnvFile} from "../../src/util";
-import {InMemoryProsopoDatabase} from "./mockdb";
+import { Database, ProsopoConfig, ProsopoEnvironment } from '../../src/types';
 
 // TODO mock imageserver.
 

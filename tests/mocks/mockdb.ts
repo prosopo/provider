@@ -16,13 +16,15 @@
 import {ERRORS} from '../../src/errors';
 import {Db, Document, Filter, MongoClient} from "mongodb";
 import {MongoMemoryServer} from "mongodb-memory-server";
+import {Database, DatasetRecord, PendingCaptchaRequestRecord, Tables} from '../../src/types';
 import {
   Captcha,
-  CaptchaSolution, CaptchaStates, Database,
-  DatasetRecord,
+  CaptchaSolution,
+  CaptchaStates,
+  Dataset,
   DatasetWithIdsAndTree,
-  DatasetWithIdsAndTreeSchema, PendingCaptchaRequestRecord, Tables
-} from "@prosopo/provider";
+  DatasetWithIdsAndTreeSchema
+} from '@prosopo/contract';
 import {Hash} from "@polkadot/types/interfaces";
 import {isHex} from "@polkadot/util";
 

@@ -15,7 +15,6 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { decodeAddress, encodeAddress } from '@polkadot/keyring';
 import { hexToU8a, isHex } from '@polkadot/util';
-import { blake2AsHex } from '@polkadot/util-crypto';
 import fs, { createWriteStream, WriteStream } from 'fs';
 import { ERRORS } from './errors';
 import {config} from "dotenv";
@@ -95,17 +94,6 @@ export function shuffleArray<T> (array: T[]): T[] {
         [array[arrayIndex], array[randIndex]] = [array[randIndex], array[arrayIndex]]
     }
     return array
-}
-
-export function hexHash (data: string | Uint8Array): string {
-    return blake2AsHex(data)
-}
-
-export async function imageHash (path: string) {
-    // data must remain in the same order so load images synchronously
-    // const fileBuffer = await readFile(path)
-    // TODO
-    return hexHash(path)
 }
 
 type PromiseQueueRes<T> = {
