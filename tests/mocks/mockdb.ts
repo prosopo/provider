@@ -13,12 +13,18 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { Hash } from '@polkadot/types/interfaces';
-
-import { ERRORS } from '../../src/errors';
-import { Captcha, CaptchaSolution, CaptchaStates, Database, Dataset, DatasetRecord, DatasetWithIdsAndTreeSchema, Tables } from '../../src/types';
-
-const DEFAULT_ENDPOINT = 'test';
+import {ERRORS} from '../../src/errors';
+import {Db, Document, Filter, MongoClient} from "mongodb";
+import {MongoMemoryServer} from "mongodb-memory-server";
+import {
+  Captcha,
+  CaptchaSolution, CaptchaStates, Database,
+  DatasetRecord,
+  DatasetWithIdsAndTree,
+  DatasetWithIdsAndTreeSchema, PendingCaptchaRequestRecord, Tables
+} from "@prosopo/provider";
+import {Hash} from "@polkadot/types/interfaces";
+import {isHex} from "@polkadot/util";
 
 export const SOLVED_CAPTCHAS = [
   {
@@ -202,133 +208,265 @@ export const DATASET = {
   ]
 };
 
-interface mockDatabase extends Database {
-  solved: Captcha[]
-  unsolved: Captcha[]
-}
+export class InMemoryProsopoDatabase implements Database {
 
-export class ProsopoDatabase implements mockDatabase {
   dbname: string;
   tables: Tables;
-  readonly url: string;
-  solved: Captcha[];
-  unsolved: Captcha[];
+  url: string;
 
-  constructor (url, dbname) {
-    this.url = url || DEFAULT_ENDPOINT;
+  constructor(url, dbname) {
+    this.url = url;
     this.tables = {};
     this.dbname = dbname;
-    this.solved = SOLVED_CAPTCHAS;
-    this.unsolved = UNSOLVED_CAPTCHAS;
   }
 
-  connect (): Promise<void> {
-    // @ts-ignore
-    this.tables.responses = {};
-    // @ts-ignore
-    this.tables.dataset = {};
-    this.tables.dataset![DATASET.datasetId] = DATASET;
-    // @ts-ignore
-    this.tables.pending = {};
+  async connect() {
+    try {
+      const mongod = await MongoMemoryServer.create();
+      this.url = mongod.getUri();
+      const client: MongoClient = new MongoClient(this.url);
 
-    return Promise.resolve(undefined);
-  }
+      await client.connect();
+      const db: Db = client.db(this.dbname);
 
-  getCaptcha (solved: boolean, datasetId: string, size?: number): Promise<Captcha[] | undefined> {
-    // @ts-ignore
-    if (size && size > this.solved.length) {
-      throw (new Error('NotImplemented'));
+      this.tables.dataset = db.collection('dataset');
+      this.tables.captchas = db.collection('captchas');
+      this.tables.solutions = db.collection('solutions');
+      this.tables.responses = db.collection('responses');
+      this.tables.pending = db.collection('pending');
+
+    } catch (err) {
+      throw new Error(ERRORS.DATABASE.CONNECT_ERROR.message);
     }
-
-    let cloned;
-
-    if (solved) {
-      // We clone because `solution` is deleted from the object in the code
-      cloned = { ...this.solved[0] };
-    } else {
-      cloned = { ...this.unsolved[0] };
-    }
-
-    return Promise.resolve([cloned]);
   }
 
-  getDatasetDetails (datasetId: string): Promise<DatasetRecord> {
-    const matching = this.tables.dataset![datasetId] as DatasetRecord;
-
-    return Promise.resolve(matching);
-  }
-
-  storeDataset (dataset: Dataset): Promise<void> {
+  /**
+   * @description Load a dataset to the database
+   * @param {Dataset}  dataset
+   */
+  async storeDataset (dataset: DatasetWithIdsAndTree): Promise<void> {
     try {
       const parsedDataset = DatasetWithIdsAndTreeSchema.parse(dataset);
-
-      this.tables.dataset![parsedDataset.datasetId.toString()] = {
+      const datasetDoc = {
         datasetId: parsedDataset.datasetId,
         format: parsedDataset.format,
         tree: parsedDataset.tree
       };
+      console.log(parsedDataset);
 
-      return Promise.resolve(undefined);
+      await this.tables.dataset?.updateOne({ _id: parsedDataset.datasetId }, { $set: datasetDoc }, { upsert: true });
+      // put the dataset id on each of the captcha docs
+      const captchaDocs = parsedDataset.captchas.map((captcha, index) => ({
+        ...captcha,
+        datasetId: parsedDataset.datasetId,
+        index
+      }));
+
+      // create a bulk upsert operation and execute
+      await this.tables.captchas?.bulkWrite(captchaDocs.map((captchaDoc) => ({
+        updateOne: {
+          filter: { _id: captchaDoc.captchaId },
+          update: { $set: captchaDoc },
+          upsert: true
+        }
+      })));
     } catch (err) {
       throw new Error(`${ERRORS.DATABASE.DATASET_LOAD_FAILED.message}:\n${err}`);
     }
   }
 
-  updateCaptcha (captcha: Captcha, datasetId: string): Promise<void> {
-    return Promise.resolve(undefined);
-  }
-
-  getRandomCaptcha (solved: boolean, datasetId: Hash | string | Uint8Array, size?: number): Promise<Captcha[] | undefined> {
-    const collection = solved ? this.solved : this.unsolved;
-
-    if (size && size > collection.length) {
-      throw (new Error('Not Implemented'));
+  /**
+   * @description Get random captchas that are solved or not solved
+   * @param {boolean}  solved    `true` when captcha is solved
+   * @param {string}   datasetId  the id of the data set
+   * @param {number}   size       the number of records to be returned
+   */
+  async getRandomCaptcha (solved: boolean, datasetId: Hash | string | Uint8Array, size?: number): Promise<Captcha[] | undefined> {
+    if (!isHex(datasetId)) {
+      throw new Error(`${ERRORS.DATABASE.INVALID_HASH.message}: datasetId`);
     }
 
-    return Promise.resolve([{ ...collection[0] }]);
+    const sampleSize = size ? Math.abs(Math.trunc(size)) : 1;
+    const cursor = this.tables.captchas?.aggregate([
+      { $match: { datasetId, solution: { $exists: solved } } },
+      { $sample: { size: sampleSize } },
+      {
+        $project: {
+          datasetId: 1, captchaId: 1, items: 1, target: 1
+        }
+      }
+    ]);
+    const docs = await cursor?.toArray();
+    console.log(docs);
+
+    if (docs) {
+      // drop the _id field
+      return docs.map(({ _id, ...keepAttrs }) => keepAttrs) as Captcha[];
+    }
+
+    throw (ERRORS.DATABASE.CAPTCHA_GET_FAILED.message);
   }
 
-  getCaptchaById (captchaId: string[]): Promise<Captcha[] | undefined> {
-    const matching = captchaId.map((id) => ({ ...(this.solved.filter((captcha) => captcha.captchaId === id)[0]) }));
+  /**
+   * @description Get captchas by id
+   * @param {string[]} captchaId
+   */
+  async getCaptchaById (captchaId: string[]): Promise<Captcha[] | undefined> {
+    const cursor = this.tables.captchas?.find({ _id: { $in: captchaId } });
+    const docs = await cursor?.toArray();
 
-    return Promise.resolve(matching);
+    if (docs) {
+      // drop the _id field
+      return docs.map(({ _id, ...keepAttrs }) => keepAttrs) as Captcha[];
+    }
+
+    throw (ERRORS.DATABASE.CAPTCHA_GET_FAILED.message);
   }
 
-  storeDappUserSolution (captchas: CaptchaSolution[], treeRoot: string) {
-    return Promise.resolve(undefined);
+  /**
+   * @description Update a captcha solution
+   * @param {Captcha}  captcha
+   * @param {string}   datasetId  the id of the data set
+   */
+  async updateCaptcha (captcha: Captcha, datasetId: Hash | string | Uint8Array): Promise<void> {
+    if (!isHex(datasetId)) {
+      throw new Error(`${ERRORS.DATABASE.INVALID_HASH.message}: datasetId`);
+    }
+
+    await this.tables.captchas?.updateOne(
+      { datasetId },
+      { $set: captcha },
+      { upsert: false }
+    );
   }
 
-  storeDappUserPending (userAccount: string, responseHash: string, salt: string) {
-    this.tables.pending![responseHash] = {
-      accountId: userAccount,
-      pending: true,
-      salt: salt
+  /**
+   * @description Get a captcha that is solved or not solved
+   */
+  async getDatasetDetails (datasetId: Hash | string): Promise<DatasetRecord> {
+    if (!isHex(datasetId)) {
+      throw new Error(`${ERRORS.DATABASE.INVALID_HASH.message}: datasetId`);
+    }
+
+    const doc = await this.tables.dataset?.findOne({ datasetId });
+
+    if (doc) {
+      return doc as DatasetRecord;
+    }
+
+    throw (ERRORS.DATABASE.DATASET_GET_FAILED.message);
+  }
+
+  /**
+   * @description Store a Dapp User's captcha solution
+   */
+  async storeDappUserSolution (captchas: CaptchaSolution[], treeRoot: string) {
+    if (!isHex(treeRoot)) {
+      throw new Error(`${ERRORS.DATABASE.INVALID_HASH.message}: treeRoot`);
+    }
+
+    // create a bulk create operation and execute
+    await this.tables.solutions?.bulkWrite(captchas.map((captchaDoc) => ({
+      insertOne: {
+        document: {
+          captchaId: captchaDoc.captchaId,
+          solution: captchaDoc.solution,
+          salt: captchaDoc.salt,
+          treeRoot
+        }
+      }
+    })));
+  }
+
+  /**
+   * @description Store a Dapp User's pending record
+   */
+  async storeDappUserPending (userAccount: string, requestHash: string, salt: string): Promise<void> {
+    if (!isHex(requestHash)) {
+      throw new Error(`${ERRORS.DATABASE.INVALID_HASH.message}: requestHash`);
+    }
+
+    await this.tables.pending?.updateOne(
+      { _id: requestHash },
+      { $set: { accountId: userAccount, pending: true, salt } },
+      { upsert: true }
+    );
+  }
+
+  /**
+   * @description Get a Dapp user's pending record
+   */
+  async getDappUserPending (requestHash: string): Promise<PendingCaptchaRequestRecord> {
+    if (!isHex(requestHash)) {
+      throw new Error(`${ERRORS.DATABASE.INVALID_HASH.message}: requestHash`);
+    }
+
+    const doc = await this.tables.pending?.findOne({ _id: requestHash });
+
+    if (doc) {
+      return doc as PendingCaptchaRequestRecord;
+    }
+
+    throw (ERRORS.DATABASE.PENDING_RECORD_NOT_FOUND.message);
+  }
+
+  /**
+   * @description Update a Dapp User's pending record
+   */
+  async updateDappUserPendingStatus (userAccount: string, requestHash: string, approve: boolean): Promise<void> {
+    if (!isHex(requestHash)) {
+      throw new Error(`${ERRORS.DATABASE.INVALID_HASH.message}: requestHash`);
+    }
+
+    await this.tables.pending?.updateOne(
+      { _id: requestHash },
+      { $set: { accountId: userAccount, pending: false, approved: approve } },
+      { upsert: true }
+    );
+  }
+
+  /**
+   * @description Get all unsolved captchas
+   */
+  async getAllCaptchasByDatasetId (datasetId: string, state?: CaptchaStates): Promise<Captcha[] | undefined> {
+    let query: Filter<Document> = {
+      datasetId
     };
 
-    return Promise.resolve(undefined);
+    switch (state) {
+      case CaptchaStates.Solved:
+        query.solution = { solution: { $exists: true } };
+        break;
+      case CaptchaStates.Unsolved:
+        query = { solution: { $exists: false } };
+        break;
+    }
+
+    const cursor = this.tables.captchas?.find(query);
+    const docs = await cursor?.toArray();
+
+    if (docs) {
+      // drop the _id field
+      return docs.map(({ _id, ...keepAttrs }) => keepAttrs) as Captcha[];
+    }
+
+    throw (ERRORS.DATABASE.CAPTCHA_GET_FAILED.message);
   }
 
-  updateDappUserPendingStatus (userAccount: string, requestHash: string, approve: boolean) {
-    const pendingRequest = this.tables.pending![requestHash];
+  /**
+   * @description Get all dapp user's solutions
+   */
+  async getAllSolutions (captchaId: string): Promise<CaptchaSolution[] | undefined> {
+    const cursor = this.tables.solutions?.find({ captchaId });
+    const docs = await cursor?.toArray();
 
-    pendingRequest.accountId = userAccount;
-    pendingRequest.pending = false;
-    pendingRequest.approved = approve;
+    if (docs) {
+      // drop the _id field
+      return docs.map(({ _id, ...keepAttrs }) => keepAttrs) as CaptchaSolution[];
+    }
 
-    return Promise.resolve(undefined);
+    throw (ERRORS.DATABASE.SOLUTION_GET_FAILED.message);
   }
 
-  getDappUserPending (requestHash: string): Promise<any> {
-    return Promise.resolve(this.tables.pending![requestHash]);
-  }
 
-  getAllCaptchasByDatasetId (datasetId: string, captchaState?: CaptchaStates): Promise<Captcha[] | undefined> {
-    const collection = [...this.unsolved, ...this.solved];
-
-    return Promise.resolve([{ ...collection[0] }]);
-  }
-
-  getAllSolutions (captchaId: string): Promise<CaptchaSolution[] | undefined> {
-    return Promise.resolve([]);
-  }
 }

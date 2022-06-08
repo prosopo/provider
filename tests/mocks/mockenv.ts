@@ -16,10 +16,10 @@
 import {createNetwork, Network, abiJson, ContractAbi, ContractApiInterface, ProsopoContractApi } from '@prosopo/contract'
 import {AssetsResolver, Database, ProsopoConfig, ProsopoEnvironment} from '../../src/types'
 import {ERRORS} from '../../src/errors'
-import {network, patract} from 'redspot'
-import {loadJSONFile} from "../../src/util";
 import consola, {LogLevel} from 'consola'
 import {LocalAssetsResolver} from "../../src/assets";
+import {loadEnvFile} from "../../src/util";
+import {InMemoryProsopoDatabase} from "./mockdb";
 
 // TODO mock imageserver.
 
@@ -27,7 +27,6 @@ export class MockEnvironment implements ProsopoEnvironment {
     config: ProsopoConfig
     db: Database | undefined
     mnemonic: string
-    patract: any;
     contractAddress: string
     defaultEnvironment: string
     contractName: string
@@ -38,6 +37,7 @@ export class MockEnvironment implements ProsopoEnvironment {
     assetsResolver: AssetsResolver | undefined
 
     constructor() {
+        loadEnvFile();
         this.config = {
             logLevel: 'debug',
             contract: {abi: '../contract/src/abi/prosopo.json'},
@@ -85,7 +85,6 @@ export class MockEnvironment implements ProsopoEnvironment {
         }
         this.mnemonic = '//Alice'
 
-        this.patract = patract
         if (this.config.defaultEnvironment && Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultEnvironment)) {
             this.defaultEnvironment = this.config.defaultEnvironment
             this.contractAddress = this.config.networks[this.defaultEnvironment].contract.address
@@ -117,8 +116,8 @@ export class MockEnvironment implements ProsopoEnvironment {
 
     async importDatabase(): Promise<void> {
         try {
-            const {ProsopoDatabase} = await import(`./${this.config.database[this.defaultEnvironment].type}`)
-            this.db = new ProsopoDatabase(
+            const {InMemoryProsopoDatabase} = await import(`./${this.config.database[this.defaultEnvironment].type}`)
+            this.db = new InMemoryProsopoDatabase(
                 this.config.database[this.defaultEnvironment].endpoint,
                 this.config.database[this.defaultEnvironment].dbname
             )
@@ -129,7 +128,6 @@ export class MockEnvironment implements ProsopoEnvironment {
 
     private static getContractAbi(path, logger): ContractAbi {
         return abiJson;
-        // return loadJSONFile(path, logger) as ContractAbi
     }
 
 }

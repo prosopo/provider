@@ -13,20 +13,17 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import findUp from 'find-up'
+import findupSync from "findup-sync";
 import {ZodError} from 'zod'
 import {ERRORS} from './errors'
 import {Database, ProsopoConfig, ProsopoConfigSchema, ProsopoEnvironment, AssetsResolver} from './types'
 import { LocalAssetsResolver } from './assets'
 import {ContractAbi, ContractApiInterface, ProsopoContractApi} from '@prosopo/contract'
-import {loadJSONFile} from "./util";
 import {Network, createNetwork} from "@prosopo/contract";
 import consola from "consola";
 import {LogLevel} from 'consola'
-
 import { abiJson } from '@prosopo/contract';
-
-require("dotenv").config();
+import {loadEnvFile} from "./util";
 
 const TS_CONFIG_FILENAME = 'prosopo.config.ts'
 const JS_CONFIG_FILENAME = 'prosopo.config.js'
@@ -55,8 +52,12 @@ export class Environment implements ProsopoEnvironment {
     assetsResolver: AssetsResolver | undefined
 
     constructor(mnemonic) {
+
+        console.log("Getting config...")
+        loadEnvFile();
         this.config = Environment.getConfig()
-        this.mnemonic = mnemonic
+        console.log("Substrate endpoint", this.config.networks.development.endpoint)
+        this.mnemonic = mnemonic || process.env.PROVIDER_MNEMONIC
         if (this.config.defaultEnvironment && Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultEnvironment)) {
             this.defaultEnvironment = this.config.defaultEnvironment
             this.contractAddress = this.config.networks![this.defaultEnvironment].contract.address
@@ -99,12 +100,12 @@ export class Environment implements ProsopoEnvironment {
     }
 
     private static getConfigPath(): string {
-        const tsConfigPath = findUp.sync(TS_CONFIG_FILENAME)
+        const tsConfigPath = findupSync(TS_CONFIG_FILENAME)
         if (tsConfigPath !== null && tsConfigPath !== undefined) {
             return tsConfigPath
         }
 
-        const pathToConfigFile = findUp.sync(JS_CONFIG_FILENAME)
+        const pathToConfigFile = findupSync(JS_CONFIG_FILENAME)
 
         if (pathToConfigFile === null || pathToConfigFile === undefined) {
             throw new Error(ERRORS.GENERAL.CANNOT_FIND_CONFIG_FILE.message)
@@ -132,7 +133,4 @@ export class Environment implements ProsopoEnvironment {
         return imported.default !== undefined ? imported.default : imported
     }
 
-    private static getContractAbi(path, logger): ContractAbi {
-        return loadJSONFile(path) as ContractAbi
-    }
 }

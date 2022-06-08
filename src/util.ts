@@ -17,9 +17,8 @@ import { decodeAddress, encodeAddress } from '@polkadot/keyring';
 import { hexToU8a, isHex } from '@polkadot/util';
 import { blake2AsHex } from '@polkadot/util-crypto';
 import fs, { createWriteStream, WriteStream } from 'fs';
-import node_url, {URL} from "url";
 import { ERRORS } from './errors';
-
+import {config} from "dotenv";
 
 export function encodeStringAddress (address: string) {
     try {
@@ -144,4 +143,12 @@ export async function promiseQueue<T> (
 
 export function parseBlockNumber(blockNumberString: string) {
     return parseInt(blockNumberString.replace(/,/g, ''))
+}
+
+export function loadEnvFile() {
+    const envPath =
+      process.env.NODE_ENV !== undefined
+        ? { override: true, path: `.env.${process.env.NODE_ENV.toLowerCase()}` }
+        : undefined;
+    config(envPath);
 }

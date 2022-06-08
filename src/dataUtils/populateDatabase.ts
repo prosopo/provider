@@ -1,24 +1,54 @@
-import { promiseQueue } from "../util";
-import { exportDatabaseAccounts } from "./DatabaseAccounts";
+import {promiseQueue} from "../util";
+import {exportDatabaseAccounts, IDatabaseAccounts} from "./DatabaseAccounts";
 import DatabasePopulator, {
   IDatabasePopulatorMethods,
 } from "./DatabasePopulator";
 
-const AMOUNT = 25;
-
-const dummyArray = new Array(AMOUNT).fill(0);
+const AMOUNT = 3;
 
 const msToSecString = (ms: number) => `${Math.round(ms / 100) / 10}s`;
+
+export interface UserCount {
+  provider: {
+    count: number
+    staked: number
+    stakedWithDataset: number
+  }
+  dapp: {
+    count: number,
+    staked: number,
+  }
+  dappUser: {
+    count: number
+  }
+}
+
+const DEFAULT_USER_COUNT: UserCount = {
+  provider: {
+    count: 25,
+    staked: 12,
+    stakedWithDataset: 10
+  },
+  dapp: {
+    count: 3,
+    staked: 2,
+  },
+  dappUser: {
+    count: 2
+  }
+}
 
 async function populateStep(
   databasePopulator: DatabasePopulator,
   key: keyof IDatabasePopulatorMethods,
-  text: string
+  text: string,
+  userCount: number
 ) {
   const startDate = Date.now();
 
   process.stdout.write(text);
 
+  const dummyArray = new Array(AMOUNT).fill(userCount)
   const promise = await promiseQueue(
     dummyArray.map(() => () => databasePopulator[key]())
   );
@@ -28,12 +58,12 @@ async function populateStep(
   process.stdout.write(` [ ${msToSecString(time)} ]\n`);
 
   promise
-    .filter(({ error }) => error)
-    .forEach(({ error }) => console.error(["ERROR", error]));
+    .filter(({error}) => error)
+    .forEach(({error}) => console.error(["ERROR", error]));
 }
 
-async function populateDatabase() {
-  const startDate = Date.now();
+export async function populateDatabase(userCount: UserCount): Promise<IDatabaseAccounts> {
+
 
   console.log("Starting database populator...");
   const databasePopulator = new DatabasePopulator();
@@ -43,39 +73,47 @@ async function populateDatabase() {
   await populateStep(
     databasePopulator,
     "registerProvider",
-    "Adding providers..."
+    "Adding providers...",
+    userCount.provider.count
   );
   await populateStep(
     databasePopulator,
     "registerProviderWithStake",
-    "Adding providers with stake..."
+    "Adding providers with stake...",
+    userCount.provider.staked
   );
   await populateStep(
     databasePopulator,
     "registerProviderWithStakeAndDataset",
-    "Adding providers with stake and dataset..."
+    "Adding providers with stake and dataset...",
+    userCount.provider.stakedWithDataset
   );
-  await populateStep(databasePopulator, "registerDapp", "Adding dapps...");
+  await populateStep(databasePopulator, "registerDapp", "Adding dapps...", userCount.dapp.count);
   await populateStep(
     databasePopulator,
     "registerDappWithStake",
-    "Adding dapps with stake..."
+    "Adding dapps with stake...",
+    userCount.dapp.staked
   );
   await populateStep(
     databasePopulator,
     "registerDappUser",
-    "Adding dapp users..."
+    "Adding dapp users...",
+    userCount.dappUser.count
   );
 
   console.log("Exporting accounts...");
   await exportDatabaseAccounts(databasePopulator);
 
-  return Date.now() - startDate;
+  return databasePopulator;
 }
 
-populateDatabase()
-  .then((ms: number) =>
-    console.log(`Database population successful after ${msToSecString(ms)}`)
-  )
-  .catch(console.error)
-  .finally(() => process.exit());
+if (require.main === module) {
+  const startDate = Date.now();
+  populateDatabase(DEFAULT_USER_COUNT)
+    .then(() =>
+      console.log(`Database population successful after ${msToSecString(Date.now() - startDate)}`)
+    )
+    .catch(console.error)
+    .finally(() => process.exit());
+}

@@ -18,60 +18,71 @@ import {
   getEventsFromMethodName,
   TransactionResponse,
 } from "@prosopo/contract";
-import { hexHash, loadJSONFile, parseBlockNumber } from "@prosopo/provider";
+import {hexHash, loadJSONFile, parseBlockNumber} from "@prosopo/provider";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { config } from "dotenv";
+import {config} from "dotenv";
 import path from "path";
 
-import { randomAsHex } from "@polkadot/util-crypto";
+import {randomAsHex} from "@polkadot/util-crypto";
 
 import {
   computeCaptchaSolutionHash,
   computePendingRequestHash,
   parseCaptchaDataset,
 } from "../../src/captcha";
-import DatabaseAccounts, {
+import {
   Account,
   accountAddress,
-  accountMnemonic,
+  accountMnemonic, IDatabaseAccounts,
 } from "../../src/dataUtils/DatabaseAccounts";
-import { CaptchaMerkleTree } from "../../src/merkle";
-import { Tasks } from "../../src/tasks";
-import { CaptchaSolution } from "../../src/types/captcha";
-import { DAPP, PROVIDER } from "../mocks/accounts";
-import { DATASET, SOLVED_CAPTCHAS } from "../mocks/mockdb";
-import { sendFunds } from "../mocks/setup";
-import { Environment } from "../../src/env";
-
-import { ProsopoEnvError } from '../../src/handlers';
-
-const envPath =
-  process.env.NODE_ENV === "test"
-    ? { override: true, path: "../../.env.test" }
-    : undefined;
-
-config(envPath);
-
-// require("dotenv").config();
-// require("dotenv").config({path: '../../.env'});
+import {CaptchaMerkleTree} from "../../src/merkle";
+import {Tasks} from "../../src/tasks";
+import {CaptchaSolution} from "../../src/types/captcha";
+import {DAPP, PROVIDER} from "../mocks/accounts";
+import {DATASET, SOLVED_CAPTCHAS} from "../mocks/mockdb";
+import {sendFunds} from "../mocks/setup";
+import {MockEnvironment} from "../mocks/mockenv";
+import {populateDatabase, UserCount} from "../../src/dataUtils/populateDatabase"
+import {ProsopoEnvError} from '../../src/handlers';
 
 chai.should();
 chai.use(chaiAsPromised);
 const expect = chai.expect;
 
+const TEST_USER_COUNT: UserCount = {
+  provider: {
+    count: 25,
+    staked: 12,
+    stakedWithDataset: 10
+  },
+  dapp: {
+    count: 3,
+    staked: 2,
+  },
+  dappUser: {
+    count: 2
+  }
+}
+
 describe("CONTRACT TASKS", () => {
   let providerStakeDefault: bigint;
-  console.log(process.env.PROVIDER_MNEMONIC);
-  const mockEnv = new Environment(process.env.PROVIDER_MNEMONIC);
-  const databaseAccounts = new DatabaseAccounts();
+  const mockEnv = new MockEnvironment();
+  let databaseAccounts: IDatabaseAccounts
+
 
   before(async () => {
-    
+
     try {
       await mockEnv.isReady();
     } catch (e) {
       throw new ProsopoEnvError(e, 'isReady');
+    }
+
+    try {
+      databaseAccounts = await populateDatabase(TEST_USER_COUNT)
+    } catch (e) {
+      throw new ProsopoEnvError(e, 'populateDatabase');
     }
 
     const tasks = new Tasks(mockEnv);
@@ -88,13 +99,17 @@ describe("CONTRACT TASKS", () => {
       throw new ProsopoEnvError(e, 'getProviderStakeDefault');
     }
 
-    try {
-      await databaseAccounts.importDatabaseAccounts();
-    } catch (e) {
-      throw new ProsopoEnvError(e, 'importDatabaseAccounts');
-    }
-    
+    // try {
+    //   await databaseAccounts.importDatabaseAccounts();
+    // } catch (e) {
+    //   throw new ProsopoEnvError(e, 'importDatabaseAccounts');
+    // }
+
   });
+
+  after(() => {
+    process.exit()
+  })
 
   /** Gets some static solved captchas and constructions captcha solutions from them
    *  Computes the request hash for these captchas and the dappUser and then stores the request hasn in the mock db
@@ -127,10 +142,10 @@ describe("CONTRACT TASKS", () => {
       );
     }
 
-    return { account, captchaSolutions, requestHash };
+    return {account, captchaSolutions, requestHash};
   }
 
-  async function changeSigner (account: Account): Promise<Tasks> {
+  async function changeSigner(account: Account): Promise<Tasks> {
     await mockEnv.contractInterface!.changeSigner(accountMnemonic(account));
 
     return new Tasks(mockEnv);
@@ -138,7 +153,7 @@ describe("CONTRACT TASKS", () => {
 
   it("Provider registration", async () => {
     const [providerMnemonic, providerAddress] =
-      mockEnv.contractInterface!.createAccountAndAddToKeyring() || ["", ""];
+    mockEnv.contractInterface!.createAccountAndAddToKeyring() || ["", ""];
 
     await sendFunds(
       mockEnv,
@@ -160,23 +175,26 @@ describe("CONTRACT TASKS", () => {
   });
 
   it("Provider update", async () => {
-    const account = databaseAccounts.providers.pop()!;
+    try {
+      const account = databaseAccounts.providers.pop()!;
+      const tasks = await changeSigner(account);
 
-    const tasks = await changeSigner(account);
+      const value = 1000n * providerStakeDefault;
 
-    const value = 1000n * providerStakeDefault;
+      const result: TransactionResponse = await tasks.providerUpdate(
+        PROVIDER.serviceOrigin + randomAsHex().slice(0, 8),
+        PROVIDER.fee,
+        PROVIDER.payee,
+        accountAddress(account),
+        value
+      );
 
-    const result: TransactionResponse = await tasks.providerUpdate(
-      PROVIDER.serviceOrigin + randomAsHex().slice(0, 8),
-      PROVIDER.fee,
-      PROVIDER.payee,
-      accountAddress(account),
-      value
-    );
 
-    const eventData = getEventsFromMethodName(result, "providerUpdate");
-
-    expect(eventData![0].args[0]).to.equal(accountAddress(account));
+      const eventData = getEventsFromMethodName(result, "providerUpdate");
+      expect(eventData![0].args[0].toHuman()).to.equal(accountAddress(account));
+    } catch (err) {
+      throw new ProsopoEnvError(err, 'providerUpdate');
+    }
   });
 
   it("Provider add dataset", async () => {
@@ -193,7 +211,7 @@ describe("CONTRACT TASKS", () => {
     );
     const eventData = getEventsFromMethodName(result, "providerAddDataset");
 
-    expect(eventData![0].args[0]).to.equal(accountAddress(account));
+    expect(eventData![0].args[0].toHuman()).to.equal(accountAddress(account));
   });
 
   it("Inactive Provider cannot add dataset", async () => {
@@ -211,7 +229,7 @@ describe("CONTRACT TASKS", () => {
   });
 
   it("Provider approve", async () => {
-    const { account, captchaSolutions } =
+    const {account, captchaSolutions} =
       await createMockCaptchaSolutionsAndRequestHash();
 
     const dappAccount = databaseAccounts.dappsWithStake.pop()!;
@@ -251,11 +269,11 @@ describe("CONTRACT TASKS", () => {
     const result = await providerTasks.providerApprove(commitmentId, 0);
     const events = getEventsFromMethodName(result, "providerApprove");
 
-    expect(events![0].args[0]).to.equal(commitmentId);
+    expect(events![0].args[0].toHuman()).to.equal(commitmentId);
   });
 
   it("Provider disapprove", async () => {
-    const { account, captchaSolutions } =
+    const {account, captchaSolutions} =
       await createMockCaptchaSolutionsAndRequestHash();
 
     const dappAccount = databaseAccounts.dappsWithStake.pop()!;
@@ -296,7 +314,7 @@ describe("CONTRACT TASKS", () => {
     const result = await providerTasks.providerDisapprove(commitmentId);
     const events = getEventsFromMethodName(result, "providerDisapprove");
 
-    expect(events![0].args[0]).to.equal(commitmentId);
+    expect(events![0].args[0].toHuman()).to.equal(commitmentId);
   });
 
   it("Timestamps check", async () => {
@@ -306,7 +324,7 @@ describe("CONTRACT TASKS", () => {
 
     const tree = new CaptchaMerkleTree();
 
-    const { account, captchaSolutions } =
+    const {account, captchaSolutions} =
       await createMockCaptchaSolutionsAndRequestHash();
 
     const tasks = await changeSigner(account);
@@ -341,7 +359,7 @@ describe("CONTRACT TASKS", () => {
     const result = await providerTasks.providerApprove(commitmentId, 0);
     const events = getEventsFromMethodName(result, "providerApprove");
 
-    expect(events![0].args[0]).to.equal(commitmentId);
+    expect(events![0].args[0].toHuman()).to.equal(commitmentId);
 
     const commitment = await providerTasks.getCaptchaSolutionCommitment(
       commitmentId
@@ -450,7 +468,7 @@ describe("CONTRACT TASKS", () => {
   });
 
   it("Dapp user commit", async () => {
-    const { captchaSolutions, account } =
+    const {captchaSolutions, account} =
       await createMockCaptchaSolutionsAndRequestHash();
 
     const dappAccount = databaseAccounts.dappsWithStake.pop()!;
@@ -518,7 +536,7 @@ describe("CONTRACT TASKS", () => {
       true,
       1
     );
-    
+
     expect(captchas[0]).to.have.nested.property('captcha.captchaId');
     expect(captchas[0]).to.have.nested.property('captcha.datasetId', datasetId);
     expect(captchas[0]).to.have.property('proof');
@@ -527,7 +545,7 @@ describe("CONTRACT TASKS", () => {
   });
 
   it("Captcha proofs are returned if commitment found and solution is correct", async () => {
-    const { captchaSolutions, requestHash, account } =
+    const {captchaSolutions, requestHash, account} =
       await createMockCaptchaSolutionsAndRequestHash();
 
     const dappAccount = databaseAccounts.dappsWithStake.pop()!;
@@ -679,7 +697,7 @@ describe("CONTRACT TASKS", () => {
     const account =
       databaseAccounts.providersWithStakeAndDataset.pop()!;
 
-    const { captchaSolutions } =
+    const {captchaSolutions} =
       await createMockCaptchaSolutionsAndRequestHash();
 
     const tasks = await changeSigner(account);
@@ -693,7 +711,7 @@ describe("CONTRACT TASKS", () => {
   });
 
   it("Builds the tree and gets the commitment", async () => {
-    const { captchaSolutions, account } =
+    const {captchaSolutions, account} =
       await createMockCaptchaSolutionsAndRequestHash();
 
     const dappAccount = databaseAccounts.dappsWithStake.pop()!;
@@ -721,7 +739,7 @@ describe("CONTRACT TASKS", () => {
       initialCommitmentId,
       accountAddress(providerAccount)
     );
-    const { commitment, commitmentId, tree } =
+    const {commitment, commitmentId, tree} =
       await tasks.buildTreeAndGetCommitment(captchaSolutions);
 
     expect(tree).to.deep.equal(initialTree);
@@ -730,7 +748,7 @@ describe("CONTRACT TASKS", () => {
   });
 
   it("BuildTreeAndGetCommitment throws if commitment does not exist", async () => {
-    const { captchaSolutions, account } =
+    const {captchaSolutions, account} =
       await createMockCaptchaSolutionsAndRequestHash();
 
     const tasks = await changeSigner(account);
@@ -752,7 +770,7 @@ describe("CONTRACT TASKS", () => {
   });
 
   it("Validates the Dapp User Solution Request is Pending", async () => {
-    const { account, captchaSolutions } =
+    const {account, captchaSolutions} =
       await createMockCaptchaSolutionsAndRequestHash();
 
     const tasks = await changeSigner(account);
@@ -790,12 +808,12 @@ describe("CONTRACT TASKS", () => {
     const solvedCaptchaCount = mockEnv.config.captchas.solved.count;
     const unsolvedCaptchaCount = mockEnv.config.captchas.unsolved.count;
 
-    const { provider } = await tasks.getRandomProvider(
+    const {provider} = await tasks.getRandomProvider(
       accountAddress(account),
       accountAddress(dappAccount)
     );
 
-    const { captchas, requestHash } =
+    const {captchas, requestHash} =
       await tasks.getRandomCaptchasAndRequestHash(
         provider.captcha_dataset_id as string,
         hexHash(accountAddress(account))
@@ -904,7 +922,7 @@ describe("CONTRACT TASKS", () => {
     );
     const events = getEventsFromMethodName(result, "providerUnstake");
 
-    expect(events![0].args[0]).to.equal(accountAddress(account));
+    expect(events![0].args[0].toHuman()).to.equal(accountAddress(account));
   });
 
   it("Provider deregister", async () => {
@@ -917,7 +935,7 @@ describe("CONTRACT TASKS", () => {
     );
     const events = getEventsFromMethodName(result, "providerDeregister");
 
-    expect(events![0].args[0]).to.equal(accountAddress(account));
+    expect(events![0].args[0].toHuman()).to.equal(accountAddress(account));
   });
 
   it("Calculate captcha solution on the basis of Dapp users provided solutions", async () => {

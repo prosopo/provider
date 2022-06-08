@@ -21,6 +21,7 @@
       "./scripts"
     ],
     "outDir": "./build",
+    "types": ["mocha"]
 
   },
   "ts-node": {
@@ -32,9 +33,9 @@
     "./tests/**/*.ts",
     "./scripts/**/*.ts"
   ],
-  "references": [ 
-    { 
-      "path": "../contract" 
+  "references": [
+    {
+      "path": "../contract"
     }
   ]
 }
