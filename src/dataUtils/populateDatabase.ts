@@ -1,117 +1,91 @@
 import {promiseQueue} from "../util";
-import {exportDatabaseAccounts, IDatabaseAccounts} from "./DatabaseAccounts";
+import {AccountKey, exportDatabaseAccounts, IDatabaseAccounts} from "./DatabaseAccounts";
 import DatabasePopulator, {
-  IDatabasePopulatorMethods,
+  IDatabasePopulatorMethodNames,
 } from "./DatabasePopulator";
-
-const AMOUNT = 3;
+import {Environment} from "../env";
+import {ProsopoEnvironment} from "../types";
+import consola from "consola";
 
 const msToSecString = (ms: number) => `${Math.round(ms / 100) / 10}s`;
 
-export interface UserCount {
-  provider: {
-    count: number
-    staked: number
-    stakedWithDataset: number
-  }
-  dapp: {
-    count: number,
-    staked: number,
-  }
-  dappUser: {
-    count: number
-  }
+export type UserCount = {
+  [key in AccountKey]: number
+}
+
+const userPopulatorMethodMap: { [key in AccountKey]: IDatabasePopulatorMethodNames } = {
+  [AccountKey.providers]: IDatabasePopulatorMethodNames.registerProvider,
+  [AccountKey.providersWithStake]: IDatabasePopulatorMethodNames.registerProviderWithStake,
+  [AccountKey.providersWithStakeAndDataset]: IDatabasePopulatorMethodNames.registerProviderWithStakeAndDataset,
+  [AccountKey.dapps]: IDatabasePopulatorMethodNames.registerDapp,
+  [AccountKey.dappsWithStake]: IDatabasePopulatorMethodNames.registerDappWithStake,
+  [AccountKey.dappUsers]: IDatabasePopulatorMethodNames.registerDappUser,
 }
 
 const DEFAULT_USER_COUNT: UserCount = {
-  provider: {
-    count: 25,
-    staked: 12,
-    stakedWithDataset: 10
-  },
-  dapp: {
-    count: 3,
-    staked: 2,
-  },
-  dappUser: {
-    count: 2
-  }
+  [AccountKey.providers]: 20,
+  [AccountKey.providersWithStake]: 20,
+  [AccountKey.providersWithStakeAndDataset]: 20,
+  [AccountKey.dapps]: 20,
+  [AccountKey.dappsWithStake]: 20,
+  [AccountKey.dappUsers]: 0, // TODO create a method for populating these
 }
 
 async function populateStep(
   databasePopulator: DatabasePopulator,
-  key: keyof IDatabasePopulatorMethods,
+  key: IDatabasePopulatorMethodNames,
   text: string,
-  userCount: number
+  userCount: number,
+  logger: typeof consola
 ) {
   const startDate = Date.now();
-
-  process.stdout.write(text);
+  logger.debug(text);
 
   const dummyArray = new Array(userCount).fill(userCount)
   const promise = await promiseQueue(
     dummyArray.map(() => () => databasePopulator[key]())
   );
-
   const time = Date.now() - startDate;
 
-  process.stdout.write(` [ ${msToSecString(time)} ]\n`);
+  logger.debug(` [ ${msToSecString(time)} ]\n`);
 
   promise
     .filter(({error}) => error)
-    .forEach(({error}) => console.error(["ERROR", error]));
+    .forEach(({error}) => logger.error(["ERROR", error]));
 }
 
-export async function populateDatabase(userCount: UserCount): Promise<IDatabaseAccounts> {
+export async function populateDatabase(env: ProsopoEnvironment, userCounts: UserCount, exportData: boolean): Promise<IDatabaseAccounts> {
 
 
-  console.log("Starting database populator...");
-  console.log(userCount)
-  const databasePopulator = new DatabasePopulator();
-
+  env.logger.debug("Starting database populator...");
+  const databasePopulator = new DatabasePopulator(env);
   await databasePopulator.isReady();
 
-  await populateStep(
-    databasePopulator,
-    "registerProvider",
-    "Adding providers...",
-    userCount.provider.count
-  );
-  await populateStep(
-    databasePopulator,
-    "registerProviderWithStake",
-    "Adding providers with stake...",
-    userCount.provider.staked
-  );
-  await populateStep(
-    databasePopulator,
-    "registerProviderWithStakeAndDataset",
-    "Adding providers with stake and dataset...",
-    userCount.provider.stakedWithDataset
-  );
-  await populateStep(databasePopulator, "registerDapp", "Adding dapps...", userCount.dapp.count);
-  await populateStep(
-    databasePopulator,
-    "registerDappWithStake",
-    "Adding dapps with stake...",
-    userCount.dapp.staked
-  );
-  await populateStep(
-    databasePopulator,
-    "registerDappUser",
-    "Adding dapp users...",
-    userCount.dappUser.count
-  );
+  const userPromises = Object.entries(userCounts).map(async ([userType, userCount]) => {
+    if (userCount > 0) {
+      await populateStep(
+        databasePopulator,
+        userPopulatorMethodMap[userType],
+        `Running ${userType}...`,
+        userCount,
+        env.logger
+      );
+    }
+  });
 
-  console.log("Exporting accounts...");
-  await exportDatabaseAccounts(databasePopulator);
+  await Promise.all(userPromises);
+
+  if (exportData) {
+    env.logger.info("Exporting accounts...");
+    await exportDatabaseAccounts(databasePopulator);
+  }
 
   return databasePopulator;
 }
 
 if (require.main === module) {
   const startDate = Date.now();
-  populateDatabase(DEFAULT_USER_COUNT)
+  populateDatabase(new Environment(process.env.PROVIDER_MNEMONIC), DEFAULT_USER_COUNT, true)
     .then(() =>
       console.log(`Database population successful after ${msToSecString(Date.now() - startDate)}`)
     )

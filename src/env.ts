@@ -56,7 +56,6 @@ export class Environment implements ProsopoEnvironment {
     constructor(mnemonic) {
         loadEnvFile();
         this.config = Environment.getConfig()
-        console.log("Substrate endpoint", this.config.networks.development.endpoint)
         this.mnemonic = mnemonic || process.env.PROVIDER_MNEMONIC
         if (this.config.defaultEnvironment && Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultEnvironment)) {
             this.defaultEnvironment = this.config.defaultEnvironment

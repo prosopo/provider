@@ -13,10 +13,10 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import {ProsopoConfig} from './types';
+import {ProsopoConfig} from './src';
 
 export default {
-    logLevel: 'debug',
+    logLevel: 'info',
     defaultEnvironment: 'development',
     contract: {
         abi: '../contract/src/abi/prosopo.json'

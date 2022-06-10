@@ -81,6 +81,9 @@ export const ERRORS = {
         },
         SOLUTION_GET_FAILED: {
             message: 'Failed to get solution'
+        },
+        DATASET_WITH_SOLUTIONS_GET_FAILED: {
+            message: 'No datasets found with required number of solutions'
         }
     },
     API: {
