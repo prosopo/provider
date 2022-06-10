@@ -302,7 +302,7 @@ export class InMemoryProsopoDatabase implements Database {
     const cursor = this.tables.solutions?.find({captchaId});
     const docs = await cursor?.toArray();
 
-    if (docs && docs.length) {
+    if (docs) {
       // drop the _id field
       return docs.map(({_id, ...keepAttrs}) => keepAttrs) as CaptchaSolution[];
     }

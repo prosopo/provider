@@ -19,6 +19,8 @@ import consola, {LogLevel} from 'consola'
 import {LocalAssetsResolver} from "../../src/assets";
 import { loadEnvFile, Database, ProsopoConfig, ProsopoEnvironment } from '../../src';
 
+const path = require('path');
+
 // TODO mock imageserver.
 
 export class MockEnvironment implements ProsopoEnvironment {
@@ -68,7 +70,7 @@ export class MockEnvironment implements ProsopoEnvironment {
             captchaSolutions: {
                 requiredNumberOfSolutions: 3,
                 solutionWinningPercentage: 80,
-                captchaFilePath: '../../data/captchas.json'
+                captchaFilePath: path.join(process.cwd(), './tests/mocks/data/captchas.json')
             },
             database: {
                 development: {type: 'mockdb', endpoint: '', dbname: ''}

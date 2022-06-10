@@ -932,28 +932,28 @@ describe("CONTRACT TASKS", () => {
 
   it("Calculate captcha solution on the basis of Dapp users provided solutions", async () => {
     try {
-      const providerAccount = await getUser(AccountKey.providersWithStake);
-
-      const tasks = await changeSigner(providerAccount);
+      const providerAccount = await getUser(AccountKey.providersWithStakeAndDataset);
+      const providerTasks = await changeSigner(providerAccount);
+      //const provider = await providerTasks.getProviderDetails(accountAddress(providerAccount))
 
       const captchaFilePath = mockEnv.config.captchaSolutions.captchaFilePath;
-      const datsetBeforeCalculation = parseCaptchaDataset(
+      const datasetBeforeCalculation = parseCaptchaDataset(
         loadJSONFile(captchaFilePath) as JSON
       );
 
       const solvedCaptchasCountBeforeCalculation =
-        datsetBeforeCalculation.captchas.filter(
+        datasetBeforeCalculation.captchas.filter(
           (captcha) => "solution" in captcha
         ).length;
 
-      const result = await tasks.calculateCaptchaSolutions();
+      const result = await providerTasks.calculateCaptchaSolutions();
 
-      const datsetAfterCalculation = parseCaptchaDataset(
+      const datasetAfterCalculation = parseCaptchaDataset(
         loadJSONFile(captchaFilePath) as JSON
       );
 
       const solvedCaptchasCountAfterCalculation =
-        datsetAfterCalculation.captchas.filter(
+        datasetAfterCalculation.captchas.filter(
           (captcha) => "solution" in captcha
         ).length;
 
