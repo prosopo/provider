@@ -12,7 +12,6 @@
   ],
   "files": [
     "./src/prosopo.config.js",
-    "./src/redspot.config.js"
   ],
   "references": [
     {

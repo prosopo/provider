@@ -1,10 +1,10 @@
-import {promiseQueue} from "../util";
+import { promiseQueue } from "../../src/util";
 import {AccountKey, exportDatabaseAccounts, IDatabaseAccounts} from "./DatabaseAccounts";
 import DatabasePopulator, {
   IDatabasePopulatorMethodNames,
 } from "./DatabasePopulator";
-import {Environment} from "../env";
-import {ProsopoEnvironment} from "../types";
+import {Environment} from "../../src/env";
+import {ProsopoEnvironment} from "../../src/types";
 import consola from "consola";
 
 const msToSecString = (ms: number) => `${Math.round(ms / 100) / 10}s`;

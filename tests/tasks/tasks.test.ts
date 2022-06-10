@@ -35,12 +35,12 @@ import {
   AccountKey,
   accountMnemonic,
   IDatabaseAccounts,
-} from "../../src/dataUtils/DatabaseAccounts";
+} from "../dataUtils/DatabaseAccounts";
 import {Tasks} from "../../src/tasks";
 import {DAPP, PROVIDER} from "../mocks/accounts";
 import {sendFunds} from "../mocks/setup";
 import {MockEnvironment} from "../mocks/mockenv";
-import {populateDatabase} from "../../src/dataUtils/populateDatabase"
+import {populateDatabase} from "../dataUtils/populateDatabase"
 import {ProsopoEnvError} from '../../src/handlers';
 
 chai.should();
