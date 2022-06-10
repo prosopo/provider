@@ -17,7 +17,6 @@
 import { abiJson, ContractAbi, ContractApiInterface, createNetwork, Network, ProsopoContractApi, AssetsResolver } from '@prosopo/contract';
 import consola, { LogLevel } from "consola";
 import dotenv from 'dotenv';
-import findupSync from "findup-sync";
 import { ZodError } from 'zod';
 import { LocalAssetsResolver } from './assets';
 import { ERRORS } from './errors';
@@ -27,8 +26,8 @@ import {loadEnvFile} from "./util";
 
 dotenv.config();
 
-const TS_CONFIG_FILENAME = 'prosopo.config.ts'
-const JS_CONFIG_FILENAME = 'prosopo.config.js'
+import prosopoConfig from './prosopo.config';
+// const JS_CONFIG_FILENAME = 'prosopo.config.js'
 
 export class Environment implements ProsopoEnvironment {
     config: ProsopoConfig
@@ -98,38 +97,37 @@ export class Environment implements ProsopoEnvironment {
         }
     }
 
-    private static getConfigPath(): string {
-        const tsConfigPath = findupSync(TS_CONFIG_FILENAME)
-        if (tsConfigPath !== null && tsConfigPath !== undefined) {
-            return tsConfigPath
-        }
+    // private static getConfigPath(): string {
+    //     const pathToConfigFile = findUpSync(JS_CONFIG_FILENAME)
 
-        const pathToConfigFile = findupSync(JS_CONFIG_FILENAME)
+    //     if (pathToConfigFile === null || pathToConfigFile === undefined) {
+    //         throw new Error(ERRORS.GENERAL.CANNOT_FIND_CONFIG_FILE.message)
+    //     }
 
-        if (pathToConfigFile === null || pathToConfigFile === undefined) {
-            throw new Error(ERRORS.GENERAL.CANNOT_FIND_CONFIG_FILE.message)
-        }
-
-        return pathToConfigFile
-    }
+    //     return pathToConfigFile
+    // }
 
     private static getConfig(): ProsopoConfig {
-        try {
-            const filePath = Environment.getConfigPath()
-            const config = Environment.importCsjOrEsModule(filePath)
-            return ProsopoConfigSchema.parse(config)
-        } catch (error) {
-            if (error instanceof ZodError) {
-                const { path, message } = error.issues[0]
-                throw new Error(`${path.join('.')} ${message}`)
-            }
-            throw new Error(ERRORS.CONFIG.CONFIGURATIONS_LOAD_FAILED.message)
-        }
+        // try {
+        //     const filePath = Environment.getConfigPath()
+        //     const config = Environment.importCsjOrEsModule(filePath)
+        //     return ProsopoConfigSchema.parse(config)
+        // } catch (error) {
+        //     if (error instanceof ZodError) {
+        //         const { path, message } = error.issues[0]
+        //         throw new Error(`${path.join('.')} ${message}`)
+        //     }
+        //     throw new Error(ERRORS.CONFIG.CONFIGURATIONS_LOAD_FAILED.message)
+        // }
+        return prosopoConfig as ProsopoConfig;
     }
 
-    private static importCsjOrEsModule(filePath: string): any {
-        const imported = require(filePath)
-        return imported.default !== undefined ? imported.default : imported
-    }
+    // private static importCsjOrEsModule(filePath: string): any {
+    //     const imported = require(filePath)
+    //     return imported.default !== undefined ? imported.default : imported
+    // }
 
+    // private static getContractAbi(path, logger): ContractAbi {
+    //     return loadJSONFile(path) as ContractAbi
+    // }
 }
