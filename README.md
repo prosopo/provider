@@ -159,20 +159,20 @@ Using [Polkadot apps](https://polkadot.js.org/apps/?rpc=ws%3A%2F%2F127.0.0.1%3A9
 ### Register a provider
 
 ```bash
-yarn start provider_register --fee=10 --serviceOrigin=https://localhost:8282 --payee=Provider --address ADDRESS
+npm run cli -- provider_register --fee=10 --origin=https://localhost:8282 --payee=Provider --address ADDRESS
 ```
 
-| Param | Description |
-| --------------- | --------------- |
-| fee | The amount the Provider charges or pays per captcha approval / disapproval |
-| serviceOrigin | The location of the Provider's service |
-| payee | Who is paid on successful captcha completion (`Provider` or `Dapp`) |
-| address | Address of the Provider |
+| Param   | Description                                                                |
+|---------|----------------------------------------------------------------------------|
+| fee     | The amount the Provider charges or pays per captcha approval / disapproval |
+| origin  | The location of the Provider's service                                     |
+| payee   | Who is paid on successful captcha completion (`Provider` or `Dapp`)        |
+| address | Address of the Provider                                                    |
 
 ### Update a provider and optionally stake
 
 ```bash
-yarn start provider_update --fee=10 --serviceOrigin=https://localhost:8282 --payee=Provider --address ADDRESS --value STAKE_VALUE
+npm run cli -- provider_update --fee=10 --origin=https://localhost:8282 --payee=Provider --address ADDRESS --value STAKE_VALUE
 ```
 
 Params are the same as `provider_register` with the addition of `value`
@@ -185,7 +185,7 @@ Params are the same as `provider_register` with the addition of `value`
 ### Add a dataset for a Provider
 
 ```bash
-yarn start provider_add_data_set --file /usr/src/data/captchas.json
+npm run cli -- provider_add_data_set --file /usr/src/data/captchas.json
 ```
 
 | Param | Description |
@@ -197,7 +197,7 @@ File format can be viewed [here](https://github.com/prosopo-io/provider/blob/mas
 ### De-register a Provider
 
 ```bash
-yarn start provider_deregister --address ADDRESS
+npm run cli -- provider_deregister --address ADDRESS
 ```
 
 | Param | Description |
@@ -207,7 +207,7 @@ yarn start provider_deregister --address ADDRESS
 ### Unstake funds
 
 ```bash
-yarn start provider_unstake --value VALUE
+npm run cli -- provider_unstake --value VALUE
 ```
 
 | Param | Description |
@@ -217,7 +217,7 @@ yarn start provider_unstake --value VALUE
 ### List Provider accounts in contract
 
 ```bash
-yarn start provider_accounts
+npm run cli -- provider_accounts
 ```
 
 ### Other commands ###
@@ -225,36 +225,36 @@ yarn start provider_accounts
 A full list of CLI commands can be viewed by running
 
 ```bash
-yarn start --help
+npm run cli -- --help
 ```
 
 ## API
 
-Run the API server
+Run the Provider API server and image server
 
 ```bash
-yarn start --api
+npm run start
 ```
 
-The API contains functions that will be required for the frontend captcha interface.
+The API contains methods required by the frontend captcha interface.
 
-| API Resource | Function |
-| --------------- | --------------- |
-| `/v1/prosopo/random_provider/`| Get a random provider based on AccountId |
-| `/v1/prosopo/providers/` | Get list of all provider IDs |
-| `/v1/prosopo/dapps/` | Get list of all dapp IDs |
-| `/v1/prosopo/provider/:providerAccount` | Get details of a specific Provider account |
-| `/v1/prosopo/provider/captcha/:datasetId/:userAccount` | Get captchas to solve |
-| `/v1/prosopo/provider/solution` | Submit captcha solutions |
+| API Resource                                                                             | Function                                   | Type | Parameters                                                         |
+|------------------------------------------------------------------------------------------|--------------------------------------------|------|--------------------------------------------------------------------|
+| `/v1/prosopo/random_provider/:userAccount/:dappContractAccount`                          | Get a random provider based on AccountId   | GET  | userAccount, dappContractAccount                                   |
+| `/v1/prosopo/providers/`                                                                 | Get list of all provider IDs               | GET  |                                                                    |
+| `/v1/prosopo/dapps/`                                                                     | Get list of all dapp IDs                   | GET  |                                                                    |
+| `/v1/prosopo/provider/:providerAccount`                                                  | Get details of a specific Provider account | GET  | providerAccount                                                    |
+| `/v1/prosopo/provider/captcha/:datasetId/:userAccount/:dappContractAccount/:blockNumber` | Get captchas to solve                      | GET  | datasetId, userAccount, dappContractAccount, blockNumber           |
+| `/v1/prosopo/provider/solution`                                                          | Submit captcha solutions                   | POST | userAccount, dappAccount, requestHash, captchas, blockHash, txHash |
 
 ## Tests
 
-You can run the Provider integration tests via the [integration repository](https://github.com/prosopo-io/integration/).
+You can run the Provider integration tests using the command `npm run test`. This will start a substrate container containing a predeployed [prosopo protocol contract](https://github.com/prosopo-io/protocol/#prosopo-protocol)  and [dapp-example contract](https://github.com/prosopo-io/dapp-example#dapp-example). An in-memory mongo database will be used.
 
 To run the tests with coverage stats use:
 
 ```bash
-yarn c8 yarn test
+npx c8 npm run test
 ```
 
 Current test coverage is 90.9% of functions.
