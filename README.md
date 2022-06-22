@@ -256,5 +256,3 @@ To run the tests with coverage stats use:
 ```bash
 npx c8 npm run test
 ```
-
-Current test coverage is 90.9% of functions.
