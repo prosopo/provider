@@ -1,20 +1,20 @@
 {
   "name": "@prosopo/provider",
   "version": "0.0.0",
-  "author": "Prosopo",
+  "author": "PROSOPO LIMITED <info@prosopo.io>",
+  "license": "Apache-2.0",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
     "clean": "tsc --build --clean",
     "build": "tsc --build --verbose",
-    "cli": "ts-node ./cli/cli.ts",
-    "setup": "ts-node ./scripts/setup.ts",
+    "build:config": "tsc --project",
+    "cli": "node ./dist/cli/cli.js",
+    "setup": "node ./dist/cli/setup.js",
     "start": "node ./dist/cli/start.js",
-    "start:test": "NODE_ENV=test && ts-node ./cli/start.ts",
     "serve": "npm run setup && npm run start",
     "mnemonic": "ts-node ./scripts/generateMnemonic.ts",
-    "imageserver:start": "ts-node ./scripts/imageserver.ts",
-    "test": "NODE_ENV=test ts-mocha \"tests/**/*.test.ts\" --timeout 120000",
+    "test": "NODE_ENV=test ts-mocha \"tests/**/*.test.ts\" --timeout 120000 && exit 0",
     "coverage": "npx c8 npm run test",
     "populate-data": "ts-node ./src/dataUtils/populateDatabase.ts",
     "dev-provider-register": "npm run cli -- provider_register --fee=10 --origin=https://localhost:8282 --payee=Provider --address=$PROVIDER_ADDRESS",
@@ -68,7 +68,6 @@
     "type": "git",
     "url": "git+ssh://git@github.com/prosopo-io/provider.git"
   },
-  "license": "GPL-3.0",
   "description": "> NOTE: The easiest way to deploy the Prosopo contract and run the Provider node is via the [integration repository](https://github.com/prosopo-io/integration/). The following instructions explain how to set up the repositories manually.",
   "bugs": {
     "url": "https://github.com/prosopo-io/provider/issues"

@@ -4,9 +4,8 @@ WORKDIR /usr/src/app
 
 COPY . ./
 
-ENV NODE_ENV $NODE_ENV
-
 RUN npm i
+RUN npm run build:config -- ./tsconfig.docker.json
 
 EXPOSE 3000
 
